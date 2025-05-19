@@ -1,14 +1,14 @@
-// src/components/AddProductModal.jsx
+// src/components/EditProductModal.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Upload, Plus } from 'lucide-react';
 import '../styles/AddProductModal.css';
 import { validateProductForm } from '../schma/ProductSchema';
 
-const AddProductModal = ({ isOpen, onClose }) => {
+const EditProductModal = ({ isOpen, onClose, product,categories = [] }) => {
   // Form fields state
   const [formData, setFormData] = useState({
     name: '',
-    category: [],
+    category: '',
     quantity: '',
     price: '',
     discountPrice: '',
@@ -25,6 +25,21 @@ const AddProductModal = ({ isOpen, onClose }) => {
   // Refs
   const uploadRef = useRef(null);
   const modalRef = useRef(null);
+  
+  // Initialize form data when product changes
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.name || '',
+        category: product.category || '',
+        quantity: product.quantity || '',
+        price: product.price || '',
+        discountPrice: product.discountPrice || '',
+        description: product.description || '',
+        images: product.images || []
+      });
+    }
+  }, [product]);
   
   // Close modal when clicking escape
   useEffect(() => {
@@ -106,10 +121,10 @@ const AddProductModal = ({ isOpen, onClose }) => {
     
     if (Object.keys(newErrors).length === 0) {
       // Form is valid, proceed with submission
-      console.log('Submitting form data:', formData);
+      console.log('Updating product with data:', formData);
       
       // In a real app, you would send this data to an API
-      // Example: await api.post('/products', formData);
+      // Example: await api.put(`/products/${product.id}`, formData);
       
       // Close modal after successful submission
       onClose();
@@ -175,10 +190,8 @@ const AddProductModal = ({ isOpen, onClose }) => {
     <div className="modal-overlay">
       <div className="add-product-modal" ref={modalRef}>
         <div className="modal-header">
-          <h2>Add New Product</h2>
-          <button type="button" className="close-button" onClick={onClose}>
-            <X size={24} />
-          </button>
+          <h2>Edit Product</h2>
+    
         </div>
         
         <form onSubmit={handleSubmit} className="product-form">
@@ -201,30 +214,23 @@ const AddProductModal = ({ isOpen, onClose }) => {
             <div className="form-row">
               {/* Product Category */}
               <div className={`form-group ${errors.category ? 'error' : ''}`}>
-  <label htmlFor="category">Product Categories</label>
-  <select
-    id="category"
-    name="category"
-    value={formData.category}
-    onChange={(e) => {
-      const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
-      setFormData({ ...formData, category: selectedOptions });
+                <label htmlFor="category">Product Category</label>
+                <select
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                >
+               <option value="" disabled>Select product category</option>
+{categories.map((cat) => (
+  <option key={cat.value} value={cat.value}>
+    {cat.label}
+  </option>
+))}
 
-      if (errors.category) {
-        setErrors({ ...errors, category: '' });
-      }
-    }}
-    multiple
-  >
-    <option value="appetizers">Appetizers</option>
-    <option value="mains">Main Courses</option>
-    <option value="desserts">Desserts</option>
-    <option value="drinks">Drinks</option>
-    <option value="sides">Side Dishes</option>
-  </select>
-  {errors.category && <div className="error-message">{errors.category}</div>}
-</div>
-
+                </select>
+                {errors.category && <div className="error-message">{errors.category}</div>}
+              </div>
               
               {/* Stock Quantity */}
               <div className={`form-group ${errors.quantity ? 'error' : ''}`}>
@@ -296,7 +302,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
                 <div className="image-preview-grid">
                   {formData.images.map((img, index) => (
                     <div key={index} className="image-preview-item">
-                      <img src={img.preview} alt={`Product Preview ${index + 1}`} className="image-preview" />
+                      <img src={img.preview || img.url} alt={`Product Preview ${index + 1}`} className="image-preview" />
                       <button type="button" className="remove-image" onClick={() => removeImage(index)}>
                         <X size={16} />
                       </button>
@@ -345,7 +351,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
           
           {/* Form Actions */}
           <div className="form-actions">
-            <button type="submit" className="add-button">Add Product</button>
+            <button type="submit" className="add-button">Update Product</button>
             <button type="button" className="cancel-button" onClick={onClose}>Cancel</button>
           </div>
         </form>
@@ -354,4 +360,4 @@ const AddProductModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default AddProductModal;
+export default EditProductModal;

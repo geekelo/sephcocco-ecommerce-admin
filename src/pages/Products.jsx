@@ -2,9 +2,12 @@
 import React, { useState, useRef } from 'react';
 import { Search, SlidersHorizontal, Plus } from 'lucide-react';
 import '../styles/ProductsPage.css';
-import { sampleProducts } from '../constants/data';
+import { mockCategories, mockProduct, sampleProducts } from '../constants/data';
 import ProductCard from '../components/ProductCard';
 import AddProductModal from '../components/AddProductModal';
+import ProductDetails from '../components/ProductDetails';
+import EditProductModal from '../components/EditProductModal';
+import DeleteProductModal from '../components/DeleteProductModal';
 
 const ProductsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -12,7 +15,9 @@ const ProductsPage = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const mainContentRef = useRef(null);
-
+const [isEditModal, setIsEditModal] = useState(false)
+const [isDeleteModal, setIsDeleteModal] = useState(false)
+const [isViewModal, setIsViewModal] = useState(false)
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -38,6 +43,21 @@ const ProductsPage = () => {
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+const handleView = () => {
+  setIsViewModal(true)
+}
+
+const handleEdit = () => {
+  setIsEditModal(true)
+}
+const handleDelete = () => {
+  setIsDeleteModal(true)
+}
+const handleConfirm = () => {
+ console.log('click me');
+ 
+}
+
 
   return (
     <div className="products-page" ref={mainContentRef}>
@@ -83,13 +103,16 @@ const ProductsPage = () => {
             <div className="products-grid">
               {filteredProducts.map(product => (
                 <div className="product-grid-item" key={product.id}>
-                  <ProductCard product={product} />
+                  <ProductCard product={product} onDelete={handleDelete} onEdit={handleEdit} onView={handleView}/>
                 </div>
               ))}
             </div>
           </div>
         </>
       )}
+      {isViewModal && <ProductDetails product={mockProduct} onEdit={handleEdit} onDelete={handleDelete}/>}
+      {isEditModal && <EditProductModal isOpen={isEditModal} onClose={()=> setIsEditModal(false)}  product={mockProduct} categories={mockCategories}/>}
+      {isDeleteModal && <DeleteProductModal onConfirm={handleConfirm} isOpen={isDeleteModal} onClose={()=> setIsDeleteModal(false)} product={mockProduct}/>}
     </div>
   );
 };
