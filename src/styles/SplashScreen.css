@@ -20,7 +20,7 @@
     width: 100%;
   }
   
-  .logo-container {
+  .logo-container-splash {
     width: 100%;
     display: flex;
     justify-content: center;
@@ -28,13 +28,13 @@
     margin-bottom: 2rem;
   }
   
-  .logo-image {
+  .logo-image-splash {
     width: 250px;
     height: 250px;
     object-fit: contain;
   }
   
-  .loading-text {
+  .loading-text-splash {
     color: #ffffff;
     font-size: 1.5rem;
     font-weight: bold;
@@ -44,7 +44,7 @@
   
   /* Media Queries */
   @media (max-width: 768px) {
-    .logo-image {
+    .logo-image-splash {
       width: 200px;
       height: 200px;
     }

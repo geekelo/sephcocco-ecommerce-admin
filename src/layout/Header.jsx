@@ -1,12 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Search,
-  Bell
+  Bell,
+  Menu
 } from 'lucide-react';
 import '../styles/Header.css';
 import Image from '../assets/profile.png'
-const Header = () => {
+const Header = ({ toggleSidebar, isMobile }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
   const handleSearchChange = (e) => {
@@ -16,8 +17,17 @@ const Header = () => {
   return (
     <header className="header">
       <div className="header-wrapper">
-        {/* Left section with title */}
+        {/* Left section with title and toggle button */}
         <div className="header-title">
+          {isMobile && (
+            <button 
+              className="menu-toggle" 
+              onClick={toggleSidebar}
+              aria-label="Toggle menu"
+            >
+              <Menu size={20} color='#000'/>
+            </button>
+          )}
           <h1>Products</h1>
         </div>
 
@@ -36,13 +46,13 @@ const Header = () => {
           
           <div className="user-section">
             <div className="notification-badge">
-              <Bell size={20} />
+              <Bell size={20} color='#000' />
               <span className="notification-indicator"></span>
             </div>
             
             <div className="user-profile">
               <div className="avatar">
-                <img src={Profile} alt="John David" />
+                <img src={Image} alt="John David" />
               </div>
               <span className="username">John David</span>
             </div>
@@ -54,3 +64,4 @@ const Header = () => {
 };
 
 export default Header;
+

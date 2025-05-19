@@ -44,13 +44,13 @@ useEffect(() => {
                   ease: "linear" 
                 }
               }}
-              className="logo-container"
+              className="logo-container-splash"
             >
             
               <img 
                 src={Logo} 
                 alt="Logo" 
-                className="logo-image" 
+                className="logo-image-splash" 
               />
             </motion.div>
             
@@ -62,7 +62,7 @@ useEffect(() => {
                   repeat: Infinity,
                 }
               }}
-              className="loading-text"
+              className="loading-text-splash"
             >
               SEPHCOCCO
               <motion.span
