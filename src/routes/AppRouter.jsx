@@ -1,6 +1,6 @@
 import { Suspense, useState, } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import {  LoginPage } from "./LazyLoader";
+import {  LoginPage, StoresPage } from "./LazyLoader";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { SplashScreen } from "../components/SplashScreen";
 
@@ -26,6 +26,7 @@ const AppRouter = () => {
                 <Route path="/" element={<Navigate to="/login" replace />} />
        
                   <Route path="login" element={<LoginPage />} />
+                  <Route path="store" element={<StoresPage />} />
             
                 {/* Redirect unknown routes to home */}
                 <Route path="*" element={<Navigate to="/" replace />} />
