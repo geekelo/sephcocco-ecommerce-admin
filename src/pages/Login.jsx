@@ -5,6 +5,7 @@ import '../styles/LoginPage.css';
 import storeImage from '../assets/login.png';
 import logo from '../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
+import { validateEmail, validatePassword } from '../schma/LoginSchema';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -13,16 +14,6 @@ const LoginPage = () => {
   const [passwordError, setPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 const navigate = useNavigate()
-  // Email validation function
-  const validateEmail = (email) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
-
-  // Password validation function
-  const validatePassword = (password) => {
-    return password.length >= 6;
-  };
 
   const handleEmailChange = (e) => {
     const value = e.target.value;

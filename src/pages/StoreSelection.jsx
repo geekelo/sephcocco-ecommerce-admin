@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Pill, Utensils, Coffee, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import '../styles/StorePage.css';
 import storeImage from '../assets/login.png';
 import logo from '../assets/logo.png'; 
 import { useNavigate } from 'react-router-dom';
-import Icon1 from '../assets/restur.svg';
-import Icon2 from '../assets/louge.svg';
-import Icon3 from '../assets/phar.svg';
+
+import { storeOptions } from '../constants/data';
+import { getStoreIcon } from '../utils/getStoreIcon';
 const StoreSelectionPage = () => {
   const [selectedStore, setSelectedStore] = useState(null);
   const navigate = useNavigate()
@@ -17,38 +17,6 @@ const StoreSelectionPage = () => {
 
   };
   
-  // Get the appropriate icon for each store type
-  const getStoreIcon = (storeType) => {
-    switch(storeType) {
-      case 'pharmacy':
-        return       <img 
-                      src={Icon3}
-                      alt="Icon" 
-                      className="icon"
-                    />;
-      case 'restaurant':
-        return       <img 
-                      src={Icon1}
-                      alt="Icon" 
-                      className="icon"
-                    />;
-      case 'lounge':
-        return       <img 
-                      src={Icon2}
-                      alt="Icon" 
-                      className="icon"
-                    />;
-      default:
-        return null;
-    }
-  };
-  
-  // Store options data
-  const storeOptions = [
-    { id: 'pharmacy', name: 'Go To Pharmacy', icon: 'pharmacy' },
-    { id: 'restaurant', name: 'Go To Restaurant', icon: 'restaurant' },
-    { id: 'lounge', name: 'Go To Lounge', icon: 'lounge' }
-  ];
 
   return (
     <div className="store-container">
@@ -61,7 +29,7 @@ const StoreSelectionPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="logo-container">
+        <div className="logo-container-store">
           <img src={logo} alt="Logo" className="logo" />
         </div>
         
