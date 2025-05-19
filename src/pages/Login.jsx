@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import '../styles/LoginPage.css';
 import storeImage from '../assets/login.png';
 import logo from '../assets/logo.png';
+import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -11,7 +12,7 @@ const LoginPage = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+const navigate = useNavigate()
   // Email validation function
   const validateEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -65,16 +66,7 @@ const LoginPage = () => {
       // Set submitting state for animation
       setIsSubmitting(true);
       
-      // Simulate submission - replace with your actual login logic
-      setTimeout(() => {
-        console.log('Login submitted:', { email, password });
-        
-        // Reset submitting state
-        setIsSubmitting(false);
-        
-        // Add your login logic here
-        alert('Login successful!');
-      }, 1000);
+     navigate('/store')
     }
   };
 

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -11,13 +12,26 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --primary-color: #F93A01;
+  --primary-color-light: #ff7a52;
+  --primary-color-dark: #e03000;
+  --black: #000000;
+  --text-dark: #333333;
+  --text-medium: #555555;
+  --text-light: #666666;
+  --border-color: #dddddd;
+  --error-color: #e53935;
+  --white: #ffffff;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --card-radius: 10px;
+  --option-radius: 8px;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif;
 }
  
 
