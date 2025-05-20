@@ -103,10 +103,16 @@ export const mockProduct = {
 It features breathable mesh fabric, adjustable height, reclining backrest, and smooth-rolling wheels. 
 Perfect for home offices, gaming setups, or workspaces. Built with durability and comfort in mind.`,
   images: [
-    ProductImage,
-    ProductImage,
-    ProductImage,
-    ProductImage,
+  
+    {
+      url:   ProductImage,
+    },
+    {
+      url:   ProductImage,
+    },
+    {
+      url:   ProductImage,
+    },
     {
       url:   ProductImage,
     },

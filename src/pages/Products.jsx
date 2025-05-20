@@ -6,8 +6,11 @@ import { mockCategories, mockProduct, sampleProducts } from '../constants/data';
 import ProductCard from '../components/ProductCard';
 import AddProductModal from '../components/AddProductModal';
 import ProductDetails from '../components/ProductDetails';
-import EditProductModal from '../components/EditProductModal';
+
 import DeleteProductModal from '../components/DeleteProductModal';
+
+import EditProductModal from '../components/EditModal';
+
 
 const ProductsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,60 +63,95 @@ const handleConfirm = () => {
 
 
   return (
-    <div className="products-page" ref={mainContentRef}>
-      {isAddModalOpen ? (
-        <AddProductModal isOpen={isAddModalOpen} onClose={handleCloseModal} />
-      ) : (
-        <>
-              
-              <div className="search-filter-section">
-                <div className='filter-container'>
-                <div className="search-box">
-                <Search size={16} className="search-icon" />
-                <input 
-                  type="text" 
-                  placeholder="Search for anything" 
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  className="search-input"
-                />
-              </div>
-              
-              <button 
-                className="filter-button"
-                onClick={toggleFilter}
-              >
-                <SlidersHorizontal size={16} />
-                <span>Filter by</span>
-              </button>
-                </div>
+<div className="products-page" ref={mainContentRef}>
+  {isAddModalOpen && (
+    <AddProductModal 
+      isOpen={isAddModalOpen} 
+      onClose={handleCloseModal} 
+    />
+  )}
 
-              
-              <button className="add-product-button" onClick={handleAddProduct}>
-                <Plus size={16} color="white" />
-                <span>Add New Product</span>
-              </button>
-            </div>
-          <div className="products-container">
-            <div className="page-title-section">
-              <h2>100 Products in stock</h2>
-            </div>
-      
-            
-            <div className="products-grid">
-              {filteredProducts.map(product => (
-                <div className="product-grid-item" key={product.id}>
-                  <ProductCard product={product} onDelete={handleDelete} onEdit={handleEdit} onView={handleView}/>
-                </div>
-              ))}
-            </div>
+  {isViewModal && (
+    <ProductDetails 
+      product={mockProduct} 
+      onEdit={handleEdit} 
+      onDelete={handleDelete} 
+      onClose={() => setIsViewModal(false)}
+    />
+  )}
+{isEditModal && (
+    <EditProductModal
+      isOpen={isEditModal} 
+      onClose={() => setIsEditModal(false)} 
+      product={mockProduct} 
+      categories={mockCategories} 
+    />)}
+  {!isAddModalOpen && !isViewModal && !isEditModal && (
+    <>
+      <div className="search-filter-section">
+        <div className="filter-container">
+          <div className="search-box">
+            <Search size={16} className="search-icon" />
+            <input 
+              type="text" 
+              placeholder="Search for anything" 
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="search-input"
+            />
           </div>
-        </>
-      )}
-      {isViewModal && <ProductDetails product={mockProduct} onEdit={handleEdit} onDelete={handleDelete}/>}
-      {isEditModal && <EditProductModal isOpen={isEditModal} onClose={()=> setIsEditModal(false)}  product={mockProduct} categories={mockCategories}/>}
-      {isDeleteModal && <DeleteProductModal onConfirm={handleConfirm} isOpen={isDeleteModal} onClose={()=> setIsDeleteModal(false)} product={mockProduct}/>}
-    </div>
+
+          <button 
+            className="filter-button"
+            onClick={toggleFilter}
+          >
+            <SlidersHorizontal size={16} />
+            <span>Filter by</span>
+          </button>
+        </div>
+
+        <button 
+          className="add-product-button" 
+          onClick={handleAddProduct}
+        >
+          <Plus size={16} color="white" />
+          <span>Add New Product</span>
+        </button>
+      </div>
+
+      <div className="products-container">
+        <div className="page-title-section">
+          <h2>100 Products in stock</h2>
+        </div>
+
+        <div className="products-grid">
+          {filteredProducts.map(product => (
+            <div className="product-grid-item" key={product.id}>
+              <ProductCard 
+                product={product} 
+                onDelete={handleDelete} 
+                onEdit={handleEdit} 
+                onView={handleView} 
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  )}
+
+
+  {isDeleteModal && (
+    <DeleteProductModal 
+      onConfirm={handleConfirm} 
+      isOpen={isDeleteModal} 
+      onClose={() => setIsDeleteModal(false)} 
+      product={mockProduct} 
+    />
+  )}
+</div>
+
+
   );
 };
 

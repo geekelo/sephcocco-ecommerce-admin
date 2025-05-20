@@ -5,18 +5,18 @@ import '../styles/ImageGallery.css';
 const ImageGallery = ({ images, selectedImage, onSelect }) => {
   return (
     <div className="image-gallery">
-      <img src={selectedImage} alt="Selected" className="main-image" />
+      <img src={selectedImage.url} alt="Selected" className="main-image" />
       <div className="thumbnail-list">
-        {images.map((img, index) => (
-          <div
-            key={index}
-            className={`thumbnail ${selectedImage === img ? 'active' : ''}`}
-            onClick={() => onSelect(img)}
-          >
-            <img src={img} alt={`Thumbnail ${index}`} />
-            {selectedImage === img && <Check className="check-icon" size={16} color="#e74c3c" />}
-          </div>
-        ))}
+      {images.slice(1).map((img, index) => (
+  <div
+    key={index}
+    className={`thumbnail ${selectedImage === img ? 'active' : ''}`}
+    onClick={() => onSelect(img)}
+  >
+    <img src={img.url} alt={`Thumbnail ${index + 1}`} />
+    {selectedImage === img && <Check className="check-icon" size={16} color="#e74c3c" />}
+  </div>
+))}
       </div>
     </div>
   );

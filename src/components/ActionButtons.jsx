@@ -13,7 +13,7 @@ const ActionButtons = ({ onDelete, onEdit}) => {
   return (
     <div className="action-buttons">
            <button 
-              className={` btn secondary pending-order-button `}
+              className={` btn secondary `}
               onClick={handleEdit}
         
             >

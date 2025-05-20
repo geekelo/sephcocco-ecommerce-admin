@@ -15,60 +15,15 @@
   }
   
   .primary {
-    background-color: #ff4500;
-    color: white;
-    border: none;
+    background-color: transparent;
+    color: #F93A01;
+    border-color: #F93A01;
   }
   
-  .primary:hover {
-    background-color: #e03e00;
-  }
-  
-  /* .secondary {
-    background-color: white;
-    color: #333;
-    border: 1px solid #d1d5db;
-  }
-  
-  .secondary:hover {
-    background-color: #f3f4f6;
-  } */
 
-  .pending-order-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 15px;
-    background-color: rgb(255, 235, 209);
-    border: 1px solid rgb(255, 235, 209);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
   
-  .pending-order-button:hover:not(:disabled) {
-    background-color: rgb(248, 226, 196);
-  }
-  
-  .pending-order-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.8;
-  }
-  
-  .pending-icon {
-    font-size: 18px;
-    margin-right: 8px;
-    color: #000
-  }
-  
-  .pending-active {
-    background-color: #e6f7e6;
-    border-color: #c3e6cb;
-    color: #155724;
-  }
-  
-  .pending-text {
-    font-weight: 500;
-    color: #000;
-    text-align: center;
+  .secondary {
+    background-color: #F93A01;
+    color: #fff;
+    border-color: #F93A01;
   }

@@ -5,9 +5,10 @@ import LikeButton from './LikeButton';
 import ActionButtons from './ActionButtons';
 import ExpandableDescription from './ExpandableDescription';
 import '../styles/ProductDetails.css';
+import { X } from 'lucide-react';
 
 
-const ProductDetails = ({ product, onEdit, onDelete }) => {
+const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
   const [selectedImage, setSelectedImage] = useState(product?.images?.[0]);
 
   
@@ -20,7 +21,11 @@ const ProductDetails = ({ product, onEdit, onDelete }) => {
 
 
   return (
+    <div className="modal-overlay">
     <div className="product-details-container">
+    <button onClick={onClose} type="button" className="close-button-product" >
+            <X size={24} />
+          </button>
       <motion.div 
         className="product-main"
         initial={{ opacity: 0, y: 20 }}
@@ -35,14 +40,15 @@ const ProductDetails = ({ product, onEdit, onDelete }) => {
         <div className="product-details-info">
           <div className="product-header">
             <h1 className="product-name">{product.name}</h1>
-            <LikeButton 
+        
+          </div>
+          
+          <p className="stock-status">
+          <LikeButton 
               initialLikes={product.likes}
               isLiked={product.isFavorite}
            
             />
-          </div>
-          
-          <p className="stock-status">
             {product.inStock
               ? `In stock : ${product.stockCount} Items`
               : 'Out of stock'}
@@ -69,6 +75,8 @@ const ProductDetails = ({ product, onEdit, onDelete }) => {
         </div>
       </motion.div>
     </div>
+    </div>
+
   );
 };
 
