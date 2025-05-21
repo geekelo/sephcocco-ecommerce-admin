@@ -1,10 +1,10 @@
-// src/components/AddProductModal.jsx
+
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Upload, Plus, Image } from 'lucide-react';
 import '../styles/AddProductModal.css';
 import { validateProductForm } from '../schma/ProductSchema';
 
-const AddProductModal = ({ isOpen, onClose }) => {
+const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
   // Form fields state
   const [formData, setFormData] = useState({
     name: '',
@@ -28,6 +28,24 @@ const AddProductModal = ({ isOpen, onClose }) => {
   const uploadRef = useRef(null);
   const mainImageUploadRef = useRef(null);
   const modalRef = useRef(null);
+  
+  // Initialize form data when product changes
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.name || '',
+        // Ensure category is always an array, convert single string to array if needed
+        category: Array.isArray(product.category) ? product.category : 
+                 (product.category ? [product.category] : []),
+        quantity: product.quantity || '',
+        price: product.price || '',
+        discountPrice: product.discountPrice || '',
+        description: product.description || '',
+        mainImage: product.mainImage || null,
+        images: product.images || []
+      });
+    }
+  }, [product]);
   
   // Close modal when clicking escape
   useEffect(() => {
@@ -92,34 +110,34 @@ const AddProductModal = ({ isOpen, onClose }) => {
   // Handle additional images upload
   const handleImageChange = (e) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
-  
+    
     if (files.length === 0) return; // nothing selected
-  
+    
     // Calculate how many images can still be added
     const availableSlots = 4 - formData.images.length;
-  
+    
     if (availableSlots <= 0) {
       setErrors({ ...errors, images: "Maximum of 4 additional images reached." });
       e.target.value = null; // reset input
       return;
     }
-  
+    
     // Take only the allowed number of files
     const filesToAdd = files.slice(0, availableSlots);
-  
+    
     // Map files to your image object format
     const newImages = filesToAdd.map(file => ({
       file,
       preview: URL.createObjectURL(file),
     }));
-  
+    
     // Update formData images state appending new images
     setFormData({ ...formData, images: [...formData.images, ...newImages] });
-  
+    
     if (errors.images) {
       setErrors({ ...errors, images: '' });
     }
-  
+    
     // Reset file input value so same file can be uploaded again if needed
     e.target.value = null;
   };
@@ -214,10 +232,10 @@ const AddProductModal = ({ isOpen, onClose }) => {
     
     if (Object.keys(newErrors).length === 0) {
       // Form is valid, proceed with submission
-      console.log('Submitting form data:', formData);
+      console.log('Updating product with data:', formData);
       
       // In a real app, you would send this data to an API
-      // Example: await api.post('/products', formData);
+      // Example: await api.put(`/products/${product.id}`, formData);
       
       // Close modal after successful submission
       onClose();
@@ -328,14 +346,19 @@ const AddProductModal = ({ isOpen, onClose }) => {
     }
   };
   
+  // Get category options from the prop or use default if not provided
+  const categoryOptions = categories.length > 0 
+    ? categories.map(cat => typeof cat === 'string' ? cat : cat.value || cat) 
+    : ["appetizers", "mains", "desserts", "drinks", "sides"];
+  
   if (!isOpen) return null;
   
   return (
     <div className="modal-overlay">
       <div className="add-product-modal" ref={modalRef}>
         <div className="modal-header">
-          <h2>Add New Product</h2>
-     
+          <h2>Edit Product</h2>
+      
         </div>
         
         <form onSubmit={handleSubmit} className="product-form">
@@ -356,14 +379,16 @@ const AddProductModal = ({ isOpen, onClose }) => {
             
             {/* Two column layout */}
             <div className="form-row">
-              {/* Product Category */}
+              {/* Product Categories - Modified to match AddProductModal style */}
               <div className={`form-group ${errors.category ? 'error' : ''}`}>
                 <label htmlFor="category">Product Categories</label>
                 <div className="form-group">
                   <div className="selected-categories">
                     {formData.category.map(cat => (
                       <span className="badge" key={cat}>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                        {typeof cat === 'string' 
+                          ? cat.charAt(0).toUpperCase() + cat.slice(1)
+                          : cat}
                         <button
                           type="button"
                           className="remove-btn"
@@ -400,15 +425,21 @@ const AddProductModal = ({ isOpen, onClose }) => {
                     <option value="" disabled>
                       Select a category
                     </option>
-                    {["appetizers", "mains", "desserts", "drinks", "sides"].map(option => (
-                      <option
-                        key={option}
-                        value={option}
-                        disabled={formData.category.includes(option)}
-                      >
-                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                      </option>
-                    ))}
+                    {categoryOptions.map(option => {
+                      const optionValue = typeof option === 'object' ? option.value : option;
+                      const optionLabel = typeof option === 'object' ? option.label : 
+                                         (optionValue.charAt(0).toUpperCase() + optionValue.slice(1));
+                      
+                      return (
+                        <option
+                          key={optionValue}
+                          value={optionValue}
+                          disabled={formData.category.includes(optionValue)}
+                        >
+                          {optionLabel}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 {errors.category && <div className="error-message">{errors.category}</div>}
@@ -493,7 +524,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
                 <div className="main-image-container">
                   <div className="main-image-preview">
                     <img 
-                      src={formData.mainImage.preview} 
+                      src={formData.mainImage.preview || formData.mainImage.url} 
                       alt="Main Product Preview" 
                       className="main-image" 
                     />
@@ -546,7 +577,11 @@ const AddProductModal = ({ isOpen, onClose }) => {
                   <div className="image-preview-grid">
                     {formData.images.map((img, index) => (
                       <div key={index} className="image-preview-item">
-                        <img src={img.preview} alt={`Product Preview ${index + 1}`} className="image-preview" />
+                        <img 
+                          src={img.preview || img.url} 
+                          alt={`Product Preview ${index + 1}`} 
+                          className="image-preview" 
+                        />
                         <button 
                           type="button" 
                           className="remove-image" 
@@ -561,7 +596,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
                     {/* Add more images button (if less than 4) */}
                     {formData.images.length < 4 && (
                       <div className="add-more-images" onClick={triggerFileInput}>
-                        <Plus size={24} color='#000' />
+                        <Plus size={24} color='#000'/>
                         <span>Add More</span>
                       </div>
                     )}
@@ -592,7 +627,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
           
           {/* Form Actions */}
           <div className="form-actions">
-            <button type="submit" className="add-button">Add Product</button>
+            <button type="submit" className="add-button">Update Product</button>
             <button type="button" className="cancel-button" onClick={onClose}>Cancel</button>
           </div>
         </form>
@@ -601,4 +636,4 @@ const AddProductModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default AddProductModal;
+export default EditProductModal;

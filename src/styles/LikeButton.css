@@ -1,0 +1,127 @@
+.like-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.like-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: visible; /* Allow floating elements to show outside */
+  z-index: 1;
+}
+
+.like-button:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+.like-button.active {
+  animation: pulse 0.4s ease;
+}
+
+.like-count-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.like-count {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.thumbs-up {
+  transition: all 0.3s ease;
+  opacity: 0.7;
+}
+
+.thumbs-up.active {
+  color: #3498db;
+  opacity: 1;
+}
+
+/* Animation for the +1 indicator */
+.thumbs-up-indicator {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #3498db;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+/* Floating hearts animation */
+.floating-hearts {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.floating-heart {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Moving animation for the heart when clicked */
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.3);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.3);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+.like-button.active svg {
+  animation: heartBeat 1s linear;
+}
+
+.like-container {
+  padding: 5px;
+}

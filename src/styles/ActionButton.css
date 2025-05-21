@@ -1,0 +1,29 @@
+.action-buttons {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+  
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    flex: 1;
+    font-size: 0.95rem;
+  }
+  
+  .primary {
+    background-color: transparent;
+    color: #F93A01;
+    border-color: #F93A01;
+  }
+  
+
+  
+  .secondary {
+    background-color: #F93A01;
+    color: #fff;
+    border-color: #F93A01;
+  }

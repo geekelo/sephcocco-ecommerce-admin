@@ -81,3 +81,46 @@ export const sampleProducts = [
     }
   ];
   
+ export const mockCategories = [
+    { label: "Beverages", value: "beverages" },
+    { label: "Snacks", value: "snacks" },
+    { label: "Personal Care", value: "personal_care" },
+    { label: "Supplements", value: "supplements" },
+    { label: "Household", value: "household" },
+  ];
+  
+
+export const mockProduct = {
+  id: 'prod-001',
+  name: 'UltraComfort Ergonomic Chair',
+  price: 199.99,
+  stockCount: 42,
+  inStock: true,
+  isFavorite: true,
+  likes: 137,
+  shortDescription: 'A comfortable, adjustable ergonomic chair for daily use.',
+  longDescription: `This UltraComfort Ergonomic Chair is designed to provide superior support for long hours of sitting. 
+It features breathable mesh fabric, adjustable height, reclining backrest, and smooth-rolling wheels. 
+Perfect for home offices, gaming setups, or workspaces. Built with durability and comfort in mind.`,
+  images: [
+  
+    {
+      url:   ProductImage,
+    },
+    {
+      url:   ProductImage,
+    },
+    {
+      url:   ProductImage,
+    },
+    {
+      url:   ProductImage,
+    },
+    {
+      url:   ProductImage,
+    },
+  ],
+
+};
+
+
