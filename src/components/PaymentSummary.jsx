@@ -14,44 +14,45 @@ const PaymentSummary = ({
   onDelete, 
   onView 
 }) => {
+  // For payment page, 'order' is actually a payment object with additional order info
   const {
-    id,
+    id: paymentId,
+    amount,
+    method,
+    status: paymentStatus,
+    date: paymentDate,
     customerName,
+    orderId,
     phoneNumber,
     orderDate,
-    status,
+    orderStatus,
     paymentMethod,
-    paymentStatus,
     notes,
-    products,
-    payments
+    products
   } = order;
 
-  // Get the first payment for display (assuming we're showing one payment)
-  const currentPayment = payments && payments.length > 0 ? payments[0] : null;
-
   // Convert products to the format expected by ProductCard
-  const formattedProducts = products.map(product => ({
+  const formattedProducts = products?.map(product => ({
     name: product.name,
     image: product.image,
     price: product.price,
-    rating: product.quantity, // Using quantity in place of rating
+    rating: product.quantity, 
     stockCount: product.stockCount,
     stockStatus: "In stock"
-  }));
+  })) || [];
 
-  // Prepare info card data with correct payment information
+
   const leftCardItems = [
-    { label: "Payment ID:", value: currentPayment?.id || "N/A" },
-    { label: "Payment Method:", value: paymentMethod },
-    { label: "Payment Date:", value: currentPayment?.date || orderDate },
-    { label: "Total Amount:", value: currentPayment?.amount || "N/A" }
+    { label: "Payment ID:", value: paymentId },
+    { label: "Payment Method:", value: method || paymentMethod },
+    { label: "Payment Date:", value: paymentDate },
+    { label: "Total Amount:", value: amount }
   ];
 
   const rightCardItems = [
     { label: "Customer Name:", value: customerName },
-    { label: "Order ID:", value: id },
-    { label: "Phone Number:", value: phoneNumber },
+    { label: "Order ID:", value: orderId },
+    { label: "Payment Method:", value: method || paymentMethod },
     { label: "Payment Status:", value: paymentStatus }
   ];
 
@@ -59,7 +60,7 @@ const PaymentSummary = ({
     <div className="modal-overlay">
       <div className="add-product-modal">
         <div className="modal-header">
-          <h2>Payment Summary ({currentPayment?.id || id})</h2>
+          <h2>Payment Summary ({paymentId})</h2>
           <button className="back-button" onClick={onBack}>
             <ArrowLeft size={16} />
             Go Back
@@ -78,20 +79,22 @@ const PaymentSummary = ({
             <InfoCard items={rightCardItems} />
           </div>
 
-          <div className="ordered-products-section">
-            <h3>Ordered Products</h3>
-            <div className="products-grid">
-              {formattedProducts.map((product, index) => (
-                <ProductCard
-                  key={index}
-                  product={product}
-                  onView={onView}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              ))}
+          {formattedProducts.length > 0 && (
+            <div className="ordered-products-section">
+              <h3>Ordered Products</h3>
+              <div className="products-grid">
+                {formattedProducts.map((product, index) => (
+                  <ProductCard
+                    key={index}
+                    product={product}
+                    onView={onView}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="form-actions">
             <button className="update-button add-button" onClick={onViewOrder}>
