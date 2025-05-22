@@ -13,6 +13,7 @@
   
   .add-product-modal {
     width: 100%;
+  }
     .form-group {
       display: flex;
       flex-direction: column;
@@ -58,8 +59,7 @@
     }
     
 
-    padding: 20px;
-  }
+ 
   
   .modal-header {
     display: flex;

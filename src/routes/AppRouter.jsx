@@ -1,6 +1,6 @@
 import { Suspense, useState, } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import {  LoginPage, StoresPage } from "./LazyLoader";
+import {  LoginPage, OrderPage, StoresPage } from "./LazyLoader";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { SplashScreen } from "../components/SplashScreen";
 import Layout from "../layout/Layout";
@@ -34,6 +34,7 @@ const AppRouter = () => {
      
           <Route index element={<ProductsPage />} />
           <Route path="products" element={<ProductsPage />} />
+          <Route path="orders" element={<OrderPage />} />
         </Route>
                 {/* Redirect unknown routes to home */}
                 <Route path="*" element={<Navigate to="/" replace />} />

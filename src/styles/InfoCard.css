@@ -1,0 +1,35 @@
+
+.order-info-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.info-card {
+  flex: 1;
+  background-color: #fff;
+  border: 1px solid #F93A014D;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.info-value {
+  font-weight: 500;
+  color: #333;
+}

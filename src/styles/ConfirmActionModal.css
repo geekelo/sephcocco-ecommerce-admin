@@ -1,0 +1,139 @@
+.modal-overlay-confirm {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #241f1f42;
+   z-index: 100;
+  overflow-y: auto;
+   display: flex;
+  align-items: center; 
+  justify-content: center; 
+}
+
+.confirm-action-modal {
+  width: 500px;
+  max-width: 90%;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  margin: 4rem auto;
+  padding: 20px;
+
+}
+
+.modal-header-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.logo-container-confirm {
+  width: 40px;
+  height: 40px;
+}
+
+.modal-content {
+  padding: 20px 0;
+  text-align: center;
+}
+
+.confirm-title {
+  color: #000;
+  text-decoration: underline;
+}
+
+.confirm-message {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.confirm-warning {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.confirm-button {
+  background-color: #e53935;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 120px;
+  transition: all 0.2s ease;
+}
+
+.confirm-button:hover {
+  background-color: #c62828;
+}
+
+.cancel-button {
+  background-color: transparent;
+  border: 1px solid #999;
+  padding: 10px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 120px;
+  margin-left: 10px;
+  transition: all 0.2s ease;
+}
+
+.cancel-button:hover {
+  background-color: #f0f0f0;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.close-button-confirm {
+  background: none;
+  border-radius: 50%;
+  border: 1px solid #000;
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s ease;
+}
+
+.close-button-confirm:hover {
+  color: #333;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .confirm-action-modal {
+    width: 95%;
+    margin: 2rem auto;
+  }
+
+  .confirm-message {
+    font-size: 16px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .confirm-button,
+  .cancel-button {
+    width: 100%;
+  }
+}
