@@ -1,0 +1,59 @@
+.order-table {
+  width: 100%;
+}
+
+.order-table-header {
+  display: flex;
+  background-color: #54545414;
+  border-bottom: 1px solid #54545414;
+  border-radius: 15px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.order-column {
+  padding: 15px;
+}
+
+.order-id {
+  flex: 0.7;
+}
+
+.customer, .status, .amount, .date {
+  flex: 1;
+}
+
+.action {
+  flex: 0.7;
+}
+
+.order-table-body {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+@media screen and (max-width: 768px) {
+  .order-table-header, .order-row {
+    font-size: 12px;
+  }
+  
+  .order-column {
+    padding: 10px 8px;
+  }
+  
+  .order-id, .action {
+    flex: 0.8;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .order-table-header {
+    display: none;
+  }
+  
+  /* Display as cards on mobile */
+  .order-table-body {
+    padding: 10px;
+  }
+}

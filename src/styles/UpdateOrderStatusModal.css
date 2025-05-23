@@ -1,0 +1,149 @@
+
+.update-status-modal {
+  width: 500px;
+  max-width: 90%;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  margin: 4rem auto;
+  padding: 20px;
+}
+
+.update-status-title {
+  color: #000;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.update-status-description {
+  font-size: 16px;
+  color: #666;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.status-options {
+  display: flex;
+  
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.status-option {
+  display: flex;
+  align-items: center;
+
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #fff;
+}
+
+.status-option:hover {
+  border-color: #F93A01;
+  background-color: #fafafa;
+}
+
+.status-option.selected {
+  border-color: #F93A01;
+  background-color: #fff5f3;
+}
+
+.status-option input[type="radio"] {
+  display: none;
+}
+
+.status-indicator {
+  font-size: 20px;
+  margin-right: 12px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.status-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.update-status-button {
+  background-color: #F93A01 !important;
+  color: white !important;
+}
+
+.update-status-button:hover {
+  background-color: #e03000 !important;
+}
+
+/* Enhanced button styles for different types */
+.delete-button {
+  background-color: #e53935 !important;
+  color: white !important;
+}
+
+.delete-button:hover {
+  background-color: #c62828 !important;
+}
+
+.discard-button {
+  background-color: #ff9800 !important;
+  color: white !important;
+}
+
+.discard-button:hover {
+  background-color: #f57c00 !important;
+}
+
+.verify-button {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+.verify-button:hover {
+  background-color: #388e3c !important;
+}
+
+.success-button {
+  background-color: #2196f3 !important;
+  color: white !important;
+}
+
+.success-button:hover {
+  background-color: #1976d2 !important;
+}
+
+/* Responsive styles for update status modal */
+@media (max-width: 576px) {
+  .update-status-modal {
+    width: 95%;
+    margin: 2rem auto;
+    padding: 16px;
+  }
+
+  .update-status-title {
+    font-size: 18px;
+  }
+
+  .update-status-description {
+    font-size: 14px;
+  }
+
+  .status-option {
+    padding: 10px 12px;
+  }
+
+  .status-text {
+    font-size: 14px;
+  }
+
+  .status-indicator {
+    font-size: 18px;
+    margin-right: 8px;
+  }
+}

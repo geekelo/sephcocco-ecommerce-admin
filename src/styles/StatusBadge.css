@@ -1,0 +1,44 @@
+.status-badge {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.status-delivered {
+  color: #10b981;
+}
+
+.status-delivered .status-indicator {
+  background-color: #10b981;
+}
+
+.status-transit {
+  color: #f59e0b;
+}
+
+.status-transit .status-indicator {
+  background-color: #f59e0b;
+}
+
+.status-failed {
+  color: #ef4444;
+}
+
+.status-failed .status-indicator {
+  background-color: #ef4444;
+}
+
+.status-default {
+  color: #888888;
+}
+
+.status-default .status-indicator {
+  background-color: #888888;
+}

@@ -1,0 +1,301 @@
+/* Modal overlay for order/payment summary */
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #fff;
+  z-index: 100;
+  overflow-y: auto;
+  margin-top: 60px;
+  padding-left: 240px;
+}
+
+/* Confirm action modal overlay */
+.modal-overlay-confirm {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #241f1f42;
+  z-index: 100;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Main modal containers */
+.add-product-modal {
+  width: 100%;
+  padding: 20px;
+}
+
+.confirm-action-modal {
+  width: 500px;
+  max-width: 90%;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  margin: 4rem auto;
+  padding: 20px;
+}
+
+/* Modal headers */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #F93A014D;
+  margin-bottom: 24px;
+}
+
+.modal-header-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+/* Logo container */
+.logo-container-confirm {
+  width: 40px;
+  height: 40px;
+}
+
+/* Verify button container */
+.verify {
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+/* Back button */
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #F93A01;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background-color: rgba(249, 58, 1, 0.05);
+}
+
+/* Close button for confirm modal */
+.close-button-confirm {
+  background: none;
+  border-radius: 50%;
+  border: 1px solid #000;
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s ease;
+}
+
+.close-button-confirm:hover {
+  color: #333;
+}
+
+/* Modal content */
+.modal-content {
+  padding: 20px 0;
+  text-align: center;
+}
+
+/* Confirm modal content */
+.confirm-title {
+  color: #000;
+  text-decoration: underline;
+}
+
+.confirm-message {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.confirm-warning {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+/* Section styling */
+.ordered-products-section,
+.linked-payment-section {
+  margin-bottom: 24px;
+}
+
+.ordered-products-section h3,
+.linked-payment-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+/* Products grid */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 24px;
+}
+
+/* Button styles */
+.add-button,
+.cancel-button,
+.update-button,
+.discard-button,
+.confirm-button {
+  padding: 10px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 120px;
+  transition: all 0.2s ease;
+}
+
+/* Primary buttons */
+.add-button,
+.update-button {
+  background-color: #F93A01;
+  color: white;
+  border: none;
+}
+
+.add-button:hover,
+.update-button:hover {
+  background-color: #e03000;
+}
+
+/* Confirm button (red) */
+.confirm-button {
+  background-color: #e53935;
+  color: white;
+  border: none;
+}
+
+.confirm-button:hover {
+  background-color: #c62828;
+}
+
+/* Secondary buttons */
+.cancel-button,
+.discard-button {
+  background-color: #fff;
+  color: #F93A01;
+  border: 1px solid #F93A01;
+}
+
+.cancel-button:hover,
+.discard-button:hover {
+  background-color: #f0f0f0;
+}
+
+/* Special positioning for order summary actions */
+.order-details .form-actions {
+  justify-content: flex-end;
+}
+
+/* Special positioning for confirm modal actions */
+.confirm-action-modal .form-actions {
+  justify-content: center;
+  margin-left: 0;
+}
+
+.confirm-action-modal .cancel-button {
+  margin-left: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .modal-overlay {
+    padding-left: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding-left: 0;
+    padding-top: 50px;
+  }
+  
+  .add-product-modal {
+    padding: 16px;
+  }
+  
+  .order-info-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .add-button,
+  .cancel-button,
+  .update-button,
+  .discard-button,
+  .confirm-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .confirm-action-modal {
+    width: 95%;
+    margin: 2rem auto;
+  }
+
+  .confirm-message {
+    font-size: 16px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .confirm-button,
+  .cancel-button {
+    width: 100%;
+  }
+}

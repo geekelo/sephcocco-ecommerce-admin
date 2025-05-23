@@ -1,18 +1,29 @@
-
 import React, { useState } from 'react';
-import {
-  Search,
-  Bell,
-  Menu
-} from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { Search, Bell, Menu } from 'lucide-react';
 import '../styles/Header.css';
-import Image from '../assets/profile.png'
+import Image from '../assets/profile.png';
+
+const navItems = [
+  { name: 'Dashboard Overview', path: '/dashboard' },
+  { name: 'Orders', path: '/orders' },
+  { name: 'Products', path: '/products' },
+  { name: 'Payments', path: '/payments' },
+  { name: 'Messages', path: '/messages' },
+  { name: 'Activities', path: '/activities' },
+  { name: 'Analytics', path: '/analytics' },
+  { name: 'Settings', path: '/settings' },
+];
+
 const Header = ({ toggleSidebar, isMobile }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  
+  const location = useLocation();
+
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
+
+  const currentPage = navItems.find(item => location.pathname.startsWith(item.path))?.name || 'Dashboard';
 
   return (
     <header className="header">
@@ -25,10 +36,10 @@ const Header = ({ toggleSidebar, isMobile }) => {
               onClick={toggleSidebar}
               aria-label="Toggle menu"
             >
-              <Menu size={20} color='#000'/>
+              <Menu size={20} color='#000' />
             </button>
           )}
-          <h1>Products</h1>
+          <h1>{currentPage}</h1>
         </div>
 
         {/* Right section with search and user info */}
@@ -64,4 +75,3 @@ const Header = ({ toggleSidebar, isMobile }) => {
 };
 
 export default Header;
-

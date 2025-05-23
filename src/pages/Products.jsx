@@ -7,9 +7,9 @@ import ProductCard from '../components/ProductCard';
 import AddProductModal from '../components/AddProductModal';
 import ProductDetails from '../components/ProductDetails';
 
-import DeleteProductModal from '../components/DeleteProductModal';
-
 import EditProductModal from '../components/EditModal';
+import SearchBar from '../components/SearchBar';
+import ConfirmActionModal from '../components/ConfirmActionModal';
 
 
 const ProductsPage = () => {
@@ -89,26 +89,7 @@ const handleConfirm = () => {
   {!isAddModalOpen && !isViewModal && !isEditModal && (
     <>
       <div className="search-filter-section">
-        <div className="filter-container">
-          <div className="search-box">
-            <Search size={16} className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="Search for anything" 
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="search-input"
-            />
-          </div>
-
-          <button 
-            className="filter-button"
-            onClick={toggleFilter}
-          >
-            <SlidersHorizontal size={16} />
-            <span>Filter by</span>
-          </button>
-        </div>
+        <SearchBar onSearch={handleSearchChange} onFilter={toggleFilter} searchTerm={searchTerm}/>
 
         <button 
           className="add-product-button" 
@@ -141,14 +122,28 @@ const handleConfirm = () => {
   )}
 
 
-  {isDeleteModal && (
-    <DeleteProductModal 
-      onConfirm={handleConfirm} 
-      isOpen={isDeleteModal} 
-      onClose={() => setIsDeleteModal(false)} 
-      product={mockProduct} 
-    />
-  )}
+
+  {isDeleteModal && <ConfirmActionModal
+  isOpen={isDeleteModal}
+  onClose={() => setIsDeleteModal(false)}
+
+  title="Confirm Delete"
+  message={
+    <>Are you sure you want to delete <strong>{products.name}</strong>?</>
+  }
+
+>
+
+     <div className="form-actions">
+          <button type="button" className="confirm-button" onClick={handleConfirm}>
+            Delete Product 
+          </button>
+          <button type="button" className="cancel-button" onClick={() => setIsDeleteModal(false)}>
+            Cancel
+          </button>
+        </div>
+</ConfirmActionModal>
+}
 </div>
 
 
