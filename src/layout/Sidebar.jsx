@@ -19,7 +19,7 @@ const Sidebar = ({ isOpen }) => {
 
   // Define sidebar navigation items
   const navItems = [
-    { name: 'Dashboard Overview', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
+    { name: 'Dashboard Overview', icon: <LayoutDashboard size={20} />, path: '/' },
     { name: 'Orders', icon: <ShoppingBag size={20} />, path: '/orders' },
     { name: 'Products', icon: <ShoppingBag size={20} />, path: '/products' },
     { name: 'Payments', icon: <CreditCard size={20} />, path: '/payments' },

@@ -33,3 +33,17 @@
   font-weight: 500;
   color: #333;
 }
+/* Add these styles to your InfoCard.css file */
+.info-value.email {
+  color: #F93A01;
+  text-decoration: underline;
+}
+
+.info-value.phone {
+  color: #F93A01;
+  font-weight: 500;
+}
+
+.info-value.email:hover {
+  color: #e03000;
+}

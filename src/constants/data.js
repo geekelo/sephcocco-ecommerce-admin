@@ -133,6 +133,8 @@ Perfect for home offices, gaming setups, or workspaces. Built with durability an
       date: '12/06/2025',
       // Additional properties needed for OrderSummary
       customerName: 'Mark Lee',
+       customerEmail: "john.doe@email.com", 
+
       phoneNumber: '+2476936374',
       orderDate: '12/06/2025',
       paymentMethod: 'Bank Transfer',
@@ -166,6 +168,7 @@ Perfect for home offices, gaming setups, or workspaces. Built with durability an
       amount: 'N42,000', 
       date: '11/06/2025',
       customerName: 'Sarah Smith',
+        customerEmail: "john.doe@email.com", 
       phoneNumber: '+2473214567',
       orderDate: '11/06/2025',
       paymentMethod: 'Card Payment',
@@ -199,6 +202,7 @@ Perfect for home offices, gaming setups, or workspaces. Built with durability an
       amount: 'N35,000', 
       date: '10/06/2025',
       customerName: 'Alex Johnson',
+        customerEmail: "john.doe@email.com", 
       phoneNumber: '+2479876543',
       orderDate: '10/06/2025',
       paymentMethod: 'Cash on Delivery',
@@ -235,4 +239,94 @@ Perfect for home offices, gaming setups, or workspaces. Built with durability an
       ]
     },
     // You can add the rest of your sample data here
+  ];
+
+  // Sample data for charts
+export  const performanceData = [
+    { name: 'Jan', value: 20 },
+    { name: 'Feb', value: 45 },
+    { name: 'Mar', value: 28 },
+    { name: 'Apr', value: 80 },
+    { name: 'May', value: 35 },
+    { name: 'Jun', value: 65 },
+    { name: 'Jul', value: 40 },
+    { name: 'Aug', value: 120 },
+    { name: 'Sep', value: 30 },
+    { name: 'Oct', value: 50 },
+    { name: 'Nov', value: 25 },
+    { name: 'Dec', value: 35 }
+  ];
+  
+ export const paymentsData = [
+    { name: 'Jan', value: 2000 },
+    { name: 'Feb', value: 3000 },
+    { name: 'Mar', value: 4500 },
+    { name: 'Apr', value: 3800 },
+    { name: 'May', value: 5200 },
+    { name: 'Jun', value: 6000 }
+  ];
+  
+  // Sample product data
+ export const topSellingProducts = [
+    {
+      id: 1,
+      name: "Chicken Shawarma",
+      image: "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=150&h=150&fit=crop&crop=center",
+      price: "$120.00",
+      rating: 4.5,
+      stockCount: 15,
+      stockStatus: "In Stock"
+    },
+    {
+      id: 2,
+      name: "Chicken Shawarma",
+      image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=150&h=150&fit=crop&crop=center",
+      price: "$120.00",
+      rating: 4.5,
+      stockCount: 10,
+      stockStatus: "In Stock"
+    },
+    {
+      id: 3,
+      name: "Chicken Shawarma",
+      image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=150&h=150&fit=crop&crop=center",
+      price: "$120.00",
+      rating: 4.5,
+      stockCount: 8,
+      stockStatus: "In Stock"
+    },
+    {
+      id: 4,
+      name: "Chicken Shawarma",
+      image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=150&h=150&fit=crop&crop=center",
+      price: "$120.00",
+      rating: 4.5,
+      stockCount: 12,
+      stockStatus: "In Stock"
+    }
+  ];
+  
+  // Unresolved chats data
+ export const unresolvedChats = [
+    {
+      id: 1,
+      name: "Alex Johnson",
+      message: "Haven't received my order yet.",
+      time: "10 mins ago",
+      status: "Reply now"
+    },
+    {
+      id: 2,
+      name: "Alex Johnson",
+      message: "Haven't received my order yet.",
+      time: "12 mins ago",
+      status: "Reply now"
+    },
+    {
+      id: 3,
+      name: "Alex Johnson",
+      message: "Haven't received my order yet.",
+      time: "15 mins ago",
+      status: "Reply now"
+    }
   ];

@@ -8,6 +8,89 @@ import ProductDetails from "../components/ProductDetails";
 import PaymentSummary from "../components/PaymentSummary";
 import ConfirmActionModal from "../components/ConfirmActionModal";
 import UpdateOrderStatusModal from "../components/UpdateOrderStatusModal";
+import { Mail, X } from 'lucide-react';
+
+// Email Modal Component for Payment Page
+const EmailModal = ({ isOpen, onClose, customerName, customerEmail }) => {
+  const [subject, setSubject] = useState('');
+  const [description, setDescription] = useState('');
+
+  const handleSendEmail = () => {
+    // Here you would typically integrate with your email service
+    console.log('Sending email to:', customerEmail);
+    console.log('Subject:', subject);
+    console.log('Description:', description);
+    
+    // Reset form and close modal
+    setSubject('');
+    setDescription('');
+    onClose();
+    
+    // Show success message (you could add a toast notification here)
+    alert('Email sent successfully!');
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay-confirm">
+      <div className="confirm-action-modal email-modal">
+        <div className="modal-header-confirm">
+          <h2>Send Email</h2>
+          <button className="close-button-confirm" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="email-modal-content">
+          <div className="customer-info">
+            <p><strong>To:</strong> {customerName}</p>
+            <p><strong>Email:</strong> {customerEmail}</p>
+          </div>
+          
+          <div className="email-form">
+            <div className="form-group">
+              <label htmlFor="subject">Subject:</label>
+              <input
+                type="text"
+                id="subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Enter email subject"
+                className="email-input"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="description">Description:</label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter email message"
+                rows="5"
+                className="email-textarea"
+              />
+            </div>
+          </div>
+          
+          <div className="form-actions">
+            <button 
+              className="confirm-button"
+              onClick={handleSendEmail}
+              disabled={!subject.trim() || !description.trim()}
+            >
+              Send Email
+            </button>
+            <button className="cancel-button" onClick={onClose}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const PaymentPage = () => {
   // Table column configuration for payments
@@ -25,6 +108,7 @@ const PaymentPage = () => {
     order.payments.map(payment => ({
       ...payment,
       customerName: order.customerName,
+      customerEmail: order.customerEmail, // Added customer email
       orderId: order.id,
       phoneNumber: order.phoneNumber,
       orderDate: order.orderDate,
@@ -45,6 +129,7 @@ const PaymentPage = () => {
   const [isSuccessModal, setIsSuccessModal] = useState(false);
   const [isUpdatePaymentStatusModal, setIsUpdatePaymentStatusModal] = useState(false);
   const [isDiscardPaymentModal, setIsDiscardPaymentModal] = useState(false);
+  const [isEmailModal, setIsEmailModal] = useState(false); // Added email modal state
   
   const [selectedPayment, setSelectedPayment] = useState(null);
 
@@ -129,6 +214,15 @@ const PaymentPage = () => {
     setIsUpdatePaymentStatusModal(false);
   };
 
+  // Handler for sending email
+  const handleSendEmail = () => {
+    if (selectedPayment?.customerEmail) {
+      setIsEmailModal(true);
+    } else {
+      alert('Customer email is not available for this payment.');
+    }
+  };
+
   return (
     <div className="order-page">
       <SearchBar
@@ -145,7 +239,7 @@ const PaymentPage = () => {
         />
       </div>
 
-      {/* Payment Summary Modal */}
+      {/* Payment Summary Modal - Enhanced with Email Button */}
       {isPaymentSummaryModal && (
         <PaymentSummary
           order={selectedPayment}
@@ -156,6 +250,7 @@ const PaymentPage = () => {
           onEdit={handleEditProduct}
           onDelete={handleDeleteProduct}
           onView={handleViewProduct}
+          onSendEmail={handleSendEmail} // Pass email handler
         />
       )}
 
@@ -186,6 +281,16 @@ const PaymentPage = () => {
           onClose={() => setIsUpdatePaymentStatusModal(false)}
           onConfirm={handleConfirmStatusUpdate}
           currentStatus={selectedPayment?.status}
+        />
+      )}
+
+      {/* Email Modal */}
+      {isEmailModal && (
+        <EmailModal
+          isOpen={isEmailModal}
+          onClose={() => setIsEmailModal(false)}
+          customerName={selectedPayment?.customerName}
+          customerEmail={selectedPayment?.customerEmail}
         />
       )}
 

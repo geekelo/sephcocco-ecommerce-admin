@@ -299,3 +299,29 @@
     width: 100%;
   }
 }
+
+.email-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #F93A01;
+  background: white;
+  border: 1px solid #F93A01;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.email-button:hover:not(:disabled) {
+  background-color: rgba(249, 58, 1, 0.05);
+}
+
+.email-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: #999;
+  border-color: #999;
+}

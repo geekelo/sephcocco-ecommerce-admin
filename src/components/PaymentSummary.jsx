@@ -1,18 +1,19 @@
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Mail } from 'lucide-react';
 import ProductCard from './ProductCard';
 import '../styles/OrderSummary.css';
 import InfoCard from './InfoCard';
 
-const PaymentSummary = ({ 
-  order, 
-  onBack, 
-  onViewOrder, 
-  onVerify, 
-  onDiscard, 
-  onEdit, 
-  onDelete, 
-  onView 
+const PaymentSummary = ({
+  order,
+  onBack,
+  onViewOrder,
+  onVerify,
+  onDiscard,
+  onEdit,
+  onDelete,
+  onView,
+  onSendEmail // Added email handler prop
 }) => {
   // For payment page, 'order' is actually a payment object with additional order info
   const {
@@ -22,6 +23,7 @@ const PaymentSummary = ({
     status: paymentStatus,
     date: paymentDate,
     customerName,
+    customerEmail, // Added customer email
     orderId,
     phoneNumber,
     orderDate,
@@ -36,11 +38,10 @@ const PaymentSummary = ({
     name: product.name,
     image: product.image,
     price: product.price,
-    rating: product.quantity, 
+    rating: product.quantity,
     stockCount: product.stockCount,
     stockStatus: "In stock"
   })) || [];
-
 
   const leftCardItems = [
     { label: "Payment ID:", value: paymentId },
@@ -51,8 +52,17 @@ const PaymentSummary = ({
 
   const rightCardItems = [
     { label: "Customer Name:", value: customerName },
+    { 
+      label: "Customer Email:", 
+      value: customerEmail || "Not provided",
+      isEmail: true 
+    },
+    { 
+      label: "Phone Number:", 
+      value: phoneNumber || "Not provided",
+      isPhone: true 
+    },
     { label: "Order ID:", value: orderId },
-    { label: "Payment Method:", value: method || paymentMethod },
     { label: "Payment Status:", value: paymentStatus }
   ];
 
@@ -61,18 +71,30 @@ const PaymentSummary = ({
       <div className="add-product-modal">
         <div className="modal-header">
           <h2>Payment Summary ({paymentId})</h2>
-          <button className="back-button" onClick={onBack}>
-            <ArrowLeft size={16} />
-            Go Back
-          </button>
+          <div className="header-actions">
+            {/* Email button */}
+            <button 
+              className="email-button" 
+              onClick={onSendEmail}
+              disabled={!customerEmail}
+              title={!customerEmail ? "Customer email not available" : "Send email to customer"}
+            >
+              <Mail size={16} />
+              Send Email
+            </button>
+            <button className="back-button" onClick={onBack}>
+              <ArrowLeft size={16} />
+              Go Back
+            </button>
+          </div>
         </div>
-        
+                
         <div className='verify'>
           <button className="update-button add-button" onClick={onVerify}>
             Verify Payment
           </button>
         </div>
-        
+                
         <div className="order-details">
           <div className="order-info-row">
             <InfoCard items={leftCardItems} />

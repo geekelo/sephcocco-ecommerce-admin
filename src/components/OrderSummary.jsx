@@ -1,19 +1,35 @@
-import React from 'react';
-import { ArrowLeft } from 'lucide-react';
-import ProductCard from './ProductCard'; 
-import OrderTable from './OrderTable'; 
+import React, { useState } from 'react';
+import { ArrowLeft, Mail, Phone, X } from 'lucide-react';
+import ProductCard from './ProductCard';
+import OrderTable from './OrderTable';
 import '../styles/OrderSummary.css';
 import InfoCard from './InfoCard';
+import EmailModal from './EmailModal';
 
-const OrderSummary = ({ order, onBack,onViewPayment, onUpdateStatus, onDiscard, onEdit,onDelete,onView }) => {
-  const { 
-    id, 
-    customerName, 
-    phoneNumber, 
-    orderDate, 
-    status, 
-    paymentMethod, 
-    paymentStatus, 
+
+
+
+const OrderSummary = ({ 
+  order, 
+  onBack, 
+  onViewPayment, 
+  onUpdateStatus, 
+  onDiscard, 
+  onEdit, 
+  onDelete, 
+  onView 
+}) => {
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+
+  const {
+    id,
+    customerName,
+    customerEmail, // Added customer email
+    phoneNumber,
+    orderDate,
+    status,
+    paymentMethod,
+    paymentStatus,
     notes,
     products,
     payments
@@ -29,11 +45,20 @@ const OrderSummary = ({ order, onBack,onViewPayment, onUpdateStatus, onDiscard, 
     stockStatus: "In stock"
   }));
 
-  // Prepare info card data
+  // Prepare info card data with email
   const leftCardItems = [
     { label: "Order ID:", value: id },
     { label: "Customer Name:", value: customerName },
-    { label: "Phone Number:", value: phoneNumber },
+    { 
+      label: "Customer Email:", 
+      value: customerEmail || "Not provided",
+      isEmail: true 
+    },
+    { 
+      label: "Phone Number:", 
+      value: phoneNumber,
+      isPhone: true 
+    },
     { label: "Order Date:", value: orderDate }
   ];
 
@@ -65,59 +90,89 @@ const OrderSummary = ({ order, onBack,onViewPayment, onUpdateStatus, onDiscard, 
     { id: 'action', label: 'Action', className: 'action' }
   ];
 
+  const handleSendEmail = () => {
+    if (customerEmail) {
+      setIsEmailModalOpen(true);
+    } else {
+      alert('Customer email is not available for this order.');
+    }
+  };
+
   return (
-    <div className="modal-overlay">
-      <div className="add-product-modal">
-        <div className="modal-header">
-          <h2>Order Summary(#{id})</h2>
-          <button className="back-button" onClick={onBack}>
-            <ArrowLeft size={16} />
-            Go Back
-          </button>
-        </div>
-
-        <div className="order-details">
-          <div className="order-info-row">
-            <InfoCard items={leftCardItems} />
-            <InfoCard items={rightCardItems} />
-          </div>
-
-          <div className="ordered-products-section">
-            <h3>Ordered Products</h3>
-            <div className="products-grid">
-              {formattedProducts.map((product, index) => (
-                <ProductCard
-                  key={index}
-                  product={product}
-                  onView={onView}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              ))}
+    <>
+      <div className="modal-overlay">
+        <div className="add-product-modal">
+          <div className="modal-header">
+            <h2>Order Summary(#{id})</h2>
+            <div className="header-actions">
+              {/* Email button */}
+              <button 
+                className="email-button" 
+                onClick={handleSendEmail}
+                disabled={!customerEmail}
+                title={!customerEmail ? "Customer email not available" : "Send email to customer"}
+              >
+                <Mail size={16} />
+                Send Email
+              </button>
+              <button className="back-button" onClick={onBack}>
+                <ArrowLeft size={16} />
+                Go Back
+              </button>
             </div>
           </div>
 
-          <div className="linked-payment-section">
-            <h3>Linked Payment</h3>
-            <OrderTable 
-              orders={formattedPayments} 
-              columns={paymentColumns}
-              keyField="id"
-              onViewOrder={onViewPayment}
-            />
-          </div>
+          <div className="order-details">
+            <div className="order-info-row">
+              <InfoCard items={leftCardItems} />
+              <InfoCard items={rightCardItems} />
+            </div>
 
-          <div className="form-actions">
-            <button className="update-button add-button" onClick={onUpdateStatus}>
-              Update Order Status
-            </button>
-            <button className="discard-button cancel-button" onClick={onDiscard}>
-              Discard Order
-            </button>
+            <div className="ordered-products-section">
+              <h3>Ordered Products</h3>
+              <div className="products-grid">
+                {formattedProducts.map((product, index) => (
+                  <ProductCard
+                    key={index}
+                    product={product}
+                    onView={onView}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="linked-payment-section">
+              <h3>Linked Payment</h3>
+              <OrderTable
+                orders={formattedPayments}
+                columns={paymentColumns}
+                keyField="id"
+                onViewOrder={onViewPayment}
+              />
+            </div>
+
+            <div className="form-actions">
+              <button className="update-button add-button" onClick={onUpdateStatus}>
+                Update Order Status
+              </button>
+              <button className="discard-button cancel-button" onClick={onDiscard}>
+                Discard Order
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Email Modal */}
+      <EmailModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        customerName={customerName}
+        customerEmail={customerEmail}
+      />
+    </>
   );
 };
 

@@ -20,9 +20,9 @@
   flex: 0.7;
 }
 
-.customer, .status, .amount, .date {
+/* .customer, .status, .amount, .date {
   flex: 1;
-}
+} */
 
 .action {
   flex: 0.7;
