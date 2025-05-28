@@ -15,8 +15,9 @@
 .chat-item {
   padding: 16px;
   border-radius: 8px;
-  background: #f8f9fa;
-  border-left: 3px solid #FF6B35;
+  background: #FAFBFD;
+  border:1px solid #D7DAF3;
+
 }
 
 .chat-header {

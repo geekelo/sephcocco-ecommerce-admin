@@ -1,9 +1,12 @@
 /* Dashboard Layout */
 .dashboard {
-  padding: 24px;
-  background-color: #f8f9fa;
-  min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+background-color: #ffffff;
+ 
+
+  overflow: hidden;
+  max-width: 100%;
+  color: #000;
+  padding: 16px 20px;
 }
 
 
@@ -41,12 +44,12 @@
   background: white;
 }
 
-.dash-line {
+/* .dash-line {
   position: absolute;
   width: 12px;
   height: 1px;
   background: #FF6B35;
-  top: 50%;
+  top: 40px;
   transform: translateY(-50%);
   background-image: repeating-linear-gradient(
     to right,
@@ -55,7 +58,7 @@
     transparent 2px,
     transparent 4px
   );
-}
+} */
 
 .center-dot {
   width: 4px;
@@ -66,53 +69,27 @@
 }
 
 /* Circular progress for unresolved chats */
-.circular-progress {
-  width: 80px;
-  height: 80px;
+.pie-chart-container {
+  width: 48px;
+  height: 48px;
   position: relative;
+}
+
+.circular-progress {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(#d63324 0% 30%, rgba(255, 255, 255, 0.15) 30% 100%);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .progress-ring {
-  width: 60px;
-  height: 60px;
-  border: 6px solid rgba(255, 255, 255, 0.3);
+  width: 36px;
+  height: 36px;
+  background-color: #f85a40;
   border-radius: 50%;
-  position: relative;
-}
-
-.progress-arc {
-  position: absolute;
-  top: -6px;
-  left: -6px;
-  width: 60px;
-  height: 60px;
-  border: 6px solid transparent;
-  border-top: 6px solid white;
-  border-right: 6px solid white;
-  border-bottom: 6px solid white;
-  border-radius: 50%;
-  transform: rotate(-90deg);
-  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 50% 50%);
-}
-
-/* Pie chart container */
-.pie-chart-container {
-  position: relative;
-  width: 80px;
-  height: 80px;
-}
-
-.pie-center-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
 }
 
 /* Main Content */
@@ -136,6 +113,13 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+
+
+}
+.section-header.product {
+  padding-bottom: 30px;
+  border-bottom: 1px solid #F93A0130;
+
 }
 
 .section-header h2,
@@ -225,6 +209,10 @@
     margin-left: 0;
     margin-top: 16px;
   }
+}
+
+.chat-sidebar, .chart-section{
+  border: 1px solid #F93A0130;
 }
 
 @media (max-width: 480px) {

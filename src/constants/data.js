@@ -122,7 +122,40 @@ Perfect for home offices, gaming setups, or workspaces. Built with durability an
   ],
 
 };
+export const messages = [
+  { 
+    id: 'MSG001',
+    product: 'Chicken',
+    customer: 'Jane Roe',
+    status: 'Pending',
+    preview: 'Payment Deline',
 
+  },
+    { 
+    id: 'MSG001',
+    product: 'Chicken',
+    customer: 'Jane Roe',
+    status: 'Pending',
+    preview: 'Payment Deline',
+    
+  },
+    { 
+    id: 'MSG001',
+    product: 'Chicken',
+    customer: 'Jane Roe',
+    status: 'Pending',
+    preview: 'Payment Deline',
+    
+  },
+    { 
+    id: 'MSG001',
+    product: 'Chicken',
+    customer: 'Jane Roe',
+    status: 'Pending',
+    preview: 'Payment Deline',
+    
+  }
+]
 
  export const initialOrders = [
     { 
@@ -256,7 +289,27 @@ export  const performanceData = [
     { name: 'Nov', value: 25 },
     { name: 'Dec', value: 35 }
   ];
-  
+  export const activities = [
+  {
+    id: 1,
+    name: 'Math Quiz Prep',
+    date: 'May 16, 2025',
+    time: '09:22 AM',
+  },
+  {
+    id: 2,
+    name: 'Science Fair Project',
+    date: 'May 16, 2025',
+    time: '09:22 AM',
+  },
+  {
+    id: 3,
+    name: 'History Presentation',
+  date: 'May 16, 2025',
+    time: '09:22 AM',
+  },
+];
+
  export const paymentsData = [
     { name: 'Jan', value: 2000 },
     { name: 'Feb', value: 3000 },

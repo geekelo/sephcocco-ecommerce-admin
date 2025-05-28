@@ -32,7 +32,7 @@ const Sidebar = ({ isOpen }) => {
   // Check if the current path matches an item's path
   const isActive = (path) => {
     return currentPath === path || 
-           (path !== '/dashboard' && currentPath.startsWith(path));
+           (path !== '/' && currentPath.startsWith(path));
   };
 
   return (

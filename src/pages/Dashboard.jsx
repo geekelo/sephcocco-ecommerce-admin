@@ -3,28 +3,80 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieC
 import StatsCard from '../components/StatsCard';
 import ChatItem from '../components/ChatItem';
 import ProductCard from '../components/ProductCard';
-import { paymentsData, performanceData, topSellingProducts, unresolvedChats } from '../constants/data';
+import { mockCategories, mockProduct, paymentsData, performanceData, topSellingProducts, unresolvedChats } from '../constants/data';
 import '../styles/Dashboard.css'
+import ConfirmActionModal from '../components/ConfirmActionModal';
+import UpdateOrderStatusModal from '../components/UpdateOrderStatusModal';
+import EditProductModal from '../components/EditModal';
+import ProductDetails from '../components/ProductDetails';
+import ProgressPie from '../components/ProgressPie';
 
 const DashboardPage = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isEditModal, setIsEditModal] = useState(false);
+  const [isDeleteModal, setIsDeleteModal] = useState(false);
+  const [isViewModal, setIsViewModal] = useState(false);
 
+  const [isVerifyModal, setIsVerifyModal] = useState(false);
+  const [isSuccessModal, setIsSuccessModal] = useState(false);
+  const [isUpdateStatusModal, setIsUpdateStatusModal] = useState(false);
+  const [isDiscardOrderModal, setIsDiscardOrderModal] = useState(false);
+  const [isDiscardPaymentModal, setIsDiscardPaymentModal] = useState(false)
   const handleProductEdit = (product) => {
+    setIsEditModal(true)
     console.log('Edit product:', product);
   };
 
   const handleProductDelete = (product) => {
     console.log('Delete product:', product);
+    setIsDeleteModal(true)
   };
 
   const handleProductView = (product) => {
-    console.log('View product:', product);
+    setIsViewModal(true)
   };
 
   const handleChatReply = (chat) => {
     console.log('Reply to chat:', chat);
   };
+  const handleConfirm = () => {
+    console.log("Deleting product:", mockProduct.name);
+    setIsDeleteModal(false);
+  };
 
+  const handleVerifyConfirm = () => {
+    console.log("Payment verified successfully");
+    setIsVerifyModal(false);
+    setIsSuccessModal(true);
+  };
+
+
+
+
+ 
+  const handleConfirmStatusUpdate = (newStatus) => {
+    console.log("Updating order status to:", newStatus, "for order:", selectedOrder.id);
+    // Update the order status in your state/backend here
+    // You might want to update the selectedOrder state or refetch data
+  };
+
+  const handleEdit = () => {
+    setIsViewModal(false);
+    setIsDeleteModal(false);
+    setIsEditModal(true);
+  };
+  const handleDelete = () => {
+    setIsViewModal(false);
+    setIsEditModal(false);
+    setIsDeleteModal(true);
+  };
+
+  const handleConfirmDiscardOrder = () => {
+    console.log("Discarding order:", selectedOrder.id);
+    setShowOrderSummary(false);
+    setIsDiscardOrderModal(false);
+    setSelectedOrder(null);
+  };
   // Custom bar shape for the chart
   const CustomBar = (props) => {
     const { fill, ...rest } = props;
@@ -88,20 +140,12 @@ const DashboardPage = () => {
           }
         />
         
-        <StatsCard
-          title="Unresolved Chats"
-          value="15"
-          isOrange={true}
-          icon={
-            <div className="pie-chart-container">
-              <div className="circular-progress">
-                <div className="progress-ring">
-                  <div className="progress-arc"></div>
-                </div>
-              </div>
-            </div>
-          }
-        />
+      <StatsCard
+  title="Unresolved Chats"
+  value="15"
+  isOrange={true}
+  icon={<ProgressPie percentage={25} />} 
+/>
       </div>
 
       {/* Main Content Row */}
@@ -151,7 +195,7 @@ const DashboardPage = () => {
 
       {/* Top Selling Products */}
       <div className="products-section">
-        <div className="section-header">
+        <div className="section-header product">
           <h2>Top selling Products</h2>
         </div>
         <div className="products-grid">
@@ -166,6 +210,119 @@ const DashboardPage = () => {
           ))}
         </div>
       </div>
+       {isViewModal && (
+        <ProductDetails
+          product={mockProduct}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onClose={() => setIsViewModal(false)}
+        />
+      )}
+
+      {/* Edit Product Modal */}
+      {isEditModal && (
+        <EditProductModal
+          isOpen={isEditModal}
+          onClose={() => setIsEditModal(false)}
+          product={mockProduct}
+          categories={mockCategories}
+        />
+      )}
+
+      {/* Update Order Status Modal */}
+      {isUpdateStatusModal && (
+        <UpdateOrderStatusModal
+          isOpen={isUpdateStatusModal}
+          onClose={() => setIsUpdateStatusModal(false)}
+          onConfirm={handleConfirmStatusUpdate}
+          currentStatus={selectedOrder?.status}
+        />
+      )}
+
+      {/* Delete Product Confirmation Modal */}
+      {isDeleteModal && (
+        <ConfirmActionModal
+          isOpen={isDeleteModal}
+          onClose={() => setIsDeleteModal(false)}
+          onConfirm={handleConfirm}
+          type="delete"
+          title="Confirm Delete"
+          message={
+            <>
+              Are you sure you want to delete{" "}
+              <strong>{mockProduct.name}</strong>?
+            </>
+          }
+        />
+      )}
+
+      {/* Discard Order Confirmation Modal */}
+      {isDiscardOrderModal && (
+        <ConfirmActionModal
+          isOpen={isDiscardOrderModal}
+          onClose={() => setIsDiscardOrderModal(false)}
+          onConfirm={handleConfirmDiscardOrder}
+          type="discard"
+          title="Confirm Discard Order"
+          message={
+            <>
+              Are you sure you want to discard order{" "}
+              <strong>#{selectedOrder?.id}</strong>? This action cannot be undone.
+            </>
+          }
+        />
+      )}
+
+      {/* Discard Payment Confirmation Modal */}
+      {isDiscardPaymentModal && (
+        <ConfirmActionModal
+          isOpen={isDiscardPaymentModal}
+          onClose={() => setIsDiscardPaymentModal(false)}
+          onConfirm={handleConfirmDiscardPayment}
+          type="discardPayment"
+          title="Confirm Discard Payment"
+          message={
+            <>
+              Are you sure you want to discard this payment? This action cannot be undone.
+            </>
+          }
+        />
+      )}
+
+      {/* Verify Payment Confirmation Modal */}
+      {isVerifyModal && (
+        <ConfirmActionModal
+          isOpen={isVerifyModal}
+          onClose={() => setIsVerifyModal(false)}
+          onConfirm={handleVerifyConfirm}
+          type="verify"
+          title="Confirm Verification"
+          message={
+            <>
+              Are you sure you want to verify this payment made by{" "}
+              <strong>{selectedOrder?.customerName}</strong> with Payment ID{" "}
+              <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>?
+            </>
+          }
+        />
+      )}
+
+      {/* Success Modal */}
+      {isSuccessModal && (
+        <ConfirmActionModal
+          isOpen={isSuccessModal}
+          onClose={() => setIsSuccessModal(false)}
+          type="success"
+          title="Verification Successful"
+          message={
+            <>
+              You have successfully verified this payment made by{" "}
+              <strong>{selectedOrder?.customerName}</strong> with Payment ID{" "}
+              <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>
+            </>
+          }
+        />
+      )}
     </div>
   );
 };

@@ -23,7 +23,16 @@ const Header = ({ toggleSidebar, isMobile }) => {
     setSearchTerm(e.target.value);
   };
 
-  const currentPage = navItems.find(item => location.pathname.startsWith(item.path))?.name || 'Dashboard';
+const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
+
+const currentPage = navItems.find(
+  item => item.path !== '/' && normalizedPath.startsWith(item.path)
+)?.name || (normalizedPath === '/' ? 'Hello, Welcome Back!' : '');
+
+
+
+console.log('Current path:', location.pathname);
+console.log(navItems.find(item => location.pathname.startsWith(item.path)));
 
   return (
     <header className="header">
