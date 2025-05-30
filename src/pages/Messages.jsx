@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import SearchBar from "../components/SearchBar";
 import OrderTable from "../components/OrderTable";
+import ChatModal from "../components/ChatModal";
 import "../styles/Messages.css";
 import { messages } from "../constants/data";
 
@@ -25,6 +26,7 @@ const MessagesPage = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -37,23 +39,39 @@ const MessagesPage = () => {
   const handleViewMessage = (message) => {
     console.log("Viewing message:", message);
     setSelectedMessage(message);
+    setIsChatModalOpen(true);
+  };
+
+  const closeChatModal = () => {
+    setIsChatModalOpen(false);
+    setSelectedMessage(null);
   };
 
   return (
     <div className="message-page">
-      <SearchBar
-        onSearch={handleSearchChange}
-        onFilter={handleFilter}
-        searchTerm={searchTerm}
-      />
-      <div className="message-container">
-        <OrderTable
-          orders={messageData}
-          columns={messagesColumns}
-          keyField="id"
-          onViewOrder={handleViewMessage}
+      {!isChatModalOpen ? (
+        <>
+          <SearchBar
+            onSearch={handleSearchChange}
+            onFilter={handleFilter}
+            searchTerm={searchTerm}
+          />
+          <div className="message-container">
+            <OrderTable
+              orders={messageData}
+              columns={messagesColumns}
+              keyField="id"
+              onViewOrder={handleViewMessage}
+            />
+          </div>
+        </>
+      ) : (
+        <ChatModal
+          isOpen={isChatModalOpen}
+          onClose={closeChatModal}
+          selectedMessage={selectedMessage}
         />
-      </div>
+      )}
     </div>
   );
 };

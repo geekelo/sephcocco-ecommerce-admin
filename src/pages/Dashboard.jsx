@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
 import StatsCard from '../components/StatsCard';
 import ChatItem from '../components/ChatItem';
 import ProductCard from '../components/ProductCard';
@@ -50,10 +50,6 @@ const DashboardPage = () => {
     setIsSuccessModal(true);
   };
 
-
-
-
- 
   const handleConfirmStatusUpdate = (newStatus) => {
     console.log("Updating order status to:", newStatus, "for order:", selectedOrder.id);
     // Update the order status in your state/backend here
@@ -77,11 +73,22 @@ const DashboardPage = () => {
     setIsDiscardOrderModal(false);
     setSelectedOrder(null);
   };
-  // Custom bar shape for the chart
-  const CustomBar = (props) => {
-    const { fill, ...rest } = props;
-    return <Bar {...rest} fill={rest.payload?.name === 'Aug' ? '#FF6B35' : '#FFE5E0'} />;
-  };
+
+  // Payment Tracker Component
+  const PaymentTracker = () => (
+    <div className="payment-tracker">
+      <div className="tracker-line"></div>
+      <div className="tracker-dots">
+        <div className="tracker-dot active"></div>
+        <div className="tracker-dot active"></div>
+        <div className="tracker-dot"></div>
+        <div className="tracker-dot"></div>
+      </div>
+      <div className="tracker-circle">
+        <div className="inner-dot"></div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="dashboard">
@@ -130,22 +137,17 @@ const DashboardPage = () => {
                   />
                 </LineChart>
               </ResponsiveContainer>
-              <div className="big-circle-container">
-                <div className="large-circle">
-                  <div className="dash-line"></div>
-                  <div className="center-dot"></div>
-                </div>
-              </div>
+              <PaymentTracker />
             </div>
           }
         />
         
-      <StatsCard
-  title="Unresolved Chats"
-  value="15"
-  isOrange={true}
-  icon={<ProgressPie percentage={25} />} 
-/>
+        <StatsCard
+          title="Unresolved Chats"
+          value="15"
+          isOrange={true}
+          icon={<ProgressPie percentage={25} size={60} strokeWidth={6} />} 
+        />
       </div>
 
       {/* Main Content Row */}
@@ -168,6 +170,12 @@ const DashboardPage = () => {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#888' }}
+                />
+                <ReferenceLine 
+                  y={performanceData.find(item => item.name === 'Aug')?.value || 80} 
+                  stroke="#f0f0f0" 
+                  strokeDasharray="4 4"
+                  label={{ value: "", position: "insideTopRight", fill: "#FF6B35", fontSize: 12, fontWeight: 600 }}
                 />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                   {performanceData.map((entry, index) => (
