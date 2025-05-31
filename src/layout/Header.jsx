@@ -5,7 +5,7 @@ import '../styles/Header.css';
 import Image from '../assets/profile.png';
 
 const navItems = [
-  { name: 'Dashboard Overview', path: '/dashboard' },
+  { name: 'Hello, Welcome Back!', path: '/' },
   { name: 'Orders', path: '/orders' },
   { name: 'Products', path: '/products' },
   { name: 'Payments', path: '/payments' },
@@ -23,7 +23,16 @@ const Header = ({ toggleSidebar, isMobile }) => {
     setSearchTerm(e.target.value);
   };
 
-  const currentPage = navItems.find(item => location.pathname.startsWith(item.path))?.name || 'Dashboard';
+const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
+
+const currentPage = navItems.find(
+  item => item.path !== '/' && normalizedPath.startsWith(item.path)
+)?.name || (normalizedPath === '/' ? 'Hello, Welcome Back!' : '');
+
+
+
+console.log('Current path:', location.pathname);
+console.log(navItems.find(item => location.pathname.startsWith(item.path)));
 
   return (
     <header className="header">
@@ -44,7 +53,7 @@ const Header = ({ toggleSidebar, isMobile }) => {
 
         {/* Right section with search and user info */}
         <div className="header-actions">
-          <div className="search-container">
+          {/* <div className="search-container">
             <Search size={16} className="search-icon" />
             <input 
               type="text" 
@@ -53,7 +62,7 @@ const Header = ({ toggleSidebar, isMobile }) => {
               onChange={handleSearchChange}
               className="search-input"
             />
-          </div>
+          </div> */}
           
           <div className="user-section">
             <div className="notification-badge">

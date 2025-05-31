@@ -1,6 +1,6 @@
 import { Suspense, useState, } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import {  LoginPage, OrderPage, PaymentPage, StoresPage } from "./LazyLoader";
+import {  ActivitiesPage, DashboardPage, LoginPage, MessagesPage, OrderPage, PaymentPage, StoresPage } from "./LazyLoader";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { SplashScreen } from "../components/SplashScreen";
 import Layout from "../layout/Layout";
@@ -26,16 +26,18 @@ const AppRouter = () => {
           ) : (
             <Suspense fallback={<SplashScreen />}>
               <Routes>
-                <Route path="/" element={<Navigate to="/products" replace />} />
+                <Route path="/" element={<Navigate to="/" replace />} />
        
                   <Route path="login" element={<LoginPage />} />
                   <Route path="store" element={<StoresPage />} />
                   <Route path="/" element={<Layout />}>
-     
-          <Route index element={<ProductsPage />} />
+       
+          <Route index element={<DashboardPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="orders" element={<OrderPage />} />
             <Route path="payments" element={<PaymentPage />} />
+                        <Route path="activities" element={<ActivitiesPage />} />
+                          <Route path="messages" element={<MessagesPage />} />
         </Route>
                 {/* Redirect unknown routes to home */}
                 <Route path="*" element={<Navigate to="/" replace />} />

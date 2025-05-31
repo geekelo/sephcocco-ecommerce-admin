@@ -1,0 +1,232 @@
+/* Dashboard Layout */
+.dashboard {
+background-color: #ffffff;
+ 
+
+  overflow: hidden;
+  max-width: 100%;
+  color: #000;
+  padding: 16px 20px;
+}
+
+
+
+/* Mini trend bars */
+.trend-chart {
+  display: flex;
+  align-items: end;
+  height: 50px;
+  width: 100px;
+}
+
+/* Payment trend line chart */
+.payment-trend {
+  position: relative;
+  width: 100px;
+  height: 50px;
+}
+
+.big-circle-container {
+  position: absolute;
+  top: 0px;
+  right: 5px;
+}
+
+.large-circle {
+  width: 30px;
+  height: 30px;
+  border: 2px solid #FF6B35;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+}
+
+/* .dash-line {
+  position: absolute;
+  width: 12px;
+  height: 1px;
+  background: #FF6B35;
+  top: 40px;
+  transform: translateY(-50%);
+  background-image: repeating-linear-gradient(
+    to right,
+    #FF6B35 0px,
+    #FF6B35 2px,
+    transparent 2px,
+    transparent 4px
+  );
+} */
+
+.center-dot {
+  width: 4px;
+  height: 4px;
+  background: #FF6B35;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* Circular progress for unresolved chats */
+.pie-chart-container {
+  width: 48px;
+  height: 48px;
+  position: relative;
+}
+
+.circular-progress {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(#d63324 0% 30%, rgba(255, 255, 255, 0.15) 30% 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring {
+  width: 36px;
+  height: 36px;
+  background-color: #f85a40;
+  border-radius: 50%;
+}
+
+/* Main Content */
+.main-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* Chart Section */
+.chart-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+
+}
+.section-header.product {
+  padding-bottom: 30px;
+  border-bottom: 1px solid #F93A0130;
+
+}
+
+.section-header h2,
+.section-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.see-all {
+  font-size: 14px;
+  color: #FF6B35;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.see-all:hover {
+  text-decoration: underline;
+}
+
+.chart-container {
+  margin-top: 16px;
+}
+
+/* Chat Sidebar */
+
+/* Products Section */
+.products-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+
+
+
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 16px;
+  }
+  
+  .stats-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .main-content {
+    gap: 16px;
+  }
+  
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .stats-trend,
+  .stats-icon {
+    margin-left: 0;
+    margin-top: 16px;
+  }
+}
+
+.chat-sidebar, .chart-section{
+  border: 1px solid #F93A0130;
+}
+
+@media (max-width: 480px) {
+  .chart-section,
+  .chat-sidebar,
+  .products-section {
+    padding: 16px;
+  }
+  
+  .product-actions {
+    flex-direction: column;
+  }
+  
+  .action-btn {
+    width: 100%;
+  }
+}

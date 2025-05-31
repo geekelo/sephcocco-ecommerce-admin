@@ -1,0 +1,18 @@
+.message-page {
+  background-color: #ffffff;
+ 
+
+  overflow: hidden;
+  max-width: 100%;
+  color: #000;
+  padding: 16px 20px;
+}
+.message-container {
+    margin-top: 35px;
+}
+@media screen and (max-width: 768px) {
+  .messages-page {
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

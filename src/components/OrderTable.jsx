@@ -26,7 +26,7 @@ const OrderTable = ({ orders, columns = [], keyField = 'id', onViewOrder }) => {
         ))}
       </div>
       <div className="order-table-body">
-        {orders.map((order, index) => (
+        {orders?.map((order, index) => (
           <OrderRow 
             key={order[keyField] || index} 
             order={order} 

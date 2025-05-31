@@ -1,0 +1,158 @@
+/* Header actions container */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Email button styling */
+.email-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #F93A01;
+  background: white;
+  border: 1px solid #F93A01;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.email-button:hover:not(:disabled) {
+  background-color: rgba(249, 58, 1, 0.05);
+}
+
+.email-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: #999;
+  border-color: #999;
+}
+
+/* Email modal specific styling */
+.email-modal {
+  width: 600px;
+  max-width: 90%;
+}
+
+.email-modal-content {
+  padding: 20px 0;
+}
+
+.customer-info {
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  border-left: 4px solid #F93A01;
+}
+
+.customer-info p {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.customer-info p:last-child {
+  margin-bottom: 0;
+}
+
+.email-form {
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: #333;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.email-input,
+.email-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.email-input:focus,
+.email-textarea:focus {
+  outline: none;
+  border-color: #F93A01;
+  box-shadow: 0 0 0 2px rgba(249, 58, 1, 0.1);
+}
+
+.email-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+/* InfoCard enhancements for email and phone */
+.info-item-value.email {
+  color: #F93A01;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.info-item-value.phone {
+  color: #F93A01;
+  font-weight: 500;
+}
+
+.info-item-value.email:hover {
+  color: #e03000;
+}
+
+/* Responsive adjustments for email modal */
+@media (max-width: 768px) {
+  .header-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  
+  .email-button {
+    width: auto;
+    min-width: 120px;
+  }
+  
+  .email-modal {
+    width: 95%;
+    margin: 1rem auto;
+  }
+  
+  .customer-info {
+    padding: 12px;
+  }
+  
+  .form-group {
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .email-button,
+  .back-button {
+    flex: 1;
+    justify-content: center;
+  }
+}

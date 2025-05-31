@@ -1,0 +1,60 @@
+.chat-sidebar {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  height: fit-content;
+}
+
+.chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chat-item {
+  padding: 16px;
+  border-radius: 8px;
+  background: #FAFBFD;
+  border:1px solid #D7DAF3;
+
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.chat-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.chat-time {
+  font-size: 12px;
+  color: #888;
+}
+
+.chat-message {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.reply-btn {
+  background: none;
+  border: none;
+  color: #FF6B35;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0;
+}
+
+.reply-btn:hover {
+  text-decoration: underline;
+}
