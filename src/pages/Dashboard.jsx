@@ -122,7 +122,7 @@ const DashboardPage = () => {
         
         <StatsCard
           title="Total Payments"
-          value="$6000"
+          value="₦6000"
           trend={
             <div className="payment-trend">
               <ResponsiveContainer width={100} height={50}>
