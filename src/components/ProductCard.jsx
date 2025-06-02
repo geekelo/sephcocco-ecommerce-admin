@@ -35,7 +35,7 @@ const ProductCard = ({ product,  onView, onEdit, onDelete}) => {
             </div>
           </div>
 
-          <div className="product-price">${price}</div>
+          <div className="product-price">₦{price}</div>
 
           <div className="product-stock">
             <div className="stock-info">{stockStatus} · {stockCount} items</div>

@@ -54,7 +54,7 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
               : 'Out of stock'}
           </p>
           
-          <div className="product-price">${product.price.toFixed(2)}</div>
+          <div className="product-price">₦{product.price.toFixed(2)}</div>
 
           <div className="product-description">
             <h3>Product Description</h3>
