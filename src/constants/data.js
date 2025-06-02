@@ -11,7 +11,7 @@ export const sampleProducts = [
       id: 1,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -20,7 +20,7 @@ export const sampleProducts = [
       id: 2,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -29,7 +29,7 @@ export const sampleProducts = [
       id: 3,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -38,7 +38,7 @@ export const sampleProducts = [
       id: 4,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -47,7 +47,7 @@ export const sampleProducts = [
       id: 5,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -56,7 +56,7 @@ export const sampleProducts = [
       id: 6,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -65,7 +65,7 @@ export const sampleProducts = [
       id: 7,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -74,7 +74,7 @@ export const sampleProducts = [
       id: 8,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -178,7 +178,7 @@ export const messages = [
           id: 1,
           name: 'Chicken Shawarma',
           image: ProductImage,
-          price: 120.00,
+          price:120.00,
           quantity: 3,
           stockCount: 12,
           stockStatus: 'In stock'
@@ -283,7 +283,7 @@ export  const performanceData = [
     { name: 'May', value: 35 },
     { name: 'Jun', value: 65 },
     { name: 'Jul', value: 40 },
-    { name: 'Aug', value: 120 },
+    { name: 'Aug', value:120 },
     { name: 'Sep', value: 30 },
     { name: 'Oct', value: 50 },
     { name: 'Nov', value: 25 },
