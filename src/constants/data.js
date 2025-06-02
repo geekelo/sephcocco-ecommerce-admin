@@ -325,7 +325,7 @@ export  const performanceData = [
       id: 1,
       name: "Chicken Shawarma",
       image: "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=150&h=150&fit=crop&crop=center",
-      price: "$120.00",
+      price: "120.00",
       rating: 4.5,
       stockCount: 15,
       stockStatus: "In Stock"
@@ -334,7 +334,7 @@ export  const performanceData = [
       id: 2,
       name: "Chicken Shawarma",
       image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=150&h=150&fit=crop&crop=center",
-      price: "$120.00",
+      price: "120.00",
       rating: 4.5,
       stockCount: 10,
       stockStatus: "In Stock"
@@ -343,7 +343,7 @@ export  const performanceData = [
       id: 3,
       name: "Chicken Shawarma",
       image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=150&h=150&fit=crop&crop=center",
-      price: "$120.00",
+      price: "120.00",
       rating: 4.5,
       stockCount: 8,
       stockStatus: "In Stock"
@@ -352,7 +352,7 @@ export  const performanceData = [
       id: 4,
       name: "Chicken Shawarma",
       image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=150&h=150&fit=crop&crop=center",
-      price: "$120.00",
+      price: "120.00",
       rating: 4.5,
       stockCount: 12,
       stockStatus: "In Stock"
