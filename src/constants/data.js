@@ -383,3 +383,89 @@ export  const performanceData = [
       status: "Reply now"
     }
   ];
+
+
+    // Mock data for users
+ export   const mockUsers = [
+      {
+        id: 'U001',
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        role: 'Customer',
+        status: 'active',
+        joinDate: '2024-01-15',
+        lastLogin: '2024-06-01',
+        orders: 12,
+        avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=F93A01&color=fff'
+      },
+      {
+        id: 'U002',
+        name: 'Jane Smith',
+        email: 'jane.smith@example.com',
+        role: 'Customer',
+        status: 'inactive',
+        joinDate: '2024-02-20',
+        lastLogin: '2024-05-28',
+        orders: 8,
+        avatar: 'https://ui-avatars.com/api/?name=Jane+Smith&background=F93A01&color=fff'
+      },
+      {
+        id: 'U003',
+        name: 'Mike Johnson',
+        email: 'mike.johnson@example.com',
+        role: 'Customer',
+        status: 'active',
+        joinDate: '2024-03-10',
+        lastLogin: '2024-06-02',
+        orders: 25,
+        avatar: 'https://ui-avatars.com/api/?name=Mike+Johnson&background=F93A01&color=fff'
+      },
+      {
+        id: 'U004',
+        name: 'Sarah Wilson',
+        email: 'sarah.wilson@example.com',
+        role: 'Customer',
+        status: 'suspended',
+        joinDate: '2024-01-05',
+        lastLogin: '2024-05-15',
+        orders: 3,
+        avatar: 'https://ui-avatars.com/api/?name=Sarah+Wilson&background=F93A01&color=fff'
+      }
+    ];
+  
+    // Mock data for admins
+   export const mockAdmins = [
+      {
+        id: 'A001',
+        name: 'Admin User',
+        email: 'admin@company.com',
+        role: 'Super Admin',
+        status: 'active',
+        joinDate: '2023-01-01',
+        lastLogin: '2024-06-02',
+        permissions: 'Full Access',
+        avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=2E7D32&color=fff'
+      },
+      {
+        id: 'A002',
+        name: 'Manager One',
+        email: 'manager1@company.com',
+        role: 'Manager',
+        status: 'active',
+        joinDate: '2023-06-15',
+        lastLogin: '2024-06-01',
+        permissions: 'Limited Access',
+        avatar: 'https://ui-avatars.com/api/?name=Manager+One&background=2E7D32&color=fff'
+      },
+      {
+        id: 'A003',
+        name: 'Support Lead',
+        email: 'support@company.com',
+        role: 'Support Admin',
+        status: 'inactive',
+        joinDate: '2023-09-20',
+        lastLogin: '2024-05-20',
+        permissions: 'Support Only',
+        avatar: 'https://ui-avatars.com/api/?name=Support+Lead&background=2E7D32&color=fff'
+      }
+    ];

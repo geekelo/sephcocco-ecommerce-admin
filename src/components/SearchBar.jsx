@@ -2,18 +2,27 @@ import React, { useState, useRef, useEffect } from 'react';
 import '../styles/SearchBar.css';
 import { Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
 
-const SearchBar = ({ onSearch, onFilter, searchTerm }) => {
+const SearchBar = ({ 
+  onSearch, 
+  onFilter, 
+  searchTerm, 
+  filterOptions = [],
+  placeholder = "Search for anything",
+  filterLabel = "Filter by"
+}) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState('All Status');
   const dropdownRef = useRef(null);
 
-  // Filter options
-  const filterOptions = [
+  // Default filter options if none provided
+  const defaultFilterOptions = [
     'All Status',
-    'failed',
-    'delivered', 
-    'on transit'
+    'active',
+    'inactive',
+    'suspended'
   ];
+
+  const currentFilterOptions = filterOptions.length > 0 ? filterOptions : defaultFilterOptions;
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -36,7 +45,7 @@ const SearchBar = ({ onSearch, onFilter, searchTerm }) => {
   const handleFilterChange = (value) => {
     setSelectedFilters(value);
     setIsFilterOpen(false); // Close dropdown after selection
-    
+        
     // Call the onFilter callback with the updated filter
     if (onFilter) {
       onFilter(value === 'All Status' ? '' : value);
@@ -58,7 +67,7 @@ const SearchBar = ({ onSearch, onFilter, searchTerm }) => {
         <Search size={16} className="search-icon" />
         <input
           type="text"
-          placeholder="Search for anything"
+          placeholder={placeholder}
           value={searchTerm}
           onChange={onSearch}
           className="search-input"
@@ -72,7 +81,7 @@ const SearchBar = ({ onSearch, onFilter, searchTerm }) => {
             onClick={handleFilterToggle}
           >
             <SlidersHorizontal size={16} />
-            <span>Filter by</span>
+            <span>{filterLabel}</span>
             {hasActiveFilters && <span className="filter-count">1</span>}
             <ChevronDown size={14} className={`chevron ${isFilterOpen ? 'rotated' : ''}`} />
           </button>
@@ -88,7 +97,7 @@ const SearchBar = ({ onSearch, onFilter, searchTerm }) => {
               )}
 
               <div className="filter-options">
-                {filterOptions.map((option) => (
+                {currentFilterOptions.map((option) => (
                   <div
                     key={option}
                     className={`filter-option ${selectedFilters === option ? 'active' : ''}`}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import logo from '../assets/logo.png';
-
+import '../styles/ConfirmActionModal.css'
 const ConfirmActionModal = ({
   isOpen,
   onClose,
@@ -80,7 +80,7 @@ const ConfirmActionModal = ({
           </button>
         </div>
 
-        <div className="modal-content">
+        <div className="modal-content-confirm">
           <h2 className="confirm-title">{title}</h2>
           <p className="confirm-message">
             {message}
@@ -88,7 +88,7 @@ const ConfirmActionModal = ({
         </div>
 
         {children || (
-          <div className="form-actions">
+          <div className="form-actions-confirm">
             <button
               type="button"
               className={buttonConfig.confirmClass}
