@@ -13,6 +13,7 @@ const navItems = [
   { name: 'Activities', path: '/activities' },
   { name: 'Analytics', path: '/analytics' },
   { name: 'Settings', path: '/settings' },
+    { name: 'Manage Accounts', path: '/manage-accounts' },
 ];
 
 const Header = ({ toggleSidebar, isMobile }) => {

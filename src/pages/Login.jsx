@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import "../styles/LoginPage.css";
 import storeImage from "../assets/login.png";
 import logo from "../assets/logo.png";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { validateEmail, validatePassword } from "../schema/LoginSchema";
 
 const LoginPage = () => {
@@ -12,43 +12,48 @@ const LoginPage = () => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleEmailChange = (e) => {
     const value = e.target.value;
     setEmail(value);
 
-    // Clear error message as user types
-    if (emailError) setEmailError("");
+    // Real-time validation
+    if (value.trim() === "") {
+      setEmailError("Email is required");
+    } else if (!validateEmail(value)) {
+      setEmailError("Please enter a valid email address");
+    } else {
+      setEmailError("");
+    }
   };
 
   const handlePasswordChange = (e) => {
     const value = e.target.value;
     setPassword(value);
 
-    // Clear error message as user types
-    if (passwordError) setPasswordError("");
+    // Real-time validation
+    if (value.trim() === "") {
+      setPasswordError("Password is required");
+    } else if (!validatePassword(value)) {
+      setPasswordError("Password must be at least 6 characters");
+    } else {
+      setPasswordError("");
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validate form
+    // Final validation
     let isValid = true;
 
-    if (!email.trim()) {
-      setEmailError("Email is required");
-      isValid = false;
-    } else if (!validateEmail(email)) {
-      setEmailError("Please enter a valid email address");
+    if (!email.trim() || !validateEmail(email)) {
       isValid = false;
     }
 
-    if (!password.trim()) {
-      setPasswordError("Password is required");
-      isValid = false;
-    } else if (!validatePassword(password)) {
-      setPasswordError("Password must be at least 6 characters");
+    if (!password.trim() || !validatePassword(password)) {
       isValid = false;
     }
 
@@ -56,7 +61,9 @@ const LoginPage = () => {
       // Set submitting state for animation
       setIsSubmitting(true);
 
-      navigate("/store");
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
     }
   };
 
@@ -81,7 +88,7 @@ const LoginPage = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
         >
-          Welcome Back!!
+          Welcome Back!
         </motion.h1>
 
         <form onSubmit={handleSubmit} className="login-form">
@@ -90,9 +97,9 @@ const LoginPage = () => {
             <motion.input
               whileFocus={{ scale: 1.01 }}
               transition={{ type: "spring", stiffness: 300 }}
-              type="text"
+              type="email"
               id="email"
-              placeholder="Enter Email Address"
+              placeholder="Enter your email address"
               value={email}
               onChange={handleEmailChange}
               className={emailError ? "error" : ""}
@@ -102,17 +109,43 @@ const LoginPage = () => {
 
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <motion.input
-              whileFocus={{ scale: 1.01 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              type="password"
-              id="password"
-              placeholder="Enter Password"
-              value={password}
-              onChange={handlePasswordChange}
-              className={passwordError ? "error" : ""}
-            />
+            <div className="password-input-container">
+              <motion.input
+                whileFocus={{ scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                type={showPassword ? "text" : "password"}
+                id="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={handlePasswordChange}
+                className={passwordError ? "error" : ""}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex="-1"
+              >
+                {showPassword ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
             {passwordError && <p className="error-message">{passwordError}</p>}
+          </div>
+
+          <div className="forgot-password-container-login">
+            <Link to="/forgot-password" className="forgot-password-link">
+              Forgot your password?
+            </Link>
           </div>
 
           <motion.button
@@ -122,13 +155,11 @@ const LoginPage = () => {
             whileTap={{ scale: 0.98 }}
             disabled={isSubmitting}
           >
-            {isSubmitting ? <div className="spinner"></div> : "Sign Up Now"}
+            {isSubmitting ? <div className="spinner"></div> : "Sign In"}
           </motion.button>
         </form>
 
-        <p className="sign-up-text">
-          Don't have an account? <a href="#signup">Sign up</a>
-        </p>
+      
       </motion.div>
     </div>
   );

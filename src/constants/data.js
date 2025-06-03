@@ -11,7 +11,7 @@ export const sampleProducts = [
       id: 1,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -20,7 +20,7 @@ export const sampleProducts = [
       id: 2,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -29,7 +29,7 @@ export const sampleProducts = [
       id: 3,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -38,7 +38,7 @@ export const sampleProducts = [
       id: 4,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -47,7 +47,7 @@ export const sampleProducts = [
       id: 5,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -56,7 +56,7 @@ export const sampleProducts = [
       id: 6,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -65,7 +65,7 @@ export const sampleProducts = [
       id: 7,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -74,7 +74,7 @@ export const sampleProducts = [
       id: 8,
       name: 'Chicken Shawarma',
       image: ProductImage,
-      price: 120.00,
+      price:120.00,
       rating: 6,
       stockCount: 12,
       stockStatus: 'In Stock'
@@ -178,7 +178,7 @@ export const messages = [
           id: 1,
           name: 'Chicken Shawarma',
           image: ProductImage,
-          price: 120.00,
+          price:120.00,
           quantity: 3,
           stockCount: 12,
           stockStatus: 'In stock'
@@ -283,7 +283,7 @@ export  const performanceData = [
     { name: 'May', value: 35 },
     { name: 'Jun', value: 65 },
     { name: 'Jul', value: 40 },
-    { name: 'Aug', value: 120 },
+    { name: 'Aug', value:120 },
     { name: 'Sep', value: 30 },
     { name: 'Oct', value: 50 },
     { name: 'Nov', value: 25 },
@@ -325,7 +325,7 @@ export  const performanceData = [
       id: 1,
       name: "Chicken Shawarma",
       image: "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=150&h=150&fit=crop&crop=center",
-      price: "$120.00",
+      price: "120.00",
       rating: 4.5,
       stockCount: 15,
       stockStatus: "In Stock"
@@ -334,7 +334,7 @@ export  const performanceData = [
       id: 2,
       name: "Chicken Shawarma",
       image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=150&h=150&fit=crop&crop=center",
-      price: "$120.00",
+      price: "120.00",
       rating: 4.5,
       stockCount: 10,
       stockStatus: "In Stock"
@@ -343,7 +343,7 @@ export  const performanceData = [
       id: 3,
       name: "Chicken Shawarma",
       image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=150&h=150&fit=crop&crop=center",
-      price: "$120.00",
+      price: "120.00",
       rating: 4.5,
       stockCount: 8,
       stockStatus: "In Stock"
@@ -352,7 +352,7 @@ export  const performanceData = [
       id: 4,
       name: "Chicken Shawarma",
       image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=150&h=150&fit=crop&crop=center",
-      price: "$120.00",
+      price: "120.00",
       rating: 4.5,
       stockCount: 12,
       stockStatus: "In Stock"
@@ -383,3 +383,89 @@ export  const performanceData = [
       status: "Reply now"
     }
   ];
+
+
+    // Mock data for users
+ export   const mockUsers = [
+      {
+        id: 'U001',
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        role: 'Customer',
+        status: 'active',
+        joinDate: '2024-01-15',
+        lastLogin: '2024-06-01',
+        orders: 12,
+        avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=F93A01&color=fff'
+      },
+      {
+        id: 'U002',
+        name: 'Jane Smith',
+        email: 'jane.smith@example.com',
+        role: 'Customer',
+        status: 'inactive',
+        joinDate: '2024-02-20',
+        lastLogin: '2024-05-28',
+        orders: 8,
+        avatar: 'https://ui-avatars.com/api/?name=Jane+Smith&background=F93A01&color=fff'
+      },
+      {
+        id: 'U003',
+        name: 'Mike Johnson',
+        email: 'mike.johnson@example.com',
+        role: 'Customer',
+        status: 'active',
+        joinDate: '2024-03-10',
+        lastLogin: '2024-06-02',
+        orders: 25,
+        avatar: 'https://ui-avatars.com/api/?name=Mike+Johnson&background=F93A01&color=fff'
+      },
+      {
+        id: 'U004',
+        name: 'Sarah Wilson',
+        email: 'sarah.wilson@example.com',
+        role: 'Customer',
+        status: 'suspended',
+        joinDate: '2024-01-05',
+        lastLogin: '2024-05-15',
+        orders: 3,
+        avatar: 'https://ui-avatars.com/api/?name=Sarah+Wilson&background=F93A01&color=fff'
+      }
+    ];
+  
+    // Mock data for admins
+   export const mockAdmins = [
+      {
+        id: 'A001',
+        name: 'Admin User',
+        email: 'admin@company.com',
+        role: 'Super Admin',
+        status: 'active',
+        joinDate: '2023-01-01',
+        lastLogin: '2024-06-02',
+        permissions: 'Full Access',
+        avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=2E7D32&color=fff'
+      },
+      {
+        id: 'A002',
+        name: 'Manager One',
+        email: 'manager1@company.com',
+        role: 'Manager',
+        status: 'active',
+        joinDate: '2023-06-15',
+        lastLogin: '2024-06-01',
+        permissions: 'Limited Access',
+        avatar: 'https://ui-avatars.com/api/?name=Manager+One&background=2E7D32&color=fff'
+      },
+      {
+        id: 'A003',
+        name: 'Support Lead',
+        email: 'support@company.com',
+        role: 'Support Admin',
+        status: 'inactive',
+        joinDate: '2023-09-20',
+        lastLogin: '2024-05-20',
+        permissions: 'Support Only',
+        avatar: 'https://ui-avatars.com/api/?name=Support+Lead&background=2E7D32&color=fff'
+      }
+    ];

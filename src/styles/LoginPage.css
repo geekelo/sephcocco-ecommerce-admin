@@ -84,6 +84,7 @@
     border-radius: 5px;
     font-size: 14px;
     transition: border-color 0.3s, box-shadow 0.3s;
+    background: #fff;
   }
   
   input:focus {
@@ -172,3 +173,110 @@
       font-size: 22px;
     }
   }
+
+
+
+
+/* Forgot Password Link Styles */
+.forgot-password-container-login {
+  text-align: right;
+  margin-bottom: 20px;
+  margin-top: -5px;
+  color: #333;
+}
+
+.forgot-password-link {
+  color: #F93A01;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.3s, text-decoration 0.3s;
+}
+
+.forgot-password-link:hover {
+  color: #e03000;
+  text-decoration: underline;
+}
+
+/* Password Input Container (if not already added) */
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-container input {
+  padding-right: 45px; /* Make room for the eye icon */
+  color: #333;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.password-toggle:hover {
+  color: #F93A01;
+  background-color: rgba(249, 58, 1, 0.1);
+}
+
+.password-toggle:focus {
+  outline: none;
+  color: #F93A01;
+  background-color: rgba(249, 58, 1, 0.1);
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+/* Form group adjustments for error positioning */
+.form-group {
+  margin-bottom: 25px;
+  position: relative;
+}
+
+.error-message {
+  color: #e53935;
+  font-size: 12px;
+  margin-top: 5px;
+  position: static; /* Changed from absolute to static */
+  display: block;
+}
+
+/* Ensure the input doesn't get weird focus states with the button */
+.password-input-container input:focus {
+  outline: none;
+  border-color: #F93A01;
+  box-shadow: 0 0 0 2px rgba(249, 58, 1, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .password-toggle {
+    right: 10px;
+  }
+  
+  .password-input-container input {
+    padding-right: 40px;
+    color: #333;
+  }
+  
+  .forgot-password-container {
+    text-align: center;
+  }
+}

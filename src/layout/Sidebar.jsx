@@ -8,7 +8,8 @@ import {
   Activity, 
   BarChart, 
   Settings,
-  LogOut
+  LogOut,
+  Users
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import '../styles/Sidebar.css';
@@ -26,6 +27,7 @@ const Sidebar = ({ isOpen }) => {
     { name: 'Messages', icon: <MessageSquare size={20} />, path: '/messages' },
     { name: 'Activities', icon: <Activity size={20} />, path: '/activities' },
     { name: 'Analytics', icon: <BarChart size={20} />, path: '/analytics' },
+        { name: 'Manage accounts', icon: <Users size={20} />, path: '/manage-accounts' },
     { name: 'Settings', icon: <Settings size={20} />, path: '/settings' },
   ];
 
