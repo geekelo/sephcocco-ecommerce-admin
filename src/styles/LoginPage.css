@@ -175,6 +175,11 @@
   }
 
 
+.api-error {
+  margin-bottom: 10px;
+  color: #b00020;
+  font-weight: 500;
+}
 
 
 /* Forgot Password Link Styles */
