@@ -5,6 +5,7 @@ import storeImage from "../assets/login.png";
 import logo from "../assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
 import { validateEmail, validatePassword } from "../schema/LoginSchema";
+import { useLogin } from "../hooks/useLogin";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -12,7 +13,10 @@ const LoginPage = () => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
+  const {mutateAsync: login} = useLogin()
   const navigate = useNavigate();
 
   const handleEmailChange = (e) => {
@@ -43,29 +47,45 @@ const LoginPage = () => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setApiError(""); // Clear previous API error
 
-    // Final validation
-    let isValid = true;
+  // Final validation
+  let isValid = true;
 
-    if (!email.trim() || !validateEmail(email)) {
-      isValid = false;
+  if (!email.trim() || !validateEmail(email)) {
+    setEmailError("Please enter a valid email address");
+    isValid = false;
+  }
+
+  if (!password.trim() || !validatePassword(password)) {
+    setPasswordError("Password must be at least 6 characters");
+    isValid = false;
+  }
+
+  if (!isValid) return;
+
+  setIsSubmitting(true);
+
+  try {
+    const payload = {
+     user: { email, password}
     }
+    console.log(payload);
+    
+    const response = await login(payload);
+    console.log("Login success:", response);
+    navigate("/");
+  } catch (error) {
+    console.error("Login failed:", error);
+    setApiError(error?.response?.data?.message || "Login failed. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-    if (!password.trim() || !validatePassword(password)) {
-      isValid = false;
-    }
 
-    if (isValid) {
-      // Set submitting state for animation
-      setIsSubmitting(true);
-
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
-    }
-  };
 
   return (
     <div className="login-container">
@@ -147,6 +167,7 @@ const LoginPage = () => {
               Forgot your password?
             </Link>
           </div>
+{apiError && <p className="error-message api-error">{apiError}</p>}
 
           <motion.button
             type="submit"
