@@ -6,8 +6,8 @@ import { forgotPassword } from "../services/forgotPassword";
 export const useForgotPassword = () => {
  
     return useMutation({
-      mutationFn: async (payload) => {
-        const response = await forgotPassword(payload); 
+      mutationFn: async (email) => {
+        const response = await forgotPassword(email); 
         return response
       }
     });
