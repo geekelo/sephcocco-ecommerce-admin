@@ -8,6 +8,7 @@
     min-height: 100vh;
     display: flex;
     justify-content: center;
+    color: #000;
     align-items: center;
     overflow: hidden;
   }
@@ -67,8 +68,11 @@
   .form-group {
     margin-bottom: 20px;
     position: relative;
+   
   }
-  
+  .email-input {
+ color: #000;
+  }
   label {
     display: block;
     margin-bottom: 8px;
@@ -81,6 +85,7 @@
     width: 100%;
     padding: 12px 15px;
     border: 1px solid #ddd;
+   
     border-radius: 5px;
     font-size: 14px;
     transition: border-color 0.3s, box-shadow 0.3s;

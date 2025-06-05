@@ -112,7 +112,7 @@ const RegisterPage = () => {
       // Here you would typically make an API call to register the user
       // For now, we'll just navigate to the store
       setTimeout(() => {
-        navigate("/store");
+        navigate("/sign-in");
       }, 1500); // Simulate API call delay
     }
   };

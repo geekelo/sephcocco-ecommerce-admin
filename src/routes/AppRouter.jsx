@@ -1,6 +1,6 @@
 import { Suspense, useState, } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import {  ActivitiesPage, DashboardPage, ForgotPasswordPage, LoginPage, ManageAccountPage, MessagesPage, OrderPage, PaymentPage, RegisterPage, ResetPasswordPage, StoresPage } from "./LazyLoader";
+import {  ActivitiesPage, DashboardPage, ForgotPasswordPage, LoginPage, ManageAccountPage, MessagesPage, OrderPage, PaymentPage, RegisterPage, ResetPasswordPage, StoresPage, VerifyOTPPage } from "./LazyLoader";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { SplashScreen } from "../components/SplashScreen";
 import Layout from "../layout/Layout";
@@ -31,6 +31,7 @@ const AppRouter = () => {
                   <Route path="sign-in" element={<LoginPage />} />
                              <Route path="forgot-password" element={<ForgotPasswordPage />} />
                                   <Route path="reset-password" element={<ResetPasswordPage />} />
+                                     <Route path="verify-otp" element={<VerifyOTPPage />} />
                   <Route path="store" element={<StoresPage />} />
                   <Route path="/" element={<Layout />}>
        

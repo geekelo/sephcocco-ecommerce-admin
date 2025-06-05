@@ -75,11 +75,15 @@ const handleSubmit = async (e) => {
     console.log(payload);
     
     const response = await login(payload);
+    if (response?.message) {
+    localStorage.setItem('token', response?.token)
     console.log("Login success:", response);
     navigate("/");
+    }
+
   } catch (error) {
     console.error("Login failed:", error);
-    setApiError(error?.response?.data?.message || "Login failed. Please try again.");
+    setApiError(error?.response?.data?.error || "Login failed. Please try again.");
   } finally {
     setIsSubmitting(false);
   }
@@ -122,7 +126,7 @@ const handleSubmit = async (e) => {
               placeholder="Enter your email address"
               value={email}
               onChange={handleEmailChange}
-              className={emailError ? "error" : ""}
+              className={emailError ? "error email-input" : "email-input"}
             />
             {emailError && <p className="error-message">{emailError}</p>}
           </div>
