@@ -5,17 +5,26 @@ import storeImage from "../assets/login.png";
 import logo from "../assets/logo.png";
 import { useNavigate } from "react-router-dom";
 import { validateEmail } from "../schema/LoginSchema";
+import { useForgotPassword } from "../hooks/useForgotPassword";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [apiError, setApiError] = useState("");
   const navigate = useNavigate();
+
+  // React Query mutation
+  const forgotPasswordMutation = useForgotPassword();
 
   const handleEmailChange = (e) => {
     const value = e.target.value;
     setEmail(value);
+
+    // Clear API error when user starts typing
+    if (apiError) {
+      setApiError("");
+    }
 
     // Real-time validation
     if (value.trim() === "") {
@@ -27,7 +36,7 @@ const ForgotPasswordPage = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Final validation
@@ -35,19 +44,27 @@ const ForgotPasswordPage = () => {
       return;
     }
 
-    // Set submitting state
-    setIsSubmitting(true);
+    setApiError("");
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const response = await forgotPasswordMutation.mutateAsync({
+        email: email.trim()
+      });
+  console.log(response);
+      // Success - show success screen
       setIsSuccess(true);
       
-      // After showing success message, redirect to reset password
+      // After showing success message, redirect to verify OTP page
       setTimeout(() => {
-        navigate("/reset-password", { state: { email } });
+        navigate("/verify-otp", { state: { email: email.trim() } });
       }, 2000);
-    }, 1500);
+
+    } catch (error) {
+      const errorMessage = error?.response?.data?.message || 
+                          error?.message || 
+                          "Something went wrong. Please try again.";
+      setApiError(errorMessage);
+    }
   };
 
   const handleBackToLogin = () => {
@@ -66,8 +83,6 @@ const ForgotPasswordPage = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-         
-
           <motion.div
             className="success-icon"
             initial={{ scale: 0 }}
@@ -95,8 +110,8 @@ const ForgotPasswordPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
           >
-            We've sent password reset instructions to <strong>{email}</strong>. 
-            Please check your email and follow the link to reset your password.
+            We've sent a verification code to <strong>{email}</strong>. 
+            Please check your email and enter the code to proceed.
           </motion.p>
 
           <motion.div
@@ -105,7 +120,7 @@ const ForgotPasswordPage = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.5 }}
           >
-            Redirecting you to reset your password...
+            Redirecting you to verify your email...
           </motion.div>
         </motion.div>
       </div>
@@ -127,6 +142,17 @@ const ForgotPasswordPage = () => {
           <img src={logo} alt="Logo" className="logo" />
         </div>
 
+        {apiError && (
+          <motion.div
+            className="api-error"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {apiError}
+          </motion.div>
+        )}
+
         <motion.h1
           className="forgot-password-title"
           initial={{ opacity: 0 }}
@@ -142,7 +168,7 @@ const ForgotPasswordPage = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.5 }}
         >
-          No worries! Enter your email address and we'll send you a link to reset your password.
+          No worries! Enter your email address and we'll send you a verification code to reset your password.
         </motion.p>
 
         <form onSubmit={handleSubmit} className="forgot-password-form">
@@ -166,9 +192,9 @@ const ForgotPasswordPage = () => {
             className="reset-button"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
-            disabled={isSubmitting || !email.trim() || emailError}
+            disabled={forgotPasswordMutation.isPending || !email.trim() || emailError}
           >
-            {isSubmitting ? <div className="spinner"></div> : "Send Reset Link"}
+            {forgotPasswordMutation.isPending ? <div className="spinner"></div> : "Send Verification Code"}
           </motion.button>
         </form>
 

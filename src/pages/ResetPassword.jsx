@@ -5,6 +5,7 @@ import storeImage from "../assets/login.png";
 import logo from "../assets/logo.png";
 import { useNavigate, useLocation } from "react-router-dom";
 import { validatePassword, validatePasswordMatch, getPasswordStrength } from "../schema/RegisterSchema";
+import { useResetPassword } from "../hooks/useResetPassword";
 
 const ResetPasswordPage = () => {
   const [password, setPassword] = useState("");
@@ -13,22 +14,31 @@ const ResetPasswordPage = () => {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [apiError, setApiError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email || "";
+  const otp = location.state?.otp || "";
+
+  // React Query mutation
+  const resetPasswordMutation = useResetPassword();
 
   useEffect(() => {
-    // If no email is provided, redirect to forgot password
-    if (!email) {
+    // If no email or OTP is provided, redirect to forgot password
+    if (!email || !otp) {
       navigate("/forgot-password");
     }
-  }, [email, navigate]);
+  }, [email, otp, navigate]);
 
   const handlePasswordChange = (e) => {
     const value = e.target.value;
     setPassword(value);
+
+    // Clear API error when user starts typing
+    if (apiError) {
+      setApiError("");
+    }
 
     // Real-time password validation
     if (value.trim() === "") {
@@ -51,6 +61,11 @@ const ResetPasswordPage = () => {
     const value = e.target.value;
     setConfirmPassword(value);
 
+    // Clear API error when user starts typing
+    if (apiError) {
+      setApiError("");
+    }
+
     // Real-time validation for password matching
     if (value.trim() === "") {
       setConfirmPasswordError("Please confirm your password");
@@ -61,7 +76,7 @@ const ResetPasswordPage = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Final validation
@@ -75,19 +90,36 @@ const ResetPasswordPage = () => {
       isValid = false;
     }
 
-    if (isValid) {
-      setIsSubmitting(true);
+    if (!isValid) {
+      return;
+    }
 
-      // Simulate API call
+    setApiError("");
+
+    try {
+      const response = await resetPasswordMutation.mutateAsync({
+        otp: otp.trim(),
+        payload: {
+          user: {
+            password: password.trim(),
+            password_confirmation: confirmPassword.trim()
+          }
+        }
+      });
+
+      // Success - show success screen
+      setIsSuccess(true);
+      
+      // After showing success, redirect to login
       setTimeout(() => {
-        setIsSubmitting(false);
-        setIsSuccess(true);
-        
-        // After showing success, redirect to login
-        setTimeout(() => {
-          navigate("/sign-in");
-        }, 3000);
-      }, 1500);
+        navigate("/sign-in");
+      }, 3000);
+
+    } catch (error) {
+      const errorMessage = error?.response?.data?.message || 
+                          error?.message || 
+                          "Something went wrong. Please try again.";
+      setApiError(errorMessage);
     }
   };
 
@@ -105,8 +137,6 @@ const ResetPasswordPage = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-        
-
           <motion.div
             className="success-icon"
             initial={{ scale: 0 }}
@@ -164,6 +194,17 @@ const ResetPasswordPage = () => {
         <div className="logo-container">
           <img src={logo} alt="Logo" className="logo" />
         </div>
+
+        {apiError && (
+          <motion.div
+            className="api-error"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {apiError}
+          </motion.div>
+        )}
 
         <motion.h1
           className="reset-password-title"
@@ -280,9 +321,9 @@ const ResetPasswordPage = () => {
             className="reset-button"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
-            disabled={isSubmitting || passwordError || confirmPasswordError || !password || !confirmPassword}
+            disabled={resetPasswordMutation.isPending || passwordError || confirmPasswordError || !password || !confirmPassword}
           >
-            {isSubmitting ? <div className="spinner"></div> : "Reset Password"}
+            {resetPasswordMutation.isPending ? <div className="spinner"></div> : "Reset Password"}
           </motion.button>
         </form>
 

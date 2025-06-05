@@ -294,7 +294,7 @@ const ManageAccounts = () => {
         
         <button className="add-account-btn" onClick={handleAddAccount}>
           <UserPlus size={16} />
-          <span>Add {activeTab === 'users' ? 'User' : 'Admin'}</span>
+          <span>Add User</span>
         </button>
       </div>
       {/* Tabs */}

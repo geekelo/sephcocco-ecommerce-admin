@@ -3,6 +3,7 @@ export const LoginPage = lazy(() => import("../pages/Login"));
 export const RegisterPage = lazy(() => import("../pages/Register"));
 export const ForgotPasswordPage = lazy(() => import("../pages/ForgotPassword"));
 export const ResetPasswordPage = lazy(() => import("../pages/ResetPassword"));
+export const VerifyOTPPage = lazy(() => import("../pages/VerifyOtp"));
 export const StoresPage = lazy(() => import("../pages/StoreSelection"));
 export const DashboardPage = lazy(() => import("../pages/Dashboard"));
 export const ProductPage = lazy(() => import("../pages/Products"));
