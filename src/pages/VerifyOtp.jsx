@@ -90,14 +90,6 @@ const VerifyOTPPage = () => {
     setApiError("");
     setIsInvalid(false);
 
-    try {
-      const response = await verifyOTPMutation.mutateAsync({
-        email,
-        otp: otpValue
-      });
-console.log(response);
-
-      // Success - show success screen
       setIsSuccess(true);
       
       // Redirect after success to reset password with OTP
@@ -108,10 +100,20 @@ console.log(response);
             otp: otpValue 
           } 
         });
-      }, 2000);
+      }, 2000);try {
+      const response = await verifyOTPMutation.mutateAsync({
+        email,
+        otp: otpValue
+      });
+console.log(response);
+if (response?.message){
+
+}
+      // Success - show success screen
+    
       
     } catch (error) {
-      const errorMessage = error?.response?.data?.message || 
+      const errorMessage = error?.response?.data?.error || 
                           error?.message || 
                           "Invalid OTP. Please check your code and try again.";
       
@@ -138,8 +140,8 @@ console.log(response);
       const response = await forgotPasswordMutation.mutateAsync({
         email: email.trim()
       });
-
-      // Success - show resend success message
+if (response?.message) {
+  // Success - show resend success message
       setResendMessage("Verification code has been resent to your email");
       
       // Clear the success message after 5 seconds
@@ -147,8 +149,10 @@ console.log(response);
         setResendMessage("");
       }, 5000);
 
+}
+    
     } catch (error) {
-      const errorMessage = error?.response?.data?.message || 
+      const errorMessage = error?.response?.data?.error || 
                           error?.message || 
                           "Failed to resend code. Please try again.";
       setApiError(errorMessage);

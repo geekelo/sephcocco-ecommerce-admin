@@ -51,16 +51,19 @@ const ForgotPasswordPage = () => {
         email: email.trim()
       });
   console.log(response);
-      // Success - show success screen
+  if (response?.message) {
+   // Success - show success screen
       setIsSuccess(true);
       
       // After showing success message, redirect to verify OTP page
       setTimeout(() => {
         navigate("/verify-otp", { state: { email: email.trim() } });
       }, 2000);
+  }
+   
 
     } catch (error) {
-      const errorMessage = error?.response?.data?.message || 
+      const errorMessage = error?.response?.data?.error || 
                           error?.message || 
                           "Something went wrong. Please try again.";
       setApiError(errorMessage);
