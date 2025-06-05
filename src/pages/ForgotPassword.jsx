@@ -47,9 +47,9 @@ const ForgotPasswordPage = () => {
     setApiError("");
 
     try {
-      const response = await forgotPasswordMutation.mutateAsync({
-        email: email.trim()
-      });
+      const response = await forgotPasswordMutation.mutateAsync(
+        email
+      );
   console.log(response);
   if (response?.message) {
    // Success - show success screen
