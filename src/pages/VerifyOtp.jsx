@@ -95,6 +95,7 @@ const VerifyOTPPage = () => {
         email,
         otp: otpValue
       });
+console.log(response);
 
       // Success - show success screen
       setIsSuccess(true);
