@@ -137,9 +137,9 @@ if (response?.message){
     setResendMessage("");
 
     try {
-      const response = await forgotPasswordMutation.mutateAsync({
-        email: email.trim()
-      });
+      const response = await forgotPasswordMutation.mutateAsync(
+        email
+      );
 if (response?.message) {
   // Success - show resend success message
       setResendMessage("Verification code has been resent to your email");

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pause, UserPlus } from 'lucide-react';
+import { Pause, UserPlus, X } from 'lucide-react';
 import '../styles/UserAdminFormModal.css';
 import { useRegister } from '../hooks/useRegister';
 import { validateEmail, validatePassword } from '../schema/LoginSchema';
@@ -19,10 +19,61 @@ const UserAdminFormModal = ({
 
   const { mutateAsync: register } = useRegister();
 
+  // Available outlets
+  const outletOptions = [
+    { value: "restaurant", label: "Restaurant" },
+    { value: "pharmacy", label: "Pharmacy" },
+    { value: "lounge", label: "Lounge" }
+  ];
+
   // Validation functions
   const validateName = (name) => name.trim().length >= 2;
   const validatePhone = (phone) => /^\+?[\d\s\-\(\)]{10,}$/.test(phone.trim());
   const validateAddress = (address) => address.trim().length >= 5;
+
+  // Handle outlet selection from dropdown
+  const handleOutletSelect = (e) => {
+    const selectedValue = e.target.value;
+    if (!selectedValue) return;
+
+    const currentOutlets = formValues.outlets || [];
+    
+    // Only add if not already selected
+    if (!currentOutlets.includes(selectedValue)) {
+      const updatedOutlets = [...currentOutlets, selectedValue];
+      onChange({ ...formValues, outlets: updatedOutlets });
+
+      // Update validation
+      const newErrors = { ...validationErrors };
+      delete newErrors.outlets;
+      setValidationErrors(newErrors);
+    }
+
+    // Reset select to placeholder
+    e.target.value = '';
+  };
+
+  // Remove a specific outlet
+  const removeOutlet = (outletToRemove) => {
+    const currentOutlets = formValues.outlets || [];
+    const updatedOutlets = currentOutlets.filter(outlet => outlet !== outletToRemove);
+    onChange({ ...formValues, outlets: updatedOutlets });
+
+    // Validation
+    const newErrors = { ...validationErrors };
+    if (updatedOutlets.length === 0) {
+      newErrors.outlets = "Please select at least one outlet";
+    } else {
+      delete newErrors.outlets;
+    }
+    setValidationErrors(newErrors);
+  };
+
+  // Get available options (exclude already selected ones)
+  const getAvailableOptions = () => {
+    const selectedOutlets = formValues.outlets || [];
+    return outletOptions.filter(option => !selectedOutlets.includes(option.value));
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -118,14 +169,6 @@ const UserAdminFormModal = ({
         }
         break;
 
-      case 'outlet':
-        if (!value.trim()) {
-          newErrors.outlet = "Please select an outlet";
-        } else {
-          delete newErrors.outlet;
-        }
-        break;
-
       default:
         break;
     }
@@ -134,43 +177,58 @@ const UserAdminFormModal = ({
   };
 
   const handleFormSubmit = async () => {
+    setIsSubmitting(true)
     try {
+      // Validate outlets before submission
+      if (!formValues.outlets || formValues.outlets.length === 0) {
+        setValidationErrors(prev => ({
+          ...prev,
+          outlets: "Please select at least one outlet"
+        }));
+        return;
+      }
+
       // Merge firstName and lastName into full name
       const fullName = `${formValues.firstName || ''} ${formValues.lastName || ''}`.trim();
       
       const payload = {
         user: {
-      name: fullName,
-        address: formValues.address || '',
-        email: formValues.email || '',
-        phone_number: formValues.phone_number || '',
-        whatsapp_number: formValues.whatsapp_number || '',
-        password: formValues.password || '',
-        password_confirmation: formValues.password_confirmation || '',
-        role: "admin",
-        outlet: formValues.outlet || ''
+          name: fullName,
+          address: formValues.address || '',
+          email: formValues.email || '',
+          phone_number: formValues.phone_number || '',
+          whatsapp_number: formValues.whatsapp_number || '',
+          password: formValues.password || '',
+          password_confirmation: formValues.password_confirmation || '',
+          role: "admin",
+          outlets: formValues.outlets || [] // Send as array
         }
-  
       };
-console.log(payload);
 
-   const response =   await register(payload);
-   console.log(response);
-   if (response?.message) {
-closeAllModals(); 
-   }
+      console.log(payload);
+
+      const response = await register(payload);
+      console.log(response);
+      if (response?.message) {
+        closeAllModals(); 
+        setIsSubmitting(false)
+      }
      
     } catch (error) {
       console.error('Registration failed:', error);
       // Handle error appropriately
     }
   };
+
   const handleBlur = (e) => {
     const { name, value } = e.target;
     
-    // Trigger validation on blur
-    validateField(name, value);
+    // Trigger validation on blur if validateField function exists
+    if (typeof validateField === 'function') {
+      validateField(name, value);
+    }
   };
+
   return (
     <div className="modal-overlay-form" onClick={closeAllModals}>
       <div className="user-admin-form-modal" onClick={(e) => e.stopPropagation()}>
@@ -318,23 +376,49 @@ closeAllModals();
               )}
             </div>
 
+            {/* Multi-select Outlets with badges */}
             <div className="form-field-form">
-              <label className="form-label-form" htmlFor="outlet">Outlet</label>
+              <label className="form-label-form">Outlets</label>
+              
+              {/* Selected outlets display as badges */}
+              {formValues.outlets && formValues.outlets.length > 0 && (
+                <div className="selected-outlets-badges">
+                  {formValues.outlets.map((outlet) => {
+                    const outletLabel = outletOptions.find(opt => opt.value === outlet)?.label || outlet;
+                    return (
+                      <span key={outlet} className="outlet-badge">
+                        {outletLabel}
+                        <button
+                          type="button"
+                          onClick={() => removeOutlet(outlet)}
+                          className="outlet-badge-remove"
+                        >
+                          <X size={14} />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Dropdown to add outlets */}
               <select
-                id="outlet"
-                name="outlet"
-                value={formValues.outlet || ''}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                className={`form-select-form ${validationErrors.outlet || formErrors.outlet ? 'error' : ''}`}
+                onChange={handleOutletSelect}
+                className={`form-select-form ${validationErrors.outlets || formErrors.outlets ? 'error' : ''}`}
+                value=""
               >
-                <option disabled value="">Select outlet</option>
-                <option value="restaurant">Restaurant</option>
-                <option value="pharmacy">Pharmacy</option>
-                <option value="lounge">Lounge</option>
+                <option value="">
+                  {getAvailableOptions().length > 0 ? 'Select outlet to add' : 'All outlets selected'}
+                </option>
+                {getAvailableOptions().map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
-              {(validationErrors.outlet || formErrors.outlet) && (
-                <div className="form-error-form">{validationErrors.outlet || formErrors.outlet}</div>
+
+              {(validationErrors.outlets || formErrors.outlets) && (
+                <div className="form-error-form">{validationErrors.outlets || formErrors.outlets}</div>
               )}
             </div>
 
@@ -355,7 +439,7 @@ closeAllModals();
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <div className="spinner"></div>
+                  `${isEdit ? 'Updating...' : 'Adding...'}`
                 ) : (
                   `${isEdit ? 'Update' : 'Add'} User`
                 )}

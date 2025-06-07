@@ -7,33 +7,34 @@ import Image from '../assets/profile.png';
 const navItems = [
   { name: 'Hello, Welcome Back!', path: '/' },
   { name: 'Orders', path: '/orders' },
+  { name: 'Product Categories', path: '/products-categories' },
   { name: 'Products', path: '/products' },
   { name: 'Payments', path: '/payments' },
   { name: 'Messages', path: '/messages' },
   { name: 'Activities', path: '/activities' },
   { name: 'Analytics', path: '/analytics' },
   { name: 'Settings', path: '/settings' },
-    { name: 'Manage Accounts', path: '/manage-accounts' },
+  { name: 'Manage Accounts', path: '/manage-accounts' },
 ];
 
 const Header = ({ toggleSidebar, isMobile }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+
   const location = useLocation();
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
 
-const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
+  const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
+  
 
-const currentPage = navItems.find(
-  item => item.path !== '/' && normalizedPath.startsWith(item.path)
-)?.name || (normalizedPath === '/' ? 'Hello, Welcome Back!' : '');
+const currentPage = navItems
+  .filter(item => {
+    if (item.path === '/') return normalizedPath === '/';
+    const regex = new RegExp(`^${item.path}(/|$)`); // ensures full segment match
+    return regex.test(normalizedPath);
+  })
+  .sort((a, b) => b.path.length - a.path.length)[0]?.name || 'Hello, Welcome Back!';
 
 
 
-console.log('Current path:', location.pathname);
-console.log(navItems.find(item => location.pathname.startsWith(item.path)));
 
   return (
     <header className="header">
@@ -41,8 +42,8 @@ console.log(navItems.find(item => location.pathname.startsWith(item.path)));
         {/* Left section with title and toggle button */}
         <div className="header-title">
           {isMobile && (
-            <button 
-              className="menu-toggle" 
+            <button
+              className="menu-toggle"
               onClick={toggleSidebar}
               aria-label="Toggle menu"
             >
@@ -56,9 +57,9 @@ console.log(navItems.find(item => location.pathname.startsWith(item.path)));
         <div className="header-actions">
           {/* <div className="search-container">
             <Search size={16} className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="Search for anything..." 
+            <input
+              type="text"
+              placeholder="Search for anything..."
               value={searchTerm}
               onChange={handleSearchChange}
               className="search-input"

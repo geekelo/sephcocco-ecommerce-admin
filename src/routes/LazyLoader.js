@@ -12,6 +12,7 @@ export const PaymentPage = lazy(() => import("../pages/Payment"));
 export const ActivitiesPage = lazy(() => import("../pages/Activities"));
 export const MessagesPage = lazy(() => import("../pages/Messages"));
 export const ManageAccountPage = lazy(() => import("../pages/ManageAccounts"));
+export const ProductCategoresPage = lazy(() => import("../pages/ProductCategories"));
 
 
 

@@ -5,7 +5,7 @@ import '../styles/StorePage.css';
 import storeImage from '../assets/login.png';
 import logo from '../assets/logo.png'; 
 import { useNavigate } from 'react-router-dom';
-
+import Cookies from 'js-cookie'; 
 import { storeOptions } from '../constants/data';
 import { getStoreIcon } from '../utils/getStoreIcon';
 const StoreSelectionPage = () => {
@@ -13,7 +13,8 @@ const StoreSelectionPage = () => {
   const navigate = useNavigate()
   const handleStoreSelection = (store) => {
     setSelectedStore(store);
-    navigate('/products')
+      Cookies.set('activeOutlet', store, { expires: 1 }); 
+    navigate('/')
 
   };
   

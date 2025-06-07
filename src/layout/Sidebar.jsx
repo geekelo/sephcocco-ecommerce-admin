@@ -23,6 +23,7 @@ const Sidebar = ({ isOpen }) => {
     { name: 'Dashboard Overview', icon: <LayoutDashboard size={20} />, path: '/' },
     { name: 'Orders', icon: <ShoppingBag size={20} />, path: '/orders' },
     { name: 'Products', icon: <ShoppingBag size={20} />, path: '/products' },
+       { name: 'Product Categories', icon: <ShoppingBag size={20} />, path: '/products-categories' },
     { name: 'Payments', icon: <CreditCard size={20} />, path: '/payments' },
     { name: 'Messages', icon: <MessageSquare size={20} />, path: '/messages' },
     { name: 'Activities', icon: <Activity size={20} />, path: '/activities' },

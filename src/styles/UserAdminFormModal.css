@@ -256,3 +256,88 @@
     font-size: 18px;
   }
 }
+
+/* Multi-select outlet badges */
+.selected-outlets-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  min-height: 20px;
+}
+
+.outlet-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #bbdefb;
+  transition: all 0.2s ease;
+}
+
+.outlet-badge:hover {
+  background-color: #e1f5fe;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.outlet-badge-remove {
+  background: none;
+  border: none;
+  color: #1976d2;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  transition: all 0.2s ease;
+  margin-left: 2px;
+}
+
+.outlet-badge-remove:hover {
+  background-color: rgba(25, 118, 210, 0.15);
+  color: #d32f2f;
+  transform: scale(1.1);
+}
+
+/* Empty state styling */
+.selected-outlets-badges:empty::before {
+  content: "No outlets selected";
+  color: #9e9e9e;
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .outlet-badge {
+    background-color: #1e3a8a;
+    color: #93c5fd;
+    border-color: #3b82f6;
+  }
+  
+  .outlet-badge:hover {
+    background-color: #1e40af;
+  }
+  
+  .outlet-badge-remove {
+    color: #93c5fd;
+  }
+  
+  .outlet-badge-remove:hover {
+    background-color: rgba(147, 197, 253, 0.15);
+    color: #fca5a5;
+  }
+  
+  .selected-outlets-badges:empty::before {
+    color: #6b7280;
+  }
+}
