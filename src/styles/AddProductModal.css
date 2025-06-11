@@ -450,3 +450,51 @@
       flex: 1;
     }
   }
+
+  .visibility-section {
+  margin-top: 8px;
+}
+
+.visibility-table {
+  width: 100%;
+  border-spacing: 0;
+}
+
+.checkbox-cell {
+  width: 30px;
+  vertical-align: top;
+  padding-right: 10px;
+}
+
+.visibility-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.visibility-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.label-cell {
+  vertical-align: top;
+  padding-bottom: 4px;
+}
+
+.visibility-label {
+  font-weight: 500;
+  cursor: pointer;
+  margin: 0;
+}
+
+.description-cell {
+  vertical-align: top;
+  padding-top: 4px;
+}
+
+.visibility-description {
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import OrderTable from "../components/OrderTable";
 import OrderSummary from "../components/OrderSummary";
@@ -12,7 +12,7 @@ import UpdateOrderStatusModal from "../components/UpdateOrderStatusModal";
 import FlexibleTable from "../components/FlexibleTable";
 import { EmptyState } from "../components/EmptyState";
 import { orderActions } from "../columns/orderActions";
-import { orderColumns } from "../columns/orderColumns";
+import { createOrderColumns } from "../columns/orderColumns";
 
 
 const OrderPage = () => {
@@ -149,7 +149,7 @@ const OrderPage = () => {
     // Update the order status in your state/backend here
     // You might want to update the selectedOrder state or refetch data
   };
-
+  const orderColumns = useMemo(() => createOrderColumns(handleViewOrder), []);
   // Handler for discarding order
   const handleDiscardOrder = () => {
     setIsDiscardOrderModal(true);
@@ -179,7 +179,11 @@ const OrderPage = () => {
   actions={orderActions}
   keyField="id"
   onRowClick={handleViewOrder}
-
+ onActionClick={(actionKey, data) => {
+    if (actionKey === 'view') {
+      handleViewOrder(data);
+    }
+  }}
   className="orders-table"
 
   emptyState={

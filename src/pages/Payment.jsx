@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import OrderTable from "../components/OrderTable";
 import "../styles/OrderPage.css";
@@ -12,7 +12,7 @@ import { Mail, X } from 'lucide-react';
 import EmailModal from "../components/EmailModal";
 import FlexibleTable from "../components/FlexibleTable";
 import { paymentActions } from "../columns/paymentActions";
-import { paymentColumns } from "../columns/paymentColumns";
+import { createPaymentColumns } from "../columns/paymentColumns";
 import { EmptyState } from "../components/EmptyState";
 
 
@@ -129,7 +129,7 @@ const PaymentPage = () => {
     // Update the payment status in your state/backend here
     setIsUpdatePaymentStatusModal(false);
   };
-
+const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
   // Handler for sending email
   const handleSendEmail = () => {
     if (selectedPayment?.customerEmail) {

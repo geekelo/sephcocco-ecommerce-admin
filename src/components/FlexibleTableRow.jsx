@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MoreVertical } from 'lucide-react';
 import '../styles/row.css';
+
 const FlexibleTableRow = ({ 
   data, 
   columns = [],
@@ -12,7 +13,9 @@ const FlexibleTableRow = ({
   clickableRow = true
 }) => {
   const [showActions, setShowActions] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const actionsRef = useRef(null);
+  const triggerRef = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -25,6 +28,28 @@ const FlexibleTableRow = ({
     if (showActions) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showActions]);
+
+  // Calculate dropdown position when showing
+  useEffect(() => {
+    if (showActions && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+      
+      // Calculate position relative to viewport
+      const top = rect.bottom + scrollTop + 4; // 4px gap
+      const left = rect.right + scrollLeft - 160; // Align right edge (160px is menu width)
+      
+      // Adjust if dropdown would go off-screen
+      const adjustedLeft = Math.max(16, Math.min(left, window.innerWidth - 176)); // 16px margin, 160px width + 16px margin
+      const adjustedTop = rect.bottom + 160 > window.innerHeight ? rect.top + scrollTop - 160 - 4 : top;
+      
+      setDropdownPosition({
+        top: adjustedTop,
+        left: adjustedLeft
+      });
     }
   }, [showActions]);
 
@@ -72,7 +97,7 @@ const FlexibleTableRow = ({
       return column.format(value, data);
     }
 
-    return value || column.defaultValue || '-';
+    return <span className="cell-text">{value || column.defaultValue || '-'}</span>;
   };
 
   // Status cell renderer
@@ -214,22 +239,32 @@ const FlexibleTableRow = ({
 
     // Multiple actions - render as dropdown
     return (
-      <div className="actions-cell">
+      <div className="actions-cell-rows">
         <div 
-          className="actions-dropdown" 
+          className={`actions-dropdown ${showActions ? 'show-menu' : ''}`}
           ref={actionsRef}
           onClick={(e) => e.stopPropagation()}
         >
           <button
+            ref={triggerRef}
             className="actions-trigger"
             onClick={() => setShowActions(!showActions)}
             aria-label="More actions"
+            aria-expanded={showActions}
           >
             <MoreVertical size={16} />
           </button>
           
           {showActions && (
-            <div className="actions-menu">
+            <div 
+              className="actions-menu"
+              style={{
+                position: 'fixed',
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+                zIndex: 10001
+              }}
+            >
               {actions.map((action) => (
                 <button
                   key={action.key}
@@ -277,9 +312,9 @@ const FlexibleTableRow = ({
             key={column.key}
             className={`table-cell ${column.className || ''}`}
             style={{
-              width: column.width,
-              minWidth: column.minWidth,
-              maxWidth: column.maxWidth,
+              flex: column.flex || 1,
+              minWidth: column.minWidth || 'auto',
+              maxWidth: column.maxWidth || 'none',
               textAlign: column.align || 'left',
               ...column.style
             }}

@@ -111,7 +111,7 @@
     margin-top: auto;
   }
   
-  .action-button {
+  .action-button-product {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -125,7 +125,7 @@
     width: 50%;
   }
   
-  .action-button span {
+  .action-button-product span {
     margin-left: 4px;
   }
   

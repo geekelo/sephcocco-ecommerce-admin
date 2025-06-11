@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Search, Plus } from 'lucide-react';
 import '../styles/ProductsPage.css';
-
+import '../styles/ProductCategories.css'
 import ProductCard from '../components/ProductCard';
 import ProductSkeleton from '../components/ProductSkeleton';
 import AddProductModal from '../components/AddProductModal';
@@ -125,6 +125,13 @@ const ProductsPage = () => {
             <div className="page-title-section">
               <h2>{products.length} Products in stock</h2>
             </div>
+              {!isLoading && !products && (
+    <ErrorState message="Failed to load products. Please try again later." />
+  )}
+
+  {!isLoading && products && filteredProducts.length === 0 && (
+    <EmptyState message="No matching products found." btnText="Add New Product" handleAddCategory={handleAddProduct}/>
+  )}
 <div className="products-grid">
   {isLoading &&
     Array.from({ length: 6 }).map((_, idx) => (
@@ -134,13 +141,7 @@ const ProductsPage = () => {
     ))
   }
 
-  {!isLoading && !products && (
-    <ErrorState message="Failed to load products. Please try again later." />
-  )}
 
-  {!isLoading && products && filteredProducts.length === 0 && (
-    <EmptyState message="No matching products found." btnText="Add New Product" handleAddCategory={handleAddProduct}/>
-  )}
 
   {!isLoading && filteredProducts.length > 0 && filteredProducts.map(product => (
     <div className="product-grid-item" key={product.id}>

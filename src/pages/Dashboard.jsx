@@ -6,6 +6,7 @@ import ProductCard from '../components/ProductCard';
 import OutletSwitcher from '../components/OutletSwitcher';
 import { mockCategories, mockProduct, paymentsData, performanceData, topSellingProducts, unresolvedChats } from '../constants/data';
 import '../styles/Dashboard.css'
+import '../styles/ProductCard.css';
 import ConfirmActionModal from '../components/ConfirmActionModal';
 import UpdateOrderStatusModal from '../components/UpdateOrderStatusModal';
 import EditProductModal from '../components/EditModal';

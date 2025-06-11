@@ -43,7 +43,7 @@ const ProductCard = ({ product,  onView, onEdit, onDelete}) => {
 
           <div className="product-actions">
             <button 
-              className="action-button edit-button" 
+              className="action-button-product edit-button" 
               onClick={onEdit}
               title="Edit product"
             >
@@ -52,7 +52,7 @@ const ProductCard = ({ product,  onView, onEdit, onDelete}) => {
             </button>
 
             <button 
-              className="action-button delete-button-product" 
+              className="action-button-product delete-button-product" 
               onClick={onDelete}
               title="Delete product"
             >

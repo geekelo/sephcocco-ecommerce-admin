@@ -81,8 +81,8 @@ const Header = ({ toggleSidebar, isMobile }) => {
               <span className="notification-indicator"></span>
             </div>
                        
-            <div className="user-profile">
-              <div className="avatar">
+            <div className="user-profile-header">
+              <div className="avatar-header">
                 <img src={Image} alt="John David" />
               </div>
               <span className="username">John David</span>

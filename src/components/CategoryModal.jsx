@@ -80,7 +80,7 @@ const CategoryModal = ({ isOpen, onClose, category, onSubmit, title = "Edit Cate
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validate form
@@ -94,7 +94,7 @@ const CategoryModal = ({ isOpen, onClose, category, onSubmit, title = "Edit Cate
       };
 
       console.log("Submitting category data:", categoryData);
-      onSubmit(categoryData);
+     await onSubmit(categoryData);
 
       // Reset form after successful submission
       setFormData({

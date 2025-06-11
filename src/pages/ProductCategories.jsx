@@ -3,7 +3,7 @@ import SearchBar from "../components/SearchBar";
 import FlexibleTable from "../components/FlexibleTable";
 
 import "../styles/ProductCategories.css"
-
+import "../styles/OrderPage.css";
 import CategoryModal from "../components/CategoryModal";
 import ConfirmActionModal from "../components/ConfirmActionModal";
 import { Plus, AlertTriangle, Eye, Edit3, Trash2, Calendar } from 'lucide-react';
@@ -32,7 +32,7 @@ const ProductCategoriesPage = () => {
   const [isDeleteCategoryModal, setIsDeleteCategoryModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // Function to get active outlet from cookie
+
 
 
   // Get active outlet ID
@@ -149,8 +149,6 @@ const ProductCategoriesPage = () => {
       return;
     }
 
-    console.log('Active outlet for API call:', active_outlet);
-    console.log('Category data:', categoryData);
 
     try {
       if (selectedCategory) {
@@ -189,7 +187,7 @@ const ProductCategoriesPage = () => {
           active_outlet,
           payload
         });
-        console.log(response);
+   
         
         // Invalidate queries to refetch fresh data
         invalidateCategories();
@@ -249,7 +247,7 @@ const ProductCategoriesPage = () => {
             onRowClick={handleRowClick}
             onActionClick={handleActionClick}
             className="categories-table"
-            isLoading={isFetchingCategories || isLoading}
+            isLoading={isFetchingCategories}
             emptyState={<EmptyState title="No categories found" btnText=" Add Your First Category" handleAddCategory={handleAddCategory} isLoading={isLoading} searchTerm={searchTerm}/>}
           />
         )}

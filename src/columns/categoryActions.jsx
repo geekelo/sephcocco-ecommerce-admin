@@ -2,12 +2,7 @@ import { Edit3, Eye, Trash2 } from "lucide-react";
 
   // Actions configuration for the dropdown
  export const categoryActions = [
-    {
-      key: 'view',
-      label: 'View Details',
-      icon: <Eye size={14} />,
-      className: 'view'
-    },
+
     {
       key: 'edit',
       label: 'Edit Category',

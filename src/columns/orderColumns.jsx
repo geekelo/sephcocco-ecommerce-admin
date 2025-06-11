@@ -1,35 +1,23 @@
-export const orderColumns = [
+export const createOrderColumns = (handleViewOrder) => [
+  { key: "id", label: "Order ID", width: "100px" },
+  { key: "customerName", label: "Customer", width: "180px" },
+  { key: "status", label: "Status", width: "120px", type: "status" },
+  { key: "totalAmount", label: "Total Amount", width: "140px" },
+  { key: "orderDate", label: "Date", width: "120px" },
   {
-    key: 'orderId',
-    label: 'Order ID',
-    minWidth: '100px'
-  },
-  {
-    key: 'customerName',
-    label: 'Customer',
-    minWidth: '150px'
-  },
-  {
-    key: 'amount',
-    label: 'Amount',
-    minWidth: '100px',
-    align: 'right',
-    render: (value) => `₦${value.toFixed(2)}`
-  },
-  {
-    key: 'date',
-    label: 'Date',
-    minWidth: '140px',
-    render: (value) => new Date(value).toLocaleDateString()
-  },
-  {
-    key: 'status',
-    label: 'Status',
-    minWidth: '120px',
-    render: (value) => (
-      <span className={`status-tag ${value.toLowerCase()}`}>
-        {value}
-      </span>
-    )
+    key: "action",
+    label: "Action",
+    width: "100px",
+    type: "button",
+    buttonConfig: {
+      text: "View",
+      className: "view-button",
+      icon: "👁️",
+      onClick: (data) => {
+        handleViewOrder(data); 
+      }
+    }
   }
 ];
+
+

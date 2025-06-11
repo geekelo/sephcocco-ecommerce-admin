@@ -9,6 +9,7 @@
   border: 1px solid #e5e7eb;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: relative;
 }
 
 .flexible-table.loading {
@@ -24,19 +25,29 @@
   font-weight: 600;
   font-size: 14px;
   flex-shrink: 0;
+  min-height: 48px;
 }
 
 .table-header-cell {
   padding: 16px;
-  flex: 1;
   display: flex;
   align-items: center;
   min-height: 48px;
   border-right: 1px solid #e5e7eb;
+  color: #000;
+  overflow: hidden;
+  position: relative;
 }
 
 .table-header-cell:last-child {
   border-right: none;
+}
+
+.header-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 }
 
 /* ===== TABLE BODY ===== */

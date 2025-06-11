@@ -78,9 +78,9 @@ const FlexibleTable = ({
             key={`skeleton-${index}-${column.key}`}
             className="table-cell"
             style={{
-              width: column.width,
-              minWidth: column.minWidth,
-              maxWidth: column.maxWidth,
+              flex: column.flex || 1,
+              minWidth: column.minWidth || 'auto',
+              maxWidth: column.maxWidth || 'none',
               textAlign: column.align || 'left',
               padding: '16px'
             }}
@@ -110,14 +110,14 @@ const FlexibleTable = ({
             key={column.key}
             className={`table-header-cell ${column.className || ''}`}
             style={{
-              width: column.width,
-              minWidth: column.minWidth,
-              maxWidth: column.maxWidth,
+              flex: column.flex || 1,
+              minWidth: column.minWidth || 'auto',
+              maxWidth: column.maxWidth || 'none',
               textAlign: column.align || 'left',
               ...column.headerStyle
             }}
           >
-            {column.label}
+            <span className="header-content">{column.label}</span>
           </div>
         ))}
       </div>
