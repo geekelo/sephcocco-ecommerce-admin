@@ -5,7 +5,7 @@ import { updateProductCategories } from "../services/updateProductCategories";
 export const useUpdateProductCategores = () => {
  
     return useMutation({
-      mutationFn: async (active_outlet,productId,payload) => {
+      mutationFn: async ({active_outlet,productId,payload}) => {
         const response = await updateProductCategories(active_outlet,productId,payload); 
         return response
       }

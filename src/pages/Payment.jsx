@@ -10,18 +10,14 @@ import ConfirmActionModal from "../components/ConfirmActionModal";
 import UpdateOrderStatusModal from "../components/UpdateOrderStatusModal";
 import { Mail, X } from 'lucide-react';
 import EmailModal from "../components/EmailModal";
+import FlexibleTable from "../components/FlexibleTable";
+import { paymentActions } from "../columns/paymentActions";
+import { paymentColumns } from "../columns/paymentColumns";
+import { EmptyState } from "../components/EmptyState";
 
 
 const PaymentPage = () => {
-  // Table column configuration for payments
-  const paymentColumns = [
-    { id: "id", label: "Payment ID", className: "order-id" },
-    { id: "amount", label: "Amount", className: "customer" },
-    { id: "method", label: "Method", className: "customer" },
-    { id: "status", label: "Status", className: "status" },
-    { id: "date", label: "Date", className: "date" },
-    { id: "action", label: "Action", className: "action" },
-  ];
+
 
   // Extract payments from orders for the payment table
   const paymentData = initialOrders.flatMap(order => 
@@ -151,12 +147,31 @@ const PaymentPage = () => {
         searchTerm={searchTerm}
       />
       <div className="order-table-container">
-        <OrderTable
+        <FlexibleTable
+  data={paymentData}
+  columns={paymentColumns}
+  actions={paymentActions}
+  keyField="id"
+  onRowClick={handleViewPayment}
+
+  className="orders-table"
+
+  emptyState={
+    <EmptyState 
+      title="No payments records found" 
+   
+     
+      searchTerm={searchTerm} 
+    />
+  }
+/>
+    
+        {/* <OrderTable
           orders={paymentData}
           columns={paymentColumns}
           keyField="id"
           onViewOrder={handleViewPayment}
-        />
+        /> */}
       </div>
 
       {/* Payment Summary Modal - Enhanced with Email Button */}

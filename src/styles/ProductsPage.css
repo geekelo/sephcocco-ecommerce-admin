@@ -82,7 +82,7 @@
     align-items: center;
     gap: 6px;
     padding: 8px 12px;
-    background-color: #F93A01;
+     background: linear-gradient(135deg, #FF6B35 0%, #FF6B35 100%);
     color: white;
     border: none;
     border-radius: 4px;
@@ -95,7 +95,7 @@
   }
   
   .add-product-button:hover {
-    background-color: #e03000;
+     background: linear-gradient(135deg, #FF6B35 0%, #FF6B35 100%);
   }
 
   .filter-container {

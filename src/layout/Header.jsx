@@ -18,24 +18,33 @@ const navItems = [
 ];
 
 const Header = ({ toggleSidebar, isMobile }) => {
-
   const location = useLocation();
-
-
+  
   const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
   
-
-const currentPage = navItems
-  .filter(item => {
-    if (item.path === '/') return normalizedPath === '/';
-    const regex = new RegExp(`^${item.path}(/|$)`); // ensures full segment match
-    return regex.test(normalizedPath);
-  })
-  .sort((a, b) => b.path.length - a.path.length)[0]?.name || 'Hello, Welcome Back!';
-
-
-
-
+  // Find exact match first, then fallback to prefix matching
+  let currentPage = 'Hello, Welcome Back!';
+  
+  // First, try to find an exact match
+  const exactMatch = navItems.find(item => item.path === normalizedPath);
+  if (exactMatch) {
+    currentPage = exactMatch.name;
+  } else {
+    // If no exact match, find the longest matching prefix (excluding root)
+    const matches = navItems
+      .filter(item => {
+        if (item.path === '/') return false; // Skip root for prefix matching
+        return normalizedPath.startsWith(item.path + '/');
+      })
+      .sort((a, b) => b.path.length - a.path.length);
+    
+    if (matches.length > 0) {
+      currentPage = matches[0].name;
+    } else if (normalizedPath === '/') {
+      currentPage = 'Hello, Welcome Back!';
+    }
+  }
+    
   return (
     <header className="header">
       <div className="header-wrapper">
@@ -65,13 +74,13 @@ const currentPage = navItems
               className="search-input"
             />
           </div> */}
-          
+                   
           <div className="user-section">
             <div className="notification-badge">
               <Bell size={20} color='#000' />
               <span className="notification-indicator"></span>
             </div>
-            
+                       
             <div className="user-profile">
               <div className="avatar">
                 <img src={Image} alt="John David" />

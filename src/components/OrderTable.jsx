@@ -2,7 +2,7 @@ import React from 'react';
 import '../styles/OrderTable.css';
 import AccountOrderRow from './AccountOrderRow';
 import CategoryTableRow from './CategoriesTableRow';
-
+import OrderRow from './OrderRow';
 
 const OrderTable = ({
   orders,

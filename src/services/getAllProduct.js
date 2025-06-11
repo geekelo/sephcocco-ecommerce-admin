@@ -1,6 +1,6 @@
 import { apiClient } from "./axios";
 
-export const getProductCategories = async (active_outlet) => {
+export const getAllProduct = async (active_outlet) => {
   try {
     const data = await apiClient().get(`/api/v1/${active_outlet}/sephcocco_${active_outlet}_product_categories`);
     return data.data;

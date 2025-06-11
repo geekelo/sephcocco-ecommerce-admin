@@ -343,7 +343,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay-add">
       <div className="add-product-modal" ref={modalRef}>
         <div className="modal-header">
           <h2>Add New Product</h2>
@@ -496,7 +496,21 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
             {/* Product Description */}
             <div className={`form-group ${errors.description ? "error" : ""}`}>
-              <label htmlFor="description">Product Description</label>
+              <label htmlFor="description">Product Short Description</label>
+              <textarea
+                id="description"
+                name="description"
+                placeholder="Describe your product"
+                value={formData.description}
+                onChange={handleChange}
+                rows={5}
+              ></textarea>
+              {errors.description && (
+                <div className="error-message">{errors.description}</div>
+              )}
+            </div>
+               <div className={`form-group ${errors.description ? "error" : ""}`}>
+              <label htmlFor="description">Product Long Description</label>
               <textarea
                 id="description"
                 name="description"

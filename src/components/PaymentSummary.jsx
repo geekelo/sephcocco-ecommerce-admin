@@ -67,7 +67,7 @@ const PaymentSummary = ({
   ];
 
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay-order-summary">
       <div className="add-product-modal">
         <div className="modal-header">
           <h2>Payment Summary ({paymentId})</h2>

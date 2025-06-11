@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Pause, UserPlus, X } from 'lucide-react';
+import React, { act, useEffect, useState } from 'react';
+import { Eye, EyeOff, Pause, UserPlus, X } from 'lucide-react';
 import '../styles/UserAdminFormModal.css';
 import { useRegister } from '../hooks/useRegister';
 import { validateEmail, validatePassword } from '../schema/LoginSchema';
-
+import Cookies from 'js-cookie';
 const UserAdminFormModal = ({
   isEdit,
   activeTab,
@@ -16,15 +16,56 @@ const UserAdminFormModal = ({
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
-
+  const [showPassword, setShowPassword] = useState(false);
   const { mutateAsync: register } = useRegister();
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [outletOptions, setOutletOptions] = useState([]);
+
+
+  useEffect(() => {
+    loadOutlets();
+ 
+  }, [activeTab]);
+ const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+
+    // Real-time validation
+    if (value.trim() === "") {
+      setPasswordError("Password is required");
+    } else if (!validatePassword(value)) {
+      setPasswordError("Password must be at least 6 characters");
+    } else {
+      setPasswordError("");
+    }
+  };
+
+  const loadOutlets = () => {
+    try {
+      const outletsFromCookies = Cookies.get('outlets');
+      if (outletsFromCookies) {
+        const parsedOutlets = JSON.parse(outletsFromCookies);
+        setOutletOptions(Array.isArray(parsedOutlets) ? parsedOutlets : []);
+      } else {
+        console.warn('No outlets found in cookies');
+        setOutletOptions([]);
+      }
+    } catch (error) {
+      console.error('Error parsing outlets from cookies:', error);
+      setOutletOptions([]);
+    } finally {
+     
+    }
+  };
+console.log(outletOptions);
 
   // Available outlets
-  const outletOptions = [
-    { value: "restaurant", label: "Restaurant" },
-    { value: "pharmacy", label: "Pharmacy" },
-    { value: "lounge", label: "Lounge" }
-  ];
+  // const outletOptions = [
+  //   { value: "restaurant", label: "Restaurant" },
+  //   { value: "pharmacy", label: "Pharmacy" },
+  //   { value: "lounge", label: "Lounge" }
+  // ];
 
   // Validation functions
   const validateName = (name) => name.trim().length >= 2;
@@ -190,8 +231,8 @@ const UserAdminFormModal = ({
 
       // Merge firstName and lastName into full name
       const fullName = `${formValues.firstName || ''} ${formValues.lastName || ''}`.trim();
-      
-      const payload = {
+      if (activeTab === "admins") {
+  const payload = {
         user: {
           name: fullName,
           address: formValues.address || '',
@@ -204,6 +245,21 @@ const UserAdminFormModal = ({
           outlets: formValues.outlets || [] // Send as array
         }
       };
+      return payload
+      } else if (activeTab === "users") {
+  const payload = {
+        user: {
+          name: fullName,
+          address: formValues.address || '',
+          email: formValues.email || '',
+          phone_number: formValues.phone_number || '',
+          whatsapp_number: formValues.whatsapp_number || '',
+          role: "user",
+       
+        }
+      };
+      return payload
+      }
 
       console.log(payload);
 
@@ -343,48 +399,71 @@ const UserAdminFormModal = ({
                 <div className="form-error-form">{validationErrors.whatsapp_number || formErrors.whatsapp_number}</div>
               )}
             </div>
+            {activeTab === "admins" &&          <div className="form-field-form">
+  <label className="form-label-form" htmlFor="password">Password</label>
+  <div className="form-input-wrapper">
+    <input
+      id="password"
+      name="password"
+      type={showPassword ? "text" : "password"}
+      value={formValues.password || ''}
+      onChange={handleInputChange}
+      className={`form-input-form ${validationErrors.password || formErrors.password ? 'error' : ''}`}
+      placeholder="Enter password"
+    />
+    <button
+      type="button"
+      className="password-toggle-icon"
+      onClick={() => setShowPassword(prev => !prev)}
+      tabIndex={-1}
+    >
+      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+    </button>
+  </div>
+  {(validationErrors.password || formErrors.password) && (
+    <div className="form-error-form">{validationErrors.password || formErrors.password}</div>
+  )}
+</div>}
+{activeTab === "admins" &&       <div className="form-field-form">
+  <label className="form-label-form" htmlFor="confirmPassword">Confirm Password</label>
+  <div className="form-input-wrapper">
+    <input
+      id="confirmPassword"
+      name="confirmPassword"
+      type={showConfirmPassword ? "text" : "password"}
+      value={formValues.confirmPassword || ''}
+      onChange={handleInputChange}
+      className={`form-input-form ${validationErrors.confirmPassword || formErrors.confirmPassword ? 'error' : ''}`}
+      placeholder="Confirm password"
+    />
+    <button
+      type="button"
+      className="password-toggle-icon"
+      onClick={() => setShowConfirmPassword(prev => !prev)}
+      tabIndex={-1}
+    >
+      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+    </button>
+  </div>
+  {(validationErrors.confirmPassword || formErrors.confirmPassword) && (
+    <div className="form-error-form">{validationErrors.confirmPassword || formErrors.confirmPassword}</div>
+  )}
+</div>}
 
-            <div className="form-field-form">
-              <label className="form-label-form" htmlFor="password">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={formValues.password || ''}
-                onChange={handleInputChange}
-                className={`form-input-form ${validationErrors.password || formErrors.password ? 'error' : ''}`}
-                placeholder="Enter password"
-              />
-              {(validationErrors.password || formErrors.password) && (
-                <div className="form-error-form">{validationErrors.password || formErrors.password}</div>
-              )}
-            </div>
 
-            <div className="form-field-form">
-              <label className="form-label-form" htmlFor="password_confirmation">Confirm Password</label>
-              <input
-                id="password_confirmation"
-                name="password_confirmation"
-                type="password"
-                value={formValues.password_confirmation || ''}
-                onChange={handleInputChange}
-                className={`form-input-form ${validationErrors.password_confirmation || formErrors.password_confirmation ? 'error' : ''}`}
-                placeholder="Confirm password"
-              />
-              {(validationErrors.password_confirmation || formErrors.password_confirmation) && (
-                <div className="form-error-form">{validationErrors.password_confirmation || formErrors.password_confirmation}</div>
-              )}
-            </div>
+
+
+          
 
             {/* Multi-select Outlets with badges */}
-            <div className="form-field-form">
+            {activeTab === "admins" &&   <div className="form-field-form">
               <label className="form-label-form">Outlets</label>
               
               {/* Selected outlets display as badges */}
               {formValues.outlets && formValues.outlets.length > 0 && (
                 <div className="selected-outlets-badges">
                   {formValues.outlets.map((outlet) => {
-                    const outletLabel = outletOptions.find(opt => opt.value === outlet)?.label || outlet;
+                    const outletLabel = outletOptions.find(opt => opt === outlet)
                     return (
                       <span key={outlet} className="outlet-badge">
                         {outletLabel}
@@ -411,8 +490,8 @@ const UserAdminFormModal = ({
                   {getAvailableOptions().length > 0 ? 'Select outlet to add' : 'All outlets selected'}
                 </option>
                 {getAvailableOptions().map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                  <option key={option} value={option}>
+                    {option}
                   </option>
                 ))}
               </select>
@@ -420,7 +499,8 @@ const UserAdminFormModal = ({
               {(validationErrors.outlets || formErrors.outlets) && (
                 <div className="form-error-form">{validationErrors.outlets || formErrors.outlets}</div>
               )}
-            </div>
+            </div>}
+          
 
             {apiError && <div className="form-error-form api-error">{apiError}</div>}
 

@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import SearchBar from "../components/SearchBar";
-import OrderTable from "../components/OrderTable";
-import "../styles/OrderPage.css";
+import FlexibleTable from "../components/FlexibleTable";
+
+import "../styles/ProductCategories.css"
 
 import CategoryModal from "../components/CategoryModal";
 import ConfirmActionModal from "../components/ConfirmActionModal";
-import { Plus, AlertTriangle } from 'lucide-react';
+import { Plus, AlertTriangle, Eye, Edit3, Trash2, Calendar } from 'lucide-react';
 
 import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,16 +15,15 @@ import { useUpdateProductCategores } from "../hooks/useUpdateProductCategories";
 import { useDeleteProductCategores } from "../hooks/useDeleteProductCategories";
 import { useViewProductCategories } from "../hooks/useGetProductCategories";
 import Cookies from 'js-cookie'; 
+import { categoryColumns } from "../columns/categoryColumns.jsx";
+import { categoryActions } from "../columns/categoryActions.jsx";
+import { getActiveOutlet } from "../../../sephcocco-lounge-user/src/utils/getActiveOutlets.js";
+import { ErrorState } from "../components/ErrorState.jsx";
+import { EmptyState } from "../components/EmptyState.jsx";
 
 const ProductCategoriesPage = () => {
-  // Table column configuration for product categories
-  const categoryColumns = [
-    { id: "id", label: "Category ID", className: "order-id" },
-    { id: "name", label: "Category Name", className: "customer" },
-    { id: "description", label: "Description", className: "customer" },
-    { id: "dateCreated", label: "Date Created", className: "date" },
-    { id: "actions", label: "Actions", className: "action" },
-  ];
+ 
+
 
   // State for categories data
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,16 +32,11 @@ const ProductCategoriesPage = () => {
   const [isDeleteCategoryModal, setIsDeleteCategoryModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // Get active outlet from cookie
-  const [active_outlet, setActiveOutlet] = useState(null);
+  // Function to get active outlet from cookie
 
-  useEffect(() => {
-    const selectedOutlet = Cookies.get('activeOutlet');
-      setActiveOutlet(selectedOutlet);
 
-    
-   
-  }, []);
+  // Get active outlet ID
+  const active_outlet = getActiveOutlet();
 
   // Query client for invalidating queries
   const queryClient = useQueryClient();
@@ -52,9 +47,7 @@ const ProductCategoriesPage = () => {
     isLoading: isFetchingCategories, 
     error: fetchError,
     refetch: refetchCategories 
-  } = useViewProductCategories(active_outlet, selectedCategory?.id, {
-    enabled: !!active_outlet // Only run query if active_outlet exists
-  });
+  } = useViewProductCategories(active_outlet);
 
   // Mutations
   const addCategoryMutation = useAddProductCategores();
@@ -96,8 +89,14 @@ const ProductCategoriesPage = () => {
     setIsAddCategoryModal(true);
   };
 
-  // Handler for category actions from hamburger menu
-  const handleCategoryAction = (action, category) => {
+  // Handler for row clicks (view category details)
+  const handleRowClick = (category) => {
+    setSelectedCategory(category);
+    setIsEditCategoryModal(true);
+  };
+
+  // Handler for category actions from dropdown
+  const handleActionClick = (action, category) => {
     if (!active_outlet) {
       toast.error("Please select an outlet first.");
       return;
@@ -106,14 +105,12 @@ const ProductCategoriesPage = () => {
     setSelectedCategory(category);
     
     switch (action) {
+      case 'view':
       case 'edit':
         setIsEditCategoryModal(true);
         break;
       case 'delete':
         setIsDeleteCategoryModal(true);
-        break;
-      case 'view':
-        setIsEditCategoryModal(true);
         break;
       default:
         break;
@@ -152,9 +149,11 @@ const ProductCategoriesPage = () => {
       return;
     }
 
+    console.log('Active outlet for API call:', active_outlet);
+    console.log('Category data:', categoryData);
+
     try {
       if (selectedCategory) {
-
         const payload = {
           product_category: {
             name: categoryData.name,
@@ -167,6 +166,9 @@ const ProductCategoriesPage = () => {
           productId: selectedCategory.id,
           payload
         });
+        console.log(selectedCategory.id, 'Update category payload:', payload);
+        
+        console.log(response);
         
         // Invalidate queries to refetch fresh data
         invalidateCategories();
@@ -174,7 +176,6 @@ const ProductCategoriesPage = () => {
         toast.success("Category updated successfully!");
         setIsEditCategoryModal(false);
       } else {
-  
         const payload = {
           product_category: {
             name: categoryData.name,
@@ -182,10 +183,13 @@ const ProductCategoriesPage = () => {
           }
         };
         
+        console.log('Add category payload:', payload);
+        
         const response = await addCategoryMutation.mutateAsync({
           active_outlet,
           payload
         });
+        console.log(response);
         
         // Invalidate queries to refetch fresh data
         invalidateCategories();
@@ -206,23 +210,7 @@ const ProductCategoriesPage = () => {
                    updateCategoryMutation.isPending || 
                    deleteCategoryMutation.isPending;
 
-  // Error state component
-  const ErrorState = () => (
-    <div className="error-state">
-      <div className="error-icon">
-        <AlertTriangle size={64} />
-      </div>
-      <h3>Failed to load categories</h3>
-      <p>There was an error loading the categories. Please try again.</p>
-      <button 
-        className="retry-btn" 
-        onClick={() => refetchCategories()}
-        disabled={isFetchingCategories}
-      >
-        {isFetchingCategories ? "Retrying..." : "Retry"}
-      </button>
-    </div>
-  );
+ 
 
 
 
@@ -231,11 +219,10 @@ const ProductCategoriesPage = () => {
       <div className="page-header">
         <h1>Product Categories</h1>
         <div className="header-actions">
-       
           <button 
             className="add-category-btn"
             onClick={handleAddCategory}
-            disabled={isFetchingCategories || isLoading}
+            disabled={isLoading}
           >
             <Plus size={16} />
             Add Category
@@ -252,15 +239,18 @@ const ProductCategoriesPage = () => {
 
       <div className="order-table-container">
         {fetchError ? (
-          <ErrorState />
+          <ErrorState  title="Failed to load categories" message=" There was an error loading the categories. Please try again." refetchCategories={refetchCategories} isFetchingCategories={isFetchingCategories}/>
         ) : (
-          <OrderTable
-            orders={filteredCategories}
+          <FlexibleTable
+            data={filteredCategories}
             columns={categoryColumns}
+            actions={categoryActions}
             keyField="id"
-            onCategoryAction={handleCategoryAction}
-            showHamburgerMenu={true}
+            onRowClick={handleRowClick}
+            onActionClick={handleActionClick}
+            className="categories-table"
             isLoading={isFetchingCategories || isLoading}
+            emptyState={<EmptyState title="No categories found" btnText=" Add Your First Category" handleAddCategory={handleAddCategory} isLoading={isLoading} searchTerm={searchTerm}/>}
           />
         )}
       </div>

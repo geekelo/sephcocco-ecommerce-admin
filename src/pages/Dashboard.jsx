@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieC
 import StatsCard from '../components/StatsCard';
 import ChatItem from '../components/ChatItem';
 import ProductCard from '../components/ProductCard';
+import OutletSwitcher from '../components/OutletSwitcher';
 import { mockCategories, mockProduct, paymentsData, performanceData, topSellingProducts, unresolvedChats } from '../constants/data';
 import '../styles/Dashboard.css'
 import ConfirmActionModal from '../components/ConfirmActionModal';
@@ -22,6 +23,7 @@ const DashboardPage = () => {
   const [isUpdateStatusModal, setIsUpdateStatusModal] = useState(false);
   const [isDiscardOrderModal, setIsDiscardOrderModal] = useState(false);
   const [isDiscardPaymentModal, setIsDiscardPaymentModal] = useState(false)
+
   const handleProductEdit = (product) => {
     setIsEditModal(true)
     console.log('Edit product:', product);
@@ -39,6 +41,7 @@ const DashboardPage = () => {
   const handleChatReply = (chat) => {
     console.log('Reply to chat:', chat);
   };
+
   const handleConfirm = () => {
     console.log("Deleting product:", mockProduct.name);
     setIsDeleteModal(false);
@@ -61,6 +64,7 @@ const DashboardPage = () => {
     setIsDeleteModal(false);
     setIsEditModal(true);
   };
+
   const handleDelete = () => {
     setIsViewModal(false);
     setIsEditModal(false);
@@ -72,6 +76,13 @@ const DashboardPage = () => {
     setShowOrderSummary(false);
     setIsDiscardOrderModal(false);
     setSelectedOrder(null);
+  };
+
+  // Handle outlet change
+  const handleOutletChange = (newOutlet) => {
+    console.log('Outlet changed to:', newOutlet);
+    // You can add additional logic here if needed
+    // The component will automatically refresh the page
   };
 
   // Payment Tracker Component
@@ -92,6 +103,20 @@ const DashboardPage = () => {
 
   return (
     <div className="dashboard">
+      {/* Dashboard Header with Outlet Switcher */}
+      <div className="dashboard-header">
+        <div className="dashboard-title">
+          <h1>Dashboard</h1>
+          <p>Welcome back! Here's what's happening with your store.</p>
+        </div>
+        <div className="dashboard-controls">
+          <OutletSwitcher 
+            onOutletChange={handleOutletChange}
+            className="dashboard-outlet-switcher"
+          />
+        </div>
+      </div>
+
       {/* Top Stats Row */}
       <div className="stats-row">
         <StatsCard
@@ -153,39 +178,49 @@ const DashboardPage = () => {
       {/* Main Content Row */}
       <div className="main-content">
         {/* Performance Chart */}
-        <div className="chart-section">
-          <div className="section-header">
-            <h2>Overall Performance</h2>
-          </div>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={performanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#888' }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#888' }}
-                />
-                <ReferenceLine 
-                  y={performanceData.find(item => item.name === 'Aug')?.value || 80} 
-                  stroke="#f0f0f0" 
-                  strokeDasharray="4 4"
-                  label={{ value: "", position: "insideTopRight", fill: "#FF6B35", fontSize: 12, fontWeight: 600 }}
-                />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {performanceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.name === 'Aug' ? '#FF6B35' : '#FFE5E0'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+<div className="chart-section">
+  <div className="section-header">
+    <h2>Overall Performance</h2>
+  </div>
+  <div className="chart-container performance-chart-container">
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={performanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        <XAxis 
+          dataKey="name" 
+          axisLine={false}
+          tickLine={false}
+          tick={{ fontSize: 12, fill: '#888' }}
+        />
+        <YAxis 
+          axisLine={false}
+          tickLine={false}
+          tick={{ fontSize: 12, fill: '#888' }}
+        />
+        
+        {/* Dashed line in orange - will be clipped on the right */}
+        <ReferenceLine 
+          y={performanceData.find(item => item.name === 'Aug')?.value || 80} 
+          stroke="#FF6B35" 
+          strokeDasharray="4 4"
+          strokeWidth={1}
+          label={{ 
+            value: "", 
+            position: "insideTopLeft", 
+            fill: "#FF6B35", 
+            fontSize: 12, 
+            fontWeight: 600 
+          }}
+        />
+        
+        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+          {performanceData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.name === 'Aug' ? '#FF6B35' : '#FFE5E0'} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+</div>
 
         {/* Unresolved Chats Sidebar */}
         <div className="chat-sidebar">
@@ -218,7 +253,8 @@ const DashboardPage = () => {
           ))}
         </div>
       </div>
-       {isViewModal && (
+
+      {isViewModal && (
         <ProductDetails
           product={mockProduct}
           onEdit={handleEdit}
@@ -334,4 +370,5 @@ const DashboardPage = () => {
     </div>
   );
 };
+
 export default DashboardPage;
