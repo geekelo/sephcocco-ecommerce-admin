@@ -11,8 +11,9 @@
     overflow-y: auto;
   }
   
-  .add-product-modal {
+  .adds-product-modal {
     width: 100%;
+    padding: 20px;
   }
     .form-group {
       display: flex;

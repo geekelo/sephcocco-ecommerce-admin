@@ -194,30 +194,41 @@ const AddProductModal = ({ isOpen, onClose }) => {
 const createFormData = () => {
   const formDataToSend = new FormData();
   
-  // Add text fields directly to FormData
-  formDataToSend.append('name', formData.name.trim());
-  formDataToSend.append('short_description', formData.short_description.trim());
-  formDataToSend.append('long_description', formData.long_description.trim());
-  formDataToSend.append('amount_in_stock', parseInt(formData.quantity));
-  formDataToSend.append('price', parseFloat(formData.price));
-  formDataToSend.append('visible', formData.visible);
-  formDataToSend.append('category_ids',formData.category_ids);
+  // Add product fields using bracket notation for nested object structure
+  formDataToSend.append('product[name]', formData.name.trim());
+  formDataToSend.append('product[short_description]', formData.short_description.trim());
+  formDataToSend.append('product[long_description]', formData.long_description.trim());
+  formDataToSend.append('product[amount_in_stock]', formData.quantity.toString());
+  formDataToSend.append('product[price]', formData.price.toString());
+  formDataToSend.append('product[visible]', formData.visible.toString());
   
+  // Add discount_price only if it exists and is greater than 0
   if (formData.discountPrice && formData.discountPrice > 0) {
-    formDataToSend.append('discount_price', parseFloat(formData.discountPrice));
+    formDataToSend.append('product[discount_price]', formData.discountPrice.toString());
   }
   
-  // Add main image
+  // Add category IDs as array elements within product
+  formData.category_ids.forEach((categoryId) => {
+    formDataToSend.append('product[category_ids][]', categoryId);
+  });
+  
+  // Add main image within product structure
   if (formData.mainImage) {
     console.log('Adding main image:', formData.mainImage.file.name);
-    formDataToSend.append('image_url', formData.mainImage.file);
+    formDataToSend.append('product[image_url]', formData.mainImage.file);
   }
   
-  // Add additional images
+  // Add additional images within product structure
   formData.other_images.forEach((image, index) => {
     console.log(`Adding additional image ${index + 1}:`, image.file.name);
-    formDataToSend.append('other_images', image.file);
+    formDataToSend.append('product[other_images][]', image.file);
   });
+  
+  // Debug: Log all FormData entries
+  console.log('=== FormData Debug ===');
+  for (let [key, value] of formDataToSend.entries()) {
+    console.log(`${key}:`, value);
+  }
   
   return formDataToSend;
 };
@@ -381,16 +392,15 @@ console.log(res);
   };
 
   // Remove additional image
-  const removeImage = (index) => {
-    const newImages = [...formData.images];
-    newImages.splice(index, 1);
-    setFormData({ ...formData, images: newImages });
-
-    // Clear any image errors when removing images
-    if (errors.images) {
-      setErrors({ ...errors, images: "" });
-    }
-  };
+const removeImage = (index) => {
+  const newImages = [...formData.other_images];
+  newImages.splice(index, 1);
+  setFormData({ ...formData, other_images: newImages }); 
+  
+  if (errors.other_images) { 
+    setErrors({ ...errors, other_images: "" });
+  }
+};
 
   if (!isOpen) return null;
 
@@ -398,7 +408,7 @@ console.log(res);
 
   return (
     <div className="modal-overlay-add">
-      <div className="add-product-modal" ref={modalRef}>
+      <div className="adds-product-modal" ref={modalRef}>
         <div className="modal-header">
           <h2>Add New Product</h2>
         </div>
@@ -725,7 +735,7 @@ console.log(res);
               {/* Upload area (shown only when no additional images are uploaded) */}
               {formData.other_images.length === 0 && (
                 <div
-                  ClassName={`image-upload-area ${
+                  className={`image-upload-area ${
                     isDragging ? "dragging" : ""
                   } ${isSubmitting ? "disabled" : ""}`}
                   onDragEnter={!isSubmitting ? handleDragEnter : undefined}
