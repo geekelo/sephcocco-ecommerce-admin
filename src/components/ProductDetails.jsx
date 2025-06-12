@@ -21,7 +21,7 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
 
 
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay-product-details">
     <div className="product-details-container">
     <button onClick={onClose} type="button" className="close-button-product" >
             <X size={24} />

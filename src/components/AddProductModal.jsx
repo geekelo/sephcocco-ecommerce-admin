@@ -6,12 +6,13 @@ import { validateProductForm } from "../schema/ProductSchema";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import { useViewProductCategories } from "../hooks/useGetProductCategories";
 import { useAddProduct } from "../hooks/useAddProduct";
-import { useUploadSingleImage } from "../hooks/useUploadSingleImage";
-
+// Remove the single image upload hook
+// import { useUploadSingleImage } from "../hooks/useUploadSingleImage";
 
 const AddProductModal = ({ isOpen, onClose }) => {
   // Get active outlet from cookies
   const active_outlet = getActiveOutlet();
+  
   // Form fields state
   const [formData, setFormData] = useState({
     name: "",
@@ -23,7 +24,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
     long_description: "",
     visible: false, // Switch for making product public
     mainImage: null,
-    images: [],
+    other_images: [],
   });
 
   // Validation errors state
@@ -31,7 +32,6 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
   // Loading states
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadingImages, setUploadingImages] = useState(false);
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
@@ -45,7 +45,8 @@ const AddProductModal = ({ isOpen, onClose }) => {
   // API hooks
   const { data: categories = [], isLoading: categoriesLoading } = useViewProductCategories(active_outlet);
   const addProductMutation = useAddProduct();
-  const uploadImageMutation = useUploadSingleImage();
+  // Remove the single image upload mutation
+  // const uploadImageMutation = useUploadSingleImage();
 
   // Close modal when clicking escape
   useEffect(() => {
@@ -72,11 +73,10 @@ const AddProductModal = ({ isOpen, onClose }) => {
         long_description: "",
         visible: false,
         mainImage: null,
-        images: [],
+        other_images: [],
       });
       setErrors({});
       setIsSubmitting(false);
-      setUploadingImages(false);
     }
   }, [isOpen]);
 
@@ -140,7 +140,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
     if (files.length === 0) return;
 
     // Calculate how many images can still be added
-    const availableSlots = 4 - formData.images.length;
+    const availableSlots = 4 - formData.other_images.length;
 
     if (availableSlots <= 0) {
       setErrors({
@@ -179,49 +179,48 @@ const AddProductModal = ({ isOpen, onClose }) => {
     }));
 
     // Update formData images state appending new images
-    setFormData({ ...formData, images: [...formData.images, ...newImages] });
+    setFormData({ ...formData, other_images: [...formData.other_images, ...newImages] });
 
-    if (errors.images) {
-      setErrors({ ...errors, images: "" });
+    if (errors.other_images) {
+      setErrors({ ...errors, other_images: "" });
     }
 
     // Reset file input value
     e.target.value = null;
   };
 
-  // Upload images to imgbb
-  const uploadImages = async () => {
-    const uploadedImages = [];
-    
-    try {
-      setUploadingImages(true);
-
-      // Upload main image
-      if (formData.mainImage) {
-        const mainImageResponse = await uploadImageMutation.mutateAsync(formData.mainImage.file);
-        uploadedImages.push({
-          url: mainImageResponse.url,
-          isMain: true
-        });
-      }
-
-      // Upload additional images
-      for (const image of formData.images) {
-        const imageResponse = await uploadImageMutation.mutateAsync(image.file);
-        uploadedImages.push({
-          url: imageResponse.url,
-          isMain: false
-        });
-      }
-
-      return uploadedImages;
-    } catch (error) {
-      console.error("Image upload failed:", error);
-      throw new Error("Failed to upload images. Please try again.");
-    } finally {
-      setUploadingImages(false);
-    }
-  };
+  // Create FormData with all product data and images
+// Replace your current createFormData function with this:
+const createFormData = () => {
+  const formDataToSend = new FormData();
+  
+  // Add text fields directly to FormData
+  formDataToSend.append('name', formData.name.trim());
+  formDataToSend.append('short_description', formData.short_description.trim());
+  formDataToSend.append('long_description', formData.long_description.trim());
+  formDataToSend.append('amount_in_stock', parseInt(formData.quantity));
+  formDataToSend.append('price', parseFloat(formData.price));
+  formDataToSend.append('visible', formData.visible);
+  formDataToSend.append('category_ids',formData.category_ids);
+  
+  if (formData.discountPrice && formData.discountPrice > 0) {
+    formDataToSend.append('discount_price', parseFloat(formData.discountPrice));
+  }
+  
+  // Add main image
+  if (formData.mainImage) {
+    console.log('Adding main image:', formData.mainImage.file.name);
+    formDataToSend.append('image_url', formData.mainImage.file);
+  }
+  
+  // Add additional images
+  formData.other_images.forEach((image, index) => {
+    console.log(`Adding additional image ${index + 1}:`, image.file.name);
+    formDataToSend.append('other_images', image.file);
+  });
+  
+  return formDataToSend;
+};
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -271,39 +270,21 @@ const AddProductModal = ({ isOpen, onClose }) => {
     try {
       setIsSubmitting(true);
 
-      // Upload images first
-      const uploadedImages = await uploadImages();
-      
-      // Separate main image and other images
-      const mainImageUrl = uploadedImages.find(img => img.isMain)?.url || "";
-      const otherImages = uploadedImages.filter(img => !img.isMain).map(img => img.url);
+      // Create FormData with all product data and images
+      const formDataToSend = createFormData();
 
-      // Prepare payload according to API requirements
-      const payload = {
-        product: {
-          name: formData.name.trim(),
-          short_description: formData.short_description.trim(),
-          long_description: formData.long_description.trim(),
-          image_url: mainImageUrl,
-          other_images: otherImages,
-          amount_in_stock: parseInt(formData.quantity),
-          price: parseFloat(formData.price),
-          visible: formData.visible,
-          category_ids: formData.category_ids
-        }
-      };
-console.log(payload);
+      console.log('Submitting form data with images...');
 
-      // Submit product
-      await addProductMutation.mutateAsync({
+      // Submit product with FormData (includes images)
+   const res =   await addProductMutation.mutateAsync({
         active_outlet,
-        payload
+        payload: formDataToSend // Send FormData directly
       });
+console.log(res);
 
       // Success - close modal
       onClose();
       
-      // You might want to show a success toast here
       console.log("Product added successfully!");
 
     } catch (error) {
@@ -413,29 +394,7 @@ console.log(payload);
 
   if (!isOpen) return null;
 
-  // Early return if no active outlet
-  if (!active_outlet) {
-    console.error("No active outlet found. Cannot load product form.");
-    return (
-      <div className="modal-overlay-add">
-        <div className="add-product-modal">
-          <div className="modal-header">
-            <h2>Add New Product</h2>
-          </div>
-          <div className="form-content">
-            <div className="error-message">
-              No active outlet found. Please select an outlet first.
-            </div>
-          </div>
-          <div className="form-actions">
-            <button type="button" className="cancel-button" onClick={onClose}>
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="modal-overlay-add">
@@ -444,7 +403,7 @@ console.log(payload);
           <h2>Add New Product</h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="product-form">
+        <form onSubmit={handleSubmit} className="product-form" encType="multipart/form-data">
           <div className="form-content">
             {/* Submit Error */}
             {errors.submit && (
@@ -726,10 +685,10 @@ console.log(payload);
               />
 
               {/* Display uploaded additional images in a grid with 3 per row */}
-              {formData.images.length > 0 && (
+              {formData.other_images.length > 0 && (
                 <div className="image-upload-container">
                   <div className="image-preview-grid">
-                    {formData.images.map((img, index) => (
+                    {formData.other_images.map((img, index) => (
                       <div key={index} className="image-preview-item">
                         <img
                           src={img.preview}
@@ -750,7 +709,7 @@ console.log(payload);
                     ))}
 
                     {/* Add more images button (if less than 4) */}
-                    {formData.images.length < 4 && !isSubmitting && (
+                    {formData.other_images.length < 4 && !isSubmitting && (
                       <div
                         className="add-more-images"
                         onClick={triggerFileInput}
@@ -764,9 +723,9 @@ console.log(payload);
               )}
 
               {/* Upload area (shown only when no additional images are uploaded) */}
-              {formData.images.length === 0 && (
+              {formData.other_images.length === 0 && (
                 <div
-                  className={`image-upload-area ${
+                  ClassName={`image-upload-area ${
                     isDragging ? "dragging" : ""
                   } ${isSubmitting ? "disabled" : ""}`}
                   onDragEnter={!isSubmitting ? handleDragEnter : undefined}
@@ -835,7 +794,7 @@ console.log(payload);
             <button 
               type="submit" 
               className="add-button"
-              disabled={isSubmitting || uploadingImages}
+              disabled={isSubmitting}
             >
               {isSubmitting 
                 ? "Adding Product..."

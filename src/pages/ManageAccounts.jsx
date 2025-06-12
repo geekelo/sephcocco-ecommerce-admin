@@ -155,7 +155,15 @@ const ManageAccounts = () => {
           <span>{new Date(value).toLocaleDateString()}</span>
         </div>
       )
-    }
+    },
+     {
+    key: 'actions',
+    label: 'Actions',
+    flex: 0,
+    minWidth: '60px',
+    type: 'actions',
+    className: 'actions-column'
+  }
   ];
 
   // Column definitions for admins table
@@ -240,7 +248,15 @@ const ManageAccounts = () => {
           <span>{new Date(value).toLocaleDateString()}</span>
         </div>
       )
-    }
+    },
+    {
+    key: 'actions',
+    label: 'Actions',
+    flex: 0,
+    minWidth: '60px',
+    type: 'actions',
+    className: 'actions-column'
+  }
   ];
 
   // Actions configuration
