@@ -11,6 +11,7 @@ import { X } from 'lucide-react';
 const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
   const [selectedImage, setSelectedImage] = useState(product?.image_url);
 
+  console.log('testing',product);
   
   const shortDescription = product?.short_description || "No description available";
   const longDescription = product?.long_description || null;

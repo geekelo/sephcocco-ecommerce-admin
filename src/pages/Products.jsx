@@ -28,14 +28,27 @@ const ProductsPage = () => {
   const [isEditModal, setIsEditModal] = useState(false);
   const [isViewModal, setIsViewModal] = useState(false);
   const [isDeleteModal, setIsDeleteModal] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [selectedProductId, setSelectedProductId] = useState('');
+ 
+
 console.log('product id',selectedProductId);
 
   const { data: products = [], isLoading, refetch } = useViewAllProduct(activeOutlet);
   console.log('products',products);
   
   const deleteMutation = useDeleteProduct();
-  const { data: selectedProduct } = useViewProductId(activeOutlet,selectedProductId, { enabled: !!selectedProductId });
+  
+  // Only fetch product by ID when:
+  // 1. Products are already loaded (!isLoading)
+  // 2. User has clicked view/edit (shouldFetchProduct is true)
+  // 3. We have a selected product ID
+  const { data: selectedProduct } = useViewProductId(
+    activeOutlet,
+    selectedProductId, 
+    { 
+      enabled: !isLoading  && !!selectedProductId 
+    }
+  );
 console.log('selectedProduct',selectedProduct);
 
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
@@ -47,16 +60,20 @@ console.log('selectedProduct',selectedProduct);
 
   const handleEdit = (productId) => {
     setSelectedProductId(productId);
+
     setIsEditModal(true);
   };
 
   const handleView = (productId) => {
     setSelectedProductId(productId);
+   
     setIsViewModal(true);
   };
 
   const handleDelete = (productId) => {
     setSelectedProductId(productId);
+    // Note: We don't need to fetch full product details for delete
+    // setShouldFetchProduct(false); // or don't set it at all
     setIsDeleteModal(true);
   };
 
@@ -66,10 +83,17 @@ console.log('selectedProduct',selectedProduct);
         toast.success('Product deleted successfully');
         setIsDeleteModal(false);
         setSelectedProductId(null);
+      
         refetch();
       },
       onError: () => toast.error('Failed to delete product'),
     });
+  };
+
+  // Reset shouldFetchProduct when modals are closed
+  const handleCloseModals = () => {
+    setSelectedProductId(null);
+
   };
 
   // Sort products by created_at in descending order (newest first)
@@ -106,7 +130,10 @@ console.log('selectedProduct',selectedProduct);
             setIsViewModal(false);
             handleDelete(selectedProduct.id);
           }}
-          onClose={() => setIsViewModal(false)}
+          onClose={() => {
+            setIsViewModal(false);
+            handleCloseModals();
+          }}
         />
       )}
 
@@ -115,6 +142,7 @@ console.log('selectedProduct',selectedProduct);
           isOpen={isEditModal}
           onClose={() => {
             setIsEditModal(false);
+            handleCloseModals();
             refetch();
           }}
           product={selectedProduct}
@@ -152,8 +180,6 @@ console.log('selectedProduct',selectedProduct);
     ))
   }
 
-
-
   {!isLoading && filteredProducts.length > 0 && filteredProducts.map(product => (
     <div className="product-grid-item" key={product.id}>
       <ProductCard
@@ -173,7 +199,10 @@ console.log('selectedProduct',selectedProduct);
       {isDeleteModal && selectedProduct && (
         <ConfirmActionModal
           isOpen={isDeleteModal}
-          onClose={() => setIsDeleteModal(false)}
+          onClose={() => {
+            setIsDeleteModal(false);
+            handleCloseModals();
+          }}
           title="Confirm Delete"
           message={
             <>Are you sure you want to delete <strong>{selectedProduct.name}</strong>?</>
@@ -183,7 +212,10 @@ console.log('selectedProduct',selectedProduct);
             <button type="button" className="confirm-button" onClick={handleConfirmDelete}>
               Delete Product
             </button>
-            <button type="button" className="cancel-button" onClick={() => setIsDeleteModal(false)}>
+            <button type="button" className="cancel-button" onClick={() => {
+              setIsDeleteModal(false);
+              handleCloseModals();
+            }}>
               Cancel
             </button>
           </div>
