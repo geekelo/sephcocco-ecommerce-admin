@@ -9,11 +9,11 @@ import { X } from 'lucide-react';
 
 
 const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
-  const [selectedImage, setSelectedImage] = useState(product?.images?.[0]);
+  const [selectedImage, setSelectedImage] = useState(product?.image_url);
 
   
-  const shortDescription = product?.shortDescription || "No description available";
-  const longDescription = product?.longDescription || null;
+  const shortDescription = product?.short_description || "No description available";
+  const longDescription = product?.long_description || null;
 
   if (!product) {
     return <div className="product-loading">Loading product details...</div>;
@@ -22,7 +22,7 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
 
   return (
     <div className="modal-overlay-product-details">
-    <div className="product-details-container">
+    <div className="product-container">
     <button onClick={onClose} type="button" className="close-button-product" >
             <X size={24} />
           </button>
@@ -33,7 +33,7 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
         transition={{ duration: 0.5 }}
       >
         <ImageGallery
-          images={product.images}
+          images={product?.other_images}
           selectedImage={selectedImage}
           onSelect={setSelectedImage}
         />
@@ -46,15 +46,15 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
           <p className="stock-status">
           <LikeButton 
               initialLikes={product.likes}
-              isLiked={product.isFavorite}
+             
            
             />
-            {product.inStock
-              ? `In stock : ${product.stockCount} Items`
+            {!product.out_of_stock_status
+              ? `In stock : ${product.amount_in_stock} Items`
               : 'Out of stock'}
           </p>
           
-          <div className="product-price">₦{product.price.toFixed(2)}</div>
+          <div className="product-price">₦{product.price}</div>
 
           <div className="product-description">
             <h3>Product Description</h3>

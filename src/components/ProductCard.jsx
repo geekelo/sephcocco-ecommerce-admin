@@ -6,11 +6,11 @@ import '../styles/ProductCard.css';
 const ProductCard = ({ product,  onView, onEdit, onDelete}) => {
   const { 
     name, 
-    image, 
+    image_url, 
     price, 
-    rating, 
-    stockCount, 
-    stockStatus 
+    likes, 
+    amount_in_stock, 
+    out_of_stock_status 
   } = product;
 
 
@@ -23,7 +23,7 @@ const ProductCard = ({ product,  onView, onEdit, onDelete}) => {
         </div>
 
         <div className="product-image">
-          <img src={image} alt={name} />
+          <img src={image_url} alt={name} />
         </div>
 
         <div className="product-details">
@@ -31,14 +31,14 @@ const ProductCard = ({ product,  onView, onEdit, onDelete}) => {
             <h3 className="product-name">{name}</h3>
             <div className="product-rating">
               <Heart size={14} className="heart-icon" />
-              <span className="rating-value">{rating}</span>
+              <span className="rating-value">{likes}</span>
             </div>
           </div>
 
           <div className="product-price">₦{price}</div>
 
           <div className="product-stock">
-            <div className="stock-info">{stockStatus} · {stockCount} items</div>
+            <div className="stock-info">{out_of_stock_status ? "Out of shock" : "In Stock"} · {amount_in_stock} items</div>
           </div>
 
           <div className="product-actions">

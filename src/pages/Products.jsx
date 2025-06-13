@@ -29,10 +29,14 @@ const ProductsPage = () => {
   const [isViewModal, setIsViewModal] = useState(false);
   const [isDeleteModal, setIsDeleteModal] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(null);
+console.log('product id',selectedProductId);
 
-  const { data: products = [], isLoading, refetch } = useViewAllProduct(activeOutlet?.id);
+  const { data: products = [], isLoading, refetch } = useViewAllProduct(activeOutlet);
+  console.log('products',products);
+  
   const deleteMutation = useDeleteProduct();
-  const { data: selectedProduct } = useViewProductId(selectedProductId, { enabled: !!selectedProductId });
+  const { data: selectedProduct } = useViewProductId(activeOutlet,selectedProductId, { enabled: !!selectedProductId });
+console.log('selectedProduct',selectedProduct);
 
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
 
@@ -68,7 +72,14 @@ const ProductsPage = () => {
     });
   };
 
-  const filteredProducts = products.filter(product =>
+  // Sort products by created_at in descending order (newest first)
+  const sortedProducts = [...products].sort((a, b) => {
+    const dateA = new Date(a.created_at);
+    const dateB = new Date(b.created_at);
+    return dateB - dateA; // Descending order (newest first)
+  });
+
+  const filteredProducts = sortedProducts.filter(product =>
     product.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -79,7 +90,7 @@ const ProductsPage = () => {
           isOpen={isAddModalOpen}
           onClose={() => {
             setIsAddModalOpen(false);
-          
+             refetch();
           }}
         />
       )}
@@ -123,13 +134,13 @@ const ProductsPage = () => {
 
           <div className="products-container">
             <div className="page-title-section">
-              <h2>{products.length} Products in stock</h2>
+              <h2>{sortedProducts.length} Products in stock</h2>
             </div>
-              {!isLoading && !products && (
+              {!isLoading && !sortedProducts && (
     <ErrorState message="Failed to load products. Please try again later." />
   )}
 
-  {!isLoading && products && filteredProducts.length === 0 && (
+  {!isLoading && sortedProducts && filteredProducts.length === 0 && (
     <EmptyState message="No matching products found." btnText="Add New Product" handleAddCategory={handleAddProduct}/>
   )}
 <div className="products-grid">
