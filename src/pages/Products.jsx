@@ -29,27 +29,30 @@ const ProductsPage = () => {
   const [isViewModal, setIsViewModal] = useState(false);
   const [isDeleteModal, setIsDeleteModal] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState('');
- 
 
-console.log('product id',selectedProductId);
+  console.log('product id', selectedProductId);
 
   const { data: products = [], isLoading, refetch } = useViewAllProduct(activeOutlet);
-  console.log('products',products);
+  console.log('products', products);
   
   const deleteMutation = useDeleteProduct();
   
   // Only fetch product by ID when:
   // 1. Products are already loaded (!isLoading)
-  // 2. User has clicked view/edit (shouldFetchProduct is true)
-  // 3. We have a selected product ID
+  // 2. We have a valid selected product ID
   const { data: selectedProduct } = useViewProductId(
     activeOutlet,
     selectedProductId, 
     { 
-      enabled: !isLoading  && !!selectedProductId 
+      enabled: !isLoading && !!selectedProductId && selectedProductId.trim() !== ''
     }
   );
-console.log('selectedProduct',selectedProduct);
+  console.log('selectedProduct', selectedProduct);
+
+  // Helper function to validate product ID
+  const isValidProductId = (productId) => {
+    return productId && productId.trim() !== '' && productId !== null && productId !== undefined;
+  };
 
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
 
@@ -59,41 +62,67 @@ console.log('selectedProduct',selectedProduct);
   };
 
   const handleEdit = (productId) => {
-    setSelectedProductId(productId);
+    console.log('Edit requested for product ID:', productId);
+    
+    if (!isValidProductId(productId)) {
+      console.error('Invalid product ID for edit:', productId);
+      toast.error('Invalid product selected for editing');
+      return;
+    }
 
+    setSelectedProductId(productId);
     setIsEditModal(true);
   };
 
   const handleView = (productId) => {
+    console.log('View requested for product ID:', productId);
+    
+    if (!isValidProductId(productId)) {
+      console.error('Invalid product ID for view:', productId);
+      toast.error('Invalid product selected for viewing');
+      return;
+    }
+
     setSelectedProductId(productId);
-   
     setIsViewModal(true);
   };
 
   const handleDelete = (productId) => {
+    console.log('Delete requested for product ID:', productId);
+    
+    if (!isValidProductId(productId)) {
+      console.error('Invalid product ID for delete:', productId);
+      toast.error('Invalid product selected for deletion');
+      return;
+    }
+
     setSelectedProductId(productId);
-    // Note: We don't need to fetch full product details for delete
-    // setShouldFetchProduct(false); // or don't set it at all
     setIsDeleteModal(true);
   };
 
   const handleConfirmDelete = () => {
+    if (!isValidProductId(selectedProductId)) {
+      toast.error('No valid product selected for deletion');
+      return;
+    }
+
     deleteMutation.mutate(activeOutlet, selectedProductId, {
       onSuccess: () => {
         toast.success('Product deleted successfully');
         setIsDeleteModal(false);
-        setSelectedProductId(null);
-      
+        setSelectedProductId('');
         refetch();
       },
-      onError: () => toast.error('Failed to delete product'),
+      onError: (error) => {
+        console.error('Delete error:', error);
+        toast.error('Failed to delete product');
+      },
     });
   };
 
-  // Reset shouldFetchProduct when modals are closed
+  // Reset selected product when modals are closed
   const handleCloseModals = () => {
-    setSelectedProductId(null);
-
+    setSelectedProductId('');
   };
 
   // Sort products by created_at in descending order (newest first)
@@ -114,12 +143,12 @@ console.log('selectedProduct',selectedProduct);
           isOpen={isAddModalOpen}
           onClose={() => {
             setIsAddModalOpen(false);
-             refetch();
+            refetch();
           }}
         />
       )}
 
-      {isViewModal && selectedProduct && (
+      {isViewModal && selectedProduct && isValidProductId(selectedProductId) && (
         <ProductDetails
           product={selectedProduct}
           onEdit={() => {
@@ -137,7 +166,7 @@ console.log('selectedProduct',selectedProduct);
         />
       )}
 
-      {isEditModal && selectedProduct && (
+      {isEditModal && selectedProduct && isValidProductId(selectedProductId) && (
         <EditProductModal
           isOpen={isEditModal}
           onClose={() => {
@@ -164,39 +193,44 @@ console.log('selectedProduct',selectedProduct);
             <div className="page-title-section">
               <h2>{sortedProducts.length} Products in stock</h2>
             </div>
-              {!isLoading && !sortedProducts && (
-    <ErrorState message="Failed to load products. Please try again later." />
-  )}
+            
+            {!isLoading && !sortedProducts && (
+              <ErrorState message="Failed to load products. Please try again later." />
+            )}
 
-  {!isLoading && sortedProducts && filteredProducts.length === 0 && (
-    <EmptyState message="No matching products found." btnText="Add New Product" handleAddCategory={handleAddProduct}/>
-  )}
-<div className="products-grid">
-  {isLoading &&
-    Array.from({ length: 6 }).map((_, idx) => (
-      <div className="product-grid-item" key={`skeleton-${idx}`}>
-        <ProductSkeleton />
-      </div>
-    ))
-  }
+            {!isLoading && sortedProducts && filteredProducts.length === 0 && (
+              <EmptyState 
+                message="No matching products found." 
+                btnText="Add New Product" 
+                handleAddCategory={handleAddProduct}
+              />
+            )}
+            
+            <div className="products-grid">
+              {isLoading &&
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <div className="product-grid-item" key={`skeleton-${idx}`}>
+                    <ProductSkeleton />
+                  </div>
+                ))
+              }
 
-  {!isLoading && filteredProducts.length > 0 && filteredProducts.map(product => (
-    <div className="product-grid-item" key={product.id}>
-      <ProductCard
-        product={product}
-        onDelete={() => handleDelete(product.id)}
-        onEdit={() => handleEdit(product.id)}
-        onView={() => handleView(product.id)}
-      />
-    </div>
-  ))}
-</div>
-
+              {!isLoading && filteredProducts.length > 0 && filteredProducts.map(product => (
+                <div className="product-grid-item" key={product.id}>
+                  <ProductCard
+                    product={product}
+                    onDelete={() => handleDelete(product.id)}
+                    onEdit={() => handleEdit(product.id)}
+                    onView={() => handleView(product.id)}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </>
       )}
 
-      {isDeleteModal && selectedProduct && (
+      {isDeleteModal && selectedProduct && isValidProductId(selectedProductId) && (
         <ConfirmActionModal
           isOpen={isDeleteModal}
           onClose={() => {
@@ -209,13 +243,22 @@ console.log('selectedProduct',selectedProduct);
           }
         >
           <div className="form-actions">
-            <button type="button" className="confirm-button" onClick={handleConfirmDelete}>
-              Delete Product
+            <button 
+              type="button" 
+              className="confirm-button" 
+              onClick={handleConfirmDelete}
+              disabled={deleteMutation.isLoading}
+            >
+              {deleteMutation.isLoading ? 'Deleting...' : 'Delete Product'}
             </button>
-            <button type="button" className="cancel-button" onClick={() => {
-              setIsDeleteModal(false);
-              handleCloseModals();
-            }}>
+            <button 
+              type="button" 
+              className="cancel-button" 
+              onClick={() => {
+                setIsDeleteModal(false);
+                handleCloseModals();
+              }}
+            >
               Cancel
             </button>
           </div>

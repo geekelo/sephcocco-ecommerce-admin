@@ -6,8 +6,7 @@ import { validateProductForm } from "../schema/ProductSchema";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import { useViewProductCategories } from "../hooks/useGetProductCategories";
 import { useAddProduct } from "../hooks/useAddProduct";
-// Remove the single image upload hook
-// import { useUploadSingleImage } from "../hooks/useUploadSingleImage";
+import { useProductImageUpload } from "../hooks/useProductUploadImage";
 
 const AddProductModal = ({ isOpen, onClose }) => {
   // Get active outlet from cookies
@@ -22,7 +21,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
     discountPrice: "",
     short_description: "",
     long_description: "",
-    visible: false, // Switch for making product public
+    visible: false, 
     mainImage: null,
     other_images: [],
   });
@@ -32,6 +31,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
   // Loading states
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
@@ -45,8 +45,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
   // API hooks
   const { data: categories = [], isLoading: categoriesLoading } = useViewProductCategories(active_outlet);
   const addProductMutation = useAddProduct();
-  // Remove the single image upload mutation
-  // const uploadImageMutation = useUploadSingleImage();
+  const productImageUploadMutation = useProductImageUpload();
 
   // Close modal when clicking escape
   useEffect(() => {
@@ -77,6 +76,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
       });
       setErrors({});
       setIsSubmitting(false);
+      setUploadProgress("");
     }
   }, [isOpen]);
 
@@ -189,49 +189,67 @@ const AddProductModal = ({ isOpen, onClose }) => {
     e.target.value = null;
   };
 
-  // Create FormData with all product data and images
-// Replace your current createFormData function with this:
-const createFormData = () => {
-  const formDataToSend = new FormData();
-  
-  // Add product fields using bracket notation for nested object structure
-  formDataToSend.append('product[name]', formData.name.trim());
-  formDataToSend.append('product[short_description]', formData.short_description.trim());
-  formDataToSend.append('product[long_description]', formData.long_description.trim());
-  formDataToSend.append('product[amount_in_stock]', formData.quantity.toString());
-  formDataToSend.append('product[price]', formData.price.toString());
-  formDataToSend.append('product[visible]', formData.visible.toString());
-  
-  // Add discount_price only if it exists and is greater than 0
-  if (formData.discountPrice && formData.discountPrice > 0) {
-    formDataToSend.append('product[discount_price]', formData.discountPrice.toString());
-  }
-  
-  // Add category IDs as array elements within product
-  formData.category_ids.forEach((categoryId) => {
-    formDataToSend.append('product[category_ids][]', categoryId);
-  });
-  
-  // Add main image within product structure
-  if (formData.mainImage) {
-    console.log('Adding main image:', formData.mainImage.file.name);
-    formDataToSend.append('product[image_url]', formData.mainImage.file);
-  }
-  
-  // Add additional images within product structure
-  formData.other_images.forEach((image, index) => {
-    console.log(`Adding additional image ${index + 1}:`, image.file.name);
-    formDataToSend.append('product[other_images][]', image.file);
-  });
-  
-  // Debug: Log all FormData entries
-  console.log('=== FormData Debug ===');
-  for (let [key, value] of formDataToSend.entries()) {
-    console.log(`${key}:`, value);
-  }
-  
-  return formDataToSend;
-};
+  // Create FormData without image files (images will be uploaded separately)
+  const createFormData = () => {
+    const formDataToSend = new FormData();
+    
+    // Add product fields using bracket notation for nested object structure
+    formDataToSend.append('product[name]', formData.name.trim());
+    formDataToSend.append('product[short_description]', formData.short_description.trim());
+    formDataToSend.append('product[long_description]', formData.long_description.trim());
+    formDataToSend.append('product[amount_in_stock]', formData.quantity.toString());
+    formDataToSend.append('product[price]', formData.price.toString());
+    formDataToSend.append('product[visible]', formData.visible.toString());
+    
+    // Add discount_price only if it exists and is greater than 0
+    if (formData.discountPrice && formData.discountPrice > 0) {
+      formDataToSend.append('product[discount_price]', formData.discountPrice.toString());
+    }
+    
+    // Add category IDs as array elements within product
+    formData.category_ids.forEach((categoryId) => {
+      formDataToSend.append('product[category_ids][]', categoryId);
+    });
+    
+    // NOTE: Images are NOT included in this FormData - they will be uploaded separately
+    
+    return formDataToSend;
+  };
+
+  // Upload images after product creation
+  const uploadImages = async (productId) => {
+    try {
+      // Upload main image
+      if (formData.mainImage) {
+        setUploadProgress("Uploading main image...");
+        await productImageUploadMutation.mutateAsync({
+          active_outlet,
+          productId,
+          file: formData.mainImage.file,
+          isMainImage: true
+        });
+      }
+
+      // Upload other images
+      if (formData.other_images.length > 0) {
+        setUploadProgress("Uploading additional images...");
+        const uploadPromises = formData.other_images.map(img => 
+          productImageUploadMutation.mutateAsync({
+            active_outlet,
+            productId,
+            file: img.file,
+            isMainImage: false
+          })
+        );
+        await Promise.all(uploadPromises);
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      throw new Error("Failed to upload images. Please try again.");
+    }
+  };
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -280,23 +298,34 @@ const createFormData = () => {
 
     try {
       setIsSubmitting(true);
+      setUploadProgress("Creating product...");
 
-      // Create FormData with all product data and images
+      // Step 1: Create product without images
       const formDataToSend = createFormData();
-
-      console.log('Submitting form data with images...');
-
-      // Submit product with FormData (includes images)
-   const res =   await addProductMutation.mutateAsync({
+      const productResponse = await addProductMutation.mutateAsync({
         active_outlet,
-        payload: formDataToSend // Send FormData directly
+        payload: formDataToSend
       });
-console.log(res);
 
-      // Success - close modal
-      onClose();
+      console.log("Product created successfully:", productResponse);
+
+      // Step 2: Upload images if product creation was successful
+      if (formData.mainImage || formData.other_images.length > 0) {
+        const productId = productResponse.id || productResponse.data?.id;
+        
+        if (!productId) {
+          throw new Error("Product ID not found in response");
+        }
+        
+        await uploadImages(productId);
+      }
+
+      setUploadProgress("Product added successfully!");
       
-      console.log("Product added successfully!");
+      // Success - close modal after a brief delay
+      setTimeout(() => {
+        onClose();
+      }, 1000);
 
     } catch (error) {
       console.error("Failed to add product:", error);
@@ -305,6 +334,7 @@ console.log(res);
       });
     } finally {
       setIsSubmitting(false);
+      setTimeout(() => setUploadProgress(""), 2000);
     }
   };
 
@@ -392,32 +422,58 @@ console.log(res);
   };
 
   // Remove additional image
-const removeImage = (index) => {
-  const newImages = [...formData.other_images];
-  newImages.splice(index, 1);
-  setFormData({ ...formData, other_images: newImages }); 
-  
-  if (errors.other_images) { 
-    setErrors({ ...errors, other_images: "" });
-  }
-};
+  const removeImage = (index) => {
+    const newImages = [...formData.other_images];
+    newImages.splice(index, 1);
+    setFormData({ ...formData, other_images: newImages }); 
+    
+    if (errors.other_images) { 
+      setErrors({ ...errors, other_images: "" });
+    }
+  };
+
+  // Handle close button click
+  const handleCloseClick = () => {
+    if (!isSubmitting) {
+      onClose();
+    }
+  };
 
   if (!isOpen) return null;
-
-
 
   return (
     <div className="modal-overlay-add">
       <div className="adds-product-modal" ref={modalRef}>
         <div className="modal-header">
           <h2>Add New Product</h2>
+          <button 
+            type="button" 
+            className="close-button" 
+            onClick={handleCloseClick}
+            disabled={isSubmitting}
+            aria-label="Close modal"
+          >
+            <X size={24} />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="product-form" encType="multipart/form-data">
+        <form onSubmit={handleSubmit} className="product-form">
           <div className="form-content">
             {/* Submit Error */}
             {errors.submit && (
               <div className="error-message submit-error">{errors.submit}</div>
+            )}
+
+            {/* Upload Progress */}
+            {uploadProgress && (
+              <div className="upload-progress-message">
+                <div className="progress-text">{uploadProgress}</div>
+                {isSubmitting && (
+                  <div className="progress-spinner">
+                    <div className="spinner"></div>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Product Name */}
@@ -814,7 +870,7 @@ const removeImage = (index) => {
             <button 
               type="button" 
               className="cancel-button" 
-              onClick={onClose}
+              onClick={handleCloseClick}
               disabled={isSubmitting}
             >
               Cancel
