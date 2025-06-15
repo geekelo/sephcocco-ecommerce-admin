@@ -9,7 +9,7 @@ import { X } from 'lucide-react';
 
 
 const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
-  const [selectedImage, setSelectedImage] = useState(product?.image_url);
+  const [selectedImage, setSelectedImage] = useState(product?.single_image_url);
 
   console.log('testing',product);
   
@@ -34,7 +34,7 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
         transition={{ duration: 0.5 }}
       >
         <ImageGallery
-          images={product?.other_images}
+          images={product?.other_images_urls}
           selectedImage={selectedImage}
           onSelect={setSelectedImage}
         />

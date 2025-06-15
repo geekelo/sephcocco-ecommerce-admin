@@ -1,3 +1,5 @@
+import { apiClient } from "./axios";
+
 export const uploadProductImage = async (active_outlet, productId, file, isMainImage = false) => {
   const formData = new FormData();
   formData.append('file', file);
@@ -5,7 +7,7 @@ export const uploadProductImage = async (active_outlet, productId, file, isMainI
 
   try {
     const response = await apiClient().post(
-      `/api/v1/sephcocco_${active_outlet}_products/${productId}/upload_image`,
+      `/api/v1/${active_outlet}/sephcocco_${active_outlet}_products/${productId}/upload_image`,
       formData,
       {
         headers: {

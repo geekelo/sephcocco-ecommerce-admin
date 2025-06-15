@@ -9,7 +9,7 @@ export const uploadSingleImage = async (file) => {
 
   try {
     const response = await apiClient().post(
-      `https://api.imgbb.com/1/upload?expiration=600&key=${apiKey}`,
+      `https://api.imgbb.com/1/upload?expiration=6600&key=${apiKey}`,
       formData
     );
     return response.data.data;
