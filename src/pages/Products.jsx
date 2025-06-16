@@ -30,10 +30,14 @@ const ProductsPage = () => {
   const [isDeleteModal, setIsDeleteModal] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState('');
 
-  console.log('product id', selectedProductId);
-
-  const { data: products = [], isLoading, refetch } = useViewAllProduct(activeOutlet);
-  console.log('products', products);
+  const { data: responseData = { products: [], meta: {} }, isLoading, error, refetch } = useViewAllProduct(activeOutlet);
+  
+  // Extract products array from the response
+  const products = Array.isArray(responseData.products) ? responseData.products : [];
+  const { total_count = 0 } = responseData.meta || {};
+  
+  console.log('API Response:', responseData);
+  console.log('Products:', products);
   
   const deleteMutation = useDeleteProduct();
   
@@ -47,7 +51,6 @@ const ProductsPage = () => {
       enabled: !isLoading && !!selectedProductId && selectedProductId.trim() !== ''
     }
   );
-  console.log('selectedProduct', selectedProduct);
 
   // Helper function to validate product ID
   const isValidProductId = (productId) => {
@@ -136,6 +139,10 @@ const ProductsPage = () => {
     product.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (error) {
+    return <ErrorState message="Failed to load products. Please try again later." />;
+  }
+
   return (
     <div className="products-page" ref={mainContentRef}>
       {isAddModalOpen && (
@@ -191,16 +198,12 @@ const ProductsPage = () => {
 
           <div className="products-container">
             <div className="page-title-section">
-              <h2>{sortedProducts.length} Products in stock</h2>
+              <h2>{total_count} Products in stock</h2>
             </div>
             
-            {!isLoading && !sortedProducts && (
-              <ErrorState message="Failed to load products. Please try again later." />
-            )}
-
-            {!isLoading && sortedProducts && filteredProducts.length === 0 && (
+            {!isLoading && products.length === 0 && (
               <EmptyState 
-                message="No matching products found." 
+                message="No products found." 
                 btnText="Add New Product" 
                 handleAddCategory={handleAddProduct}
               />

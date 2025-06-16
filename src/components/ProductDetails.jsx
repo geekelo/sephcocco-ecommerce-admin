@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import ImageGallery from './ImageGallery';
 import LikeButton from './LikeButton';
@@ -9,7 +9,20 @@ import { X } from 'lucide-react';
 
 
 const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
-  const [selectedImage, setSelectedImage] = useState(product?.single_image_url);
+  const [selectedImage, setSelectedImage] = useState('');
+  const [otherImages, setOtherImages] = useState([]);
+
+  useEffect(() => {
+    // Set the main image as the selected image
+    if (product.main_image_url) {
+      setSelectedImage(product.main_image_url);
+    }
+    
+    // Set other images
+    if (Array.isArray(product.other_image_urls)) {
+      setOtherImages(product.other_image_urls);
+    }
+  }, [product]);
 
   console.log('testing',product);
   
@@ -34,7 +47,7 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
         transition={{ duration: 0.5 }}
       >
         <ImageGallery
-          images={product?.other_images_urls}
+          images={otherImages}
           selectedImage={selectedImage}
           onSelect={setSelectedImage}
         />
