@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const IMGBB_API_KEY = 'd44d270b693fcf092b6ebb50e7e6c781';
-const IMGBB_API_URL = 'https://api.imgbb.com/1/upload';
+const IMGBB_API_KEY = import.meta.env.VITE_API_IMGBB_API_KEY;
+const IMGBB_API_URL = import.meta.env.VITE_API_IMGBB_API_URL;
 
 export const uploadToImgbb = async (imageFile) => {
   try {
@@ -19,7 +19,7 @@ export const uploadToImgbb = async (imageFile) => {
     if (response.data.success) {
       return {
         success: true,
-        url: response.data.data.url,
+        url: response.data.image.url,
         display_url: response.data.data.display_url,
         thumb_url: response.data.data.thumb.url,
         delete_url: response.data.data.delete_url
