@@ -6,7 +6,7 @@ import '../styles/ProductCard.css';
 const ProductCard = ({ product,  onView, onEdit, onDelete}) => {
   const { 
     name, 
-    image_url, 
+    main_image_url, 
     price, 
     likes, 
     amount_in_stock, 
@@ -23,7 +23,7 @@ const ProductCard = ({ product,  onView, onEdit, onDelete}) => {
         </div>
 
         <div className="product-image">
-          <img src={image_url} alt={name} />
+          <img src={main_image_url} alt={name} />
         </div>
 
         <div className="product-details">

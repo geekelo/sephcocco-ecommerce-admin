@@ -9,20 +9,20 @@ import { X } from 'lucide-react';
 
 
 const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
-  const [selectedImage, setSelectedImage] = useState('');
-  const [otherImages, setOtherImages] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(product?.main_image_url);
+  // const [otherImages, setOtherImages] = useState([]);
 
-  useEffect(() => {
-    // Set the main image as the selected image
-    if (product.main_image_url) {
-      setSelectedImage(product.main_image_url);
-    }
+  // useEffect(() => {
+  //   // Set the main image as the selected image
+  //   if (product.main_image_url) {
+  //     setSelectedImage(product.main_image_url);
+  //   }
     
-    // Set other images
-    if (Array.isArray(product.other_image_urls)) {
-      setOtherImages(product.other_image_urls);
-    }
-  }, [product]);
+  //   // Set other images
+  //   if (Array.isArray(product.other_image_urls)) {
+  //     setOtherImages(product.other_image_urls);
+  //   }
+  // }, [product]);
 
   console.log('testing',product);
   
@@ -47,7 +47,7 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
         transition={{ duration: 0.5 }}
       >
         <ImageGallery
-          images={otherImages}
+          images={product?.other_image_urls}
           selectedImage={selectedImage}
           onSelect={setSelectedImage}
         />

@@ -943,6 +943,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
   // API hooks
   const updateProductMutation = useUpdateProduct();
   const uploadImageMutation = useUploadSingleImage();
+console.log('productcat',product);
 
   // Initialize form data when product changes
   useEffect(() => {
@@ -950,12 +951,12 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
       setFormData({
         name: product.name || "",
         // Convert category to category_ids array - handle both string and array
-        category_ids: Array.isArray(product.category_ids)
-          ? product.category_ids
-          : Array.isArray(product.category)
-          ? product.category
-          : product.category
-          ? [product.category]
+        category_ids: Array.isArray(product.categories)
+          ? product.categories
+          : Array.isArray(product.categories)
+          ? product.categories
+          : product.categories
+          ? [product.categories]
           : [],
         quantity: product.amount_in_stock || "",
         price: product.price || "",
@@ -963,8 +964,8 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
         short_description: product.short_description || "",
         long_description: product.long_description || product.description || "", // Handle both field names
         visible: product.visible || false,
-        mainImage: product.mainImage || null,
-        other_images: product.other_images || product.images || [], // Handle both field names
+        mainImage: product.main_image_url || null,
+        other_images: product.other_image_urls || []
       });
     }
   }, [product]);
@@ -1420,23 +1421,17 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
                 <div className="form-group">
                   <div className="selected-categories">
                     {formData.category_ids.map((catId) => {
-                      // Handle both object and string categories
-                      const category = categories.find(cat => 
-                        (typeof cat === 'object' ? cat.id : cat) === catId
-                      );
-                      const displayName = category 
-                        ? (typeof category === 'object' ? category.name : category)
-                        : `Unknown Category`;
+               
                       
                       return (
                         <span className="badge" key={catId}>
-                          {displayName}
+                          {catId?.name}
                           <button
                             type="button"
                             className="remove-btn"
                             onClick={() => {
                               const updated = formData.category_ids.filter(
-                                (id) => id !== catId
+                                (id) => id !== catId.id
                               );
                               setFormData({ ...formData, category_ids: updated });
                               if (errors.category_ids) {
@@ -1481,17 +1476,16 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
                     <option value="" disabled>
                       Select a category
                     </option>
-                    {categories.map((category) => {
-                      const categoryId = typeof category === 'object' ? category.id : category;
-                      const categoryName = typeof category === 'object' ? category.name : category;
+                    {product?.categories?.map((category) => {
+                  
                       
                       return (
                         <option
-                          key={categoryId}
-                          value={categoryId}
-                          disabled={formData.category_ids.includes(categoryId)}
+                          key={category?.id}
+                          value={category?.id}
+                          disabled={formData.category_ids.includes(category?.id)}
                         >
-                          {categoryName}
+                          {category?.name}
                         </option>
                       );
                     })}
@@ -1619,7 +1613,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
                 <div className="main-image-container">
                   <div className="main-image-preview">
                     <img
-                      src={formData.mainImage.preview || formData.mainImage.url}
+                      src={formData.mainImage}
                       alt="Main Product Preview"
                       className="main-image"
                     />
@@ -1680,7 +1674,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
                     {formData.other_images.map((img, index) => (
                       <div key={index} className="image-preview-item">
                         <img
-                          src={img.preview || img.url}
+                          src={img}
                           alt={`Product Preview ${index + 1}`}
                           className="image-preview"
                         />
