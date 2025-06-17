@@ -127,13 +127,19 @@ const ProductsPage = () => {
     setIsDeleteModal(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (!isValidProductId(selectedProductId)) {
-      toast.error('No valid product selected for deletion');
-      return;
-    }
+const handleConfirmDelete = () => {
+  if (!isValidProductId(selectedProductId)) {
+    toast.error('No valid product selected for deletion');
+    return;
+  }
 
-    deleteMutation.mutate(activeOutlet, selectedProductId, {
+  // Fix: Pass parameters as an object, and use the second parameter for options
+  deleteMutation.mutate(
+    { 
+      active_outlet: activeOutlet, 
+      productId: selectedProductId 
+    },
+    {
       onSuccess: () => {
         toast.success('Product deleted successfully');
         setIsDeleteModal(false);
@@ -150,8 +156,9 @@ const ProductsPage = () => {
         console.error('Delete error:', error);
         toast.error('Failed to delete product');
       },
-    });
-  };
+    }
+  );
+};
 
   // Reset selected product when modals are closed
   const handleCloseModals = () => {
@@ -304,14 +311,14 @@ const ProductsPage = () => {
             <>Are you sure you want to delete <strong>{selectedProduct.name}</strong>?</>
           }
         >
-          <div className="form-actions">
+          <div className="form-actions-confirm">
             <button 
               type="button" 
               className="confirm-button" 
               onClick={handleConfirmDelete}
-              disabled={deleteMutation.isLoading}
+              disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isLoading ? 'Deleting...' : 'Delete Product'}
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete Product'}
             </button>
             <button 
               type="button" 
