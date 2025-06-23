@@ -30,7 +30,9 @@ const ProductCard = ({ product,  onView, onEdit, onDelete}) => {
           <div className="product-header">
             <h3 className="product-name">{name}</h3>
             <div className="product-rating">
-              <Heart size={14} className="heart-icon" />
+              <Heart     fill={likes > 0 ? '#e74c3c' : 'none'}
+          color={likes > 0 ? '#e74c3c' : '#666'}
+           size={14} className="heart-icon"  />
               <span className="rating-value">{likes}</span>
             </div>
           </div>

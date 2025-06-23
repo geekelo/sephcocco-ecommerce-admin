@@ -60,7 +60,7 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
           <p className="stock-status">
           <LikeButton 
               initialLikes={product.likes}
-             
+              isLiked={product.likes > 0}  
            
             />
             {!product.out_of_stock_status

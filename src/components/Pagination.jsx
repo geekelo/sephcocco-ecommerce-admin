@@ -3,53 +3,48 @@ import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import '../styles/Pagination.css';
 
 const Pagination = ({ 
-  currentPage = 1, 
-  totalPages = 1, 
-  onPageChange, 
-  totalItems = 0, 
-  itemsPerPage = 20,
+  currentPage, 
+  totalPages, 
+  totalItems, 
+  itemsPerPage, 
+  onPageChange,
   showInfo = true,
-  maxVisiblePages = 7 
+  className = ''
 }) => {
-  // Don't render if there's only one page or no pages
-  if (totalPages <= 1) return null;
-
-  const getVisiblePages = () => {
+  // Generate page numbers to display
+  const getPageNumbers = () => {
     const pages = [];
+    const maxVisiblePages = 7;
     
     if (totalPages <= maxVisiblePages) {
-      // Show all pages if total pages is less than max visible
+      // Show all pages if total is small
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Calculate start and end pages around current page
-      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      // Always show first page
+      pages.push(1);
       
-      // Adjust start page if we're near the end
-      if (endPage - startPage < maxVisiblePages - 1) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1);
-      }
-      
-      // Add first page and ellipsis if needed
-      if (startPage > 1) {
-        pages.push(1);
-        if (startPage > 2) {
-          pages.push('...');
+      if (currentPage <= 4) {
+        // Near the beginning
+        for (let i = 2; i <= 5; i++) {
+          pages.push(i);
         }
-      }
-      
-      // Add visible pages
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
-      }
-      
-      // Add ellipsis and last page if needed
-      if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-          pages.push('...');
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        // Near the end
+        pages.push('...');
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i);
         }
+      } else {
+        // In the middle
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
         pages.push(totalPages);
       }
     }
@@ -57,74 +52,81 @@ const Pagination = ({
     return pages;
   };
 
+  const pageNumbers = getPageNumbers();
+  
+  // Calculate the range of items being shown
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
   const handlePageClick = (page) => {
     if (page !== currentPage && page !== '...' && page >= 1 && page <= totalPages) {
       onPageChange(page);
     }
   };
 
-  const handlePrevious = () => {
-    if (currentPage > 1) {
-      onPageChange(currentPage - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentPage < totalPages) {
-      onPageChange(currentPage + 1);
-    }
-  };
-
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+  if (totalPages <= 1) {
+    return null; // Don't show pagination if there's only one page
+  }
 
   return (
-    <div className="pagination-container">
+    <div className={`pagination-container ${className}`}>
       {showInfo && (
         <div className="pagination-info">
-          <span>
-            Showing {startItem} to {endItem} of {totalItems} results
+          <span className="pagination-text">
+            Showing {startItem}-{endItem} of {totalItems} products
           </span>
         </div>
       )}
       
-      <div className="pagination-controls">
-        <button
-          className={`pagination-btn pagination-prev ${currentPage === 1 ? 'disabled' : ''}`}
-          onClick={handlePrevious}
-          disabled={currentPage === 1}
-          aria-label="Previous page"
-        >
-          <ChevronLeft size={16} />
-          <span>Previous</span>
-        </button>
+      <nav className="pagination-nav" aria-label="Pagination">
+        <div className="pagination-buttons">
+          {/* Previous button */}
+          <button
+            onClick={() => handlePageClick(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="pagination-button pagination-prev"
+            aria-label="Previous page"
+          >
+            <ChevronLeft size={16} />
+            <span className="pagination-button-text">Previous</span>
+          </button>
 
-        <div className="pagination-pages">
-          {getVisiblePages().map((page, index) => (
-            <button
-              key={index}
-              className={`pagination-page ${
-                page === currentPage ? 'active' : ''
-              } ${page === '...' ? 'ellipsis' : ''}`}
-              onClick={() => handlePageClick(page)}
-              disabled={page === '...'}
-              aria-label={page === '...' ? 'More pages' : `Go to page ${page}`}
-            >
-              {page === '...' ? <MoreHorizontal size={16} /> : page}
-            </button>
-          ))}
+          {/* Page numbers */}
+          <div className="pagination-numbers">
+            {pageNumbers.map((page, index) => (
+              <React.Fragment key={index}>
+                {page === '...' ? (
+                  <span className="pagination-ellipsis">
+                    <MoreHorizontal size={16} />
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => handlePageClick(page)}
+                    className={`pagination-number ${
+                      page === currentPage ? 'active' : ''
+                    }`}
+                    aria-label={`Page ${page}`}
+                    aria-current={page === currentPage ? 'page' : undefined}
+                  >
+                    {page}
+                  </button>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+
+          {/* Next button */}
+          <button
+            onClick={() => handlePageClick(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="pagination-button pagination-next"
+            aria-label="Next page"
+          >
+            <span className="pagination-button-text">Next</span>
+            <ChevronRight size={16} />
+          </button>
         </div>
-
-        <button
-          className={`pagination-btn pagination-next ${currentPage === totalPages ? 'disabled' : ''}`}
-          onClick={handleNext}
-          disabled={currentPage === totalPages}
-          aria-label="Next page"
-        >
-          <span>Next</span>
-          <ChevronRight size={16} />
-        </button>
-      </div>
+      </nav>
     </div>
   );
 };
