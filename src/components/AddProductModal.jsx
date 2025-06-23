@@ -1,24 +1,36 @@
-// src/components/AddProductModal.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { X, Upload, Plus, Image } from "lucide-react";
 import "../styles/AddProductModal.css";
 import { validateProductForm } from "../schema/ProductSchema";
+import { getActiveOutlet } from "../utils/getActiveOutlets";
+import { useViewProductCategories } from "../hooks/useGetProductCategories";
+import { useAddProduct } from "../hooks/useAddProduct";
+import { useUploadSingleImage } from "../hooks/useUploadSingleImage";
 
 const AddProductModal = ({ isOpen, onClose }) => {
+  // Get active outlet from cookies
+  const active_outlet = getActiveOutlet();
+  
   // Form fields state
   const [formData, setFormData] = useState({
     name: "",
-    category: [],
+    category_ids: [],
     quantity: "",
     price: "",
     discountPrice: "",
-    description: "",
+    short_description: "",
+    long_description: "",
+    visible: false, 
     mainImage: null,
-    images: [],
+    other_images: [],
   });
 
   // Validation errors state
   const [errors, setErrors] = useState({});
+
+  // Loading states
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
@@ -28,6 +40,11 @@ const AddProductModal = ({ isOpen, onClose }) => {
   const uploadRef = useRef(null);
   const mainImageUploadRef = useRef(null);
   const modalRef = useRef(null);
+
+  // API hooks
+  const { data: categories = [], isLoading: categoriesLoading } = useViewProductCategories(active_outlet);
+  const addProductMutation = useAddProduct();
+  const uploadImageMutation = useUploadSingleImage();
 
   // Close modal when clicking escape
   useEffect(() => {
@@ -41,10 +58,33 @@ const AddProductModal = ({ isOpen, onClose }) => {
     };
   }, [isOpen, onClose]);
 
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({
+        name: "",
+        category_ids: [],
+        quantity: "",
+        price: "",
+        discountPrice: "",
+        short_description: "",
+        long_description: "",
+        visible: false,
+        mainImage: null,
+        other_images: [],
+      });
+      setErrors({});
+      setIsSubmitting(false);
+      setUploadProgress("");
+    }
+  }, [isOpen]);
+
   // Handle form input changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+    
+    setFormData({ ...formData, [name]: newValue });
 
     // Clear error when user starts typing
     if (errors[name]) {
@@ -96,152 +136,199 @@ const AddProductModal = ({ isOpen, onClose }) => {
   const handleImageChange = (e) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
 
-    if (files.length === 0) return; // nothing selected
+    if (files.length === 0) return;
 
     // Calculate how many images can still be added
-    const availableSlots = 4 - formData.images.length;
+    const availableSlots = 4 - formData.other_images.length;
 
     if (availableSlots <= 0) {
       setErrors({
         ...errors,
         images: "Maximum of 4 additional images reached.",
       });
-      e.target.value = null; // reset input
+      e.target.value = null;
       return;
     }
 
     // Take only the allowed number of files
     const filesToAdd = files.slice(0, availableSlots);
 
-    // Map files to your image object format
+    // Validate each file
+    for (const file of filesToAdd) {
+      if (!file.type.match("image.*")) {
+        setErrors({
+          ...errors,
+          images: "Please upload only image files (PNG, JPG, JPEG)",
+        });
+        e.target.value = null;
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors({ ...errors, images: "Image size must be less than 5MB" });
+        e.target.value = null;
+        return;
+      }
+    }
+
+    // Map files to image object format
     const newImages = filesToAdd.map((file) => ({
       file,
       preview: URL.createObjectURL(file),
     }));
 
     // Update formData images state appending new images
-    setFormData({ ...formData, images: [...formData.images, ...newImages] });
+    setFormData({ ...formData, other_images: [...formData.other_images, ...newImages] });
 
-    if (errors.images) {
-      setErrors({ ...errors, images: "" });
+    if (errors.other_images) {
+      setErrors({ ...errors, other_images: "" });
     }
 
-    // Reset file input value so same file can be uploaded again if needed
+    // Reset file input value
     e.target.value = null;
   };
 
-  // Process image files (for both drag and input)
-  const handleImageFiles = (files, isMainImage = false) => {
-    if (!files || files.length === 0) return;
+  // Upload images to imgbb
+  const uploadImages = async () => {
+    const uploadedImages = {
+      mainImageUrl: null,
+      otherImageUrls: []
+    };
 
-    if (isMainImage) {
-      // For main image, we only take the first file
-      const file = files[0];
-
-      // Validate file type
-      if (!file.type.match("image.*")) {
-        setErrors({
-          ...errors,
-          mainImage: "Please upload only image files (PNG, JPG, JPEG)",
-        });
-        return;
+    try {
+      // Upload main image
+      if (formData.mainImage) {
+        setUploadProgress("Uploading main image...");
+        const mainImageResponse = await uploadImageMutation.mutateAsync(formData.mainImage.file);
+        uploadedImages.mainImageUrl = mainImageResponse.url;
       }
 
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors({ ...errors, mainImage: "Image size must be less than 5MB" });
-        return;
+      // Upload other images
+      if (formData.other_images.length > 0) {
+        setUploadProgress("Uploading additional images...");
+        const uploadPromises = formData.other_images.map(img => 
+          uploadImageMutation.mutateAsync(img.file)
+        );
+        const otherImageResponses = await Promise.all(uploadPromises);
+        uploadedImages.otherImageUrls = otherImageResponses.map(response => response.url);
       }
 
-      // Create image preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const mainImage = {
-          file,
-          preview: e.target.result,
-        };
-        setFormData({ ...formData, mainImage });
-      };
-      reader.readAsDataURL(file);
-
-      // Clear any error
-      if (errors.mainImage) {
-        setErrors({ ...errors, mainImage: "" });
-      }
-    } else {
-      // For additional images
-      // Check if adding these files would exceed the 4 image limit
-      if (formData.images.length + files.length > 4) {
-        setErrors({
-          ...errors,
-          images: "Maximum 4 additional images are allowed",
-        });
-        return;
-      }
-
-      const newImages = [...formData.images];
-      const newErrors = { ...errors };
-      delete newErrors.images;
-
-      Array.from(files).forEach((file) => {
-        // Validate file type
-        if (!file.type.match("image.*")) {
-          newErrors.images = "Please upload only image files (PNG, JPG, JPEG)";
-          return;
-        }
-
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          newErrors.images = "Image size must be less than 5MB";
-          return;
-        }
-
-        // Create image preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          newImages.push({
-            file: file,
-            preview: e.target.result,
-          });
-          setFormData({ ...formData, images: newImages });
-        };
-        reader.readAsDataURL(file);
-      });
-
-      setErrors(newErrors);
+      return uploadedImages;
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      throw new Error("Failed to upload images. Please try again.");
     }
   };
 
+  // Create FormData including image URLs
+  const createFormData = (imageUrls) => {
+    const formDataToSend = new FormData();
+    
+    // Add product fields using bracket notation for nested object structure
+    formDataToSend.append('product[name]', formData.name.trim());
+    formDataToSend.append('product[short_description]', formData.short_description.trim());
+    formDataToSend.append('product[long_description]', formData.long_description.trim());
+    formDataToSend.append('product[amount_in_stock]', formData.quantity.toString());
+    formDataToSend.append('product[price]', formData.price.toString());
+    formDataToSend.append('product[visible]', formData.visible.toString());
+    
+    // Add discount_price only if it exists and is greater than 0
+    if (formData.discountPrice && formData.discountPrice > 0) {
+      formDataToSend.append('product[discount_price]', formData.discountPrice.toString());
+    }
+    
+    // Add category IDs as array elements within product
+    formData.category_ids.forEach((categoryId) => {
+      formDataToSend.append('product[category_ids][]', categoryId);
+    });
+    
+    // Add image URLs
+    if (imageUrls.mainImageUrl) {
+      formDataToSend.append('product[main_image_url]', imageUrls.mainImageUrl);
+    }
+    
+    imageUrls.otherImageUrls.forEach((url, index) => {
+      formDataToSend.append(`product[other_image_urls][]`, url);
+    });
+    
+    return formDataToSend;
+  };
+
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate form
-    const newErrors = validateProductForm(formData);
+    // Basic validation
+    const newErrors = {};
 
-    // Additional validation for main image
+    if (!formData.name.trim()) {
+      newErrors.name = "Product name is required";
+    }
+
+    if (formData.category_ids.length === 0) {
+      newErrors.category_ids = "At least one category is required";
+    }
+
+    if (!formData.quantity || formData.quantity <= 0) {
+      newErrors.quantity = "Valid quantity is required";
+    }
+
+    if (!formData.price || formData.price <= 0) {
+      newErrors.price = "Valid price is required";
+    }
+
+    if (!formData.short_description.trim()) {
+      newErrors.short_description = "Short description is required";
+    }
+
+    if (!formData.long_description.trim()) {
+      newErrors.long_description = "Long description is required";
+    }
+
     if (!formData.mainImage) {
       newErrors.mainImage = "Main product image is required";
     }
 
-    if (Object.keys(newErrors).length === 0) {
-      // Form is valid, proceed with submission
-      console.log("Submitting form data:", formData);
-
-      // In a real app, you would send this data to an API
-      // Example: await api.post('/products', formData);
-
-      // Close modal after successful submission
-      onClose();
-    } else {
-      // Show validation errors
+    if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-
       // Scroll to the first error
       const firstErrorField = document.querySelector(".form-group.error");
       if (firstErrorField) {
         firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
       }
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      // Step 1: Upload images first
+      const uploadedImages = await uploadImages();
+
+      // Step 2: Create product with image URLs
+      setUploadProgress("Creating product...");
+      const formDataToSend = createFormData(uploadedImages);
+      const productResponse = await addProductMutation.mutateAsync({
+        active_outlet,
+        payload: formDataToSend
+      });
+
+      console.log("Product created successfully:", productResponse);
+      setUploadProgress("Product added successfully!");
+      
+      // Success - close modal after a brief delay
+      setTimeout(() => {
+        onClose();
+      }, 1000);
+
+    } catch (error) {
+      console.error("Failed to add product:", error);
+      setErrors({ 
+        submit: error.message || "Failed to add product. Please try again." 
+      });
+    } finally {
+      setIsSubmitting(false);
+      setTimeout(() => setUploadProgress(""), 2000);
     }
   };
 
@@ -330,27 +417,59 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
   // Remove additional image
   const removeImage = (index) => {
-    const newImages = [...formData.images];
+    const newImages = [...formData.other_images];
     newImages.splice(index, 1);
-    setFormData({ ...formData, images: newImages });
+    setFormData({ ...formData, other_images: newImages }); 
+    
+    if (errors.other_images) { 
+      setErrors({ ...errors, other_images: "" });
+    }
+  };
 
-    // Clear any image errors when removing images
-    if (errors.images) {
-      setErrors({ ...errors, images: "" });
+  // Handle close button click
+  const handleCloseClick = () => {
+    if (!isSubmitting) {
+      onClose();
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="add-product-modal" ref={modalRef}>
+    <div className="modal-overlay-add">
+      <div className="adds-product-modal" ref={modalRef}>
         <div className="modal-header">
           <h2>Add New Product</h2>
+          <button 
+            type="button" 
+            className="close-button" 
+            onClick={handleCloseClick}
+            disabled={isSubmitting}
+            aria-label="Close modal"
+          >
+            <X size={24} />
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="product-form">
           <div className="form-content">
+            {/* Submit Error */}
+            {errors.submit && (
+              <div className="error-message submit-error">{errors.submit}</div>
+            )}
+
+            {/* Upload Progress */}
+            {uploadProgress && (
+              <div className="upload-progress-message">
+                <div className="progress-text">{uploadProgress}</div>
+                {isSubmitting && (
+                  <div className="progress-spinner">
+                    <div className="spinner"></div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Product Name */}
             <div className={`form-group ${errors.name ? "error" : ""}`}>
               <label htmlFor="name">Product Name</label>
@@ -361,6 +480,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
                 placeholder="Enter Product Name"
                 value={formData.name}
                 onChange={handleChange}
+                disabled={isSubmitting}
               />
               {errors.name && (
                 <div className="error-message">{errors.name}</div>
@@ -370,72 +490,86 @@ const AddProductModal = ({ isOpen, onClose }) => {
             {/* Two column layout */}
             <div className="form-row">
               {/* Product Category */}
-              <div className={`form-group ${errors.category ? "error" : ""}`}>
+              <div className={`form-group ${errors.category_ids ? "error" : ""}`}>
                 <label htmlFor="category">Product Categories</label>
                 <div className="form-group">
                   <div className="selected-categories">
-                    {formData.category.map((cat) => (
-                      <span className="badge" key={cat}>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                        <button
-                          type="button"
-                          className="remove-btn"
-                          onClick={() => {
-                            const updated = formData.category.filter(
-                              (c) => c !== cat
-                            );
-                            setFormData({ ...formData, category: updated });
-                            if (errors.category) {
-                              setErrors({ ...errors, category: "" });
-                            }
-                          }}
-                        >
-                          &times;
-                        </button>
-                      </span>
-                    ))}
+                    {formData.category_ids.map((catId) => {
+                      const category = categories.find(cat => cat.id === catId);
+                      
+                      return (
+                        <span className="badge" key={catId}>
+                          {category ? category.name : `Unknown Category`}
+                          <button
+                            type="button"
+                            className="remove-btn"
+                            onClick={() => {
+                              const updated = formData.category_ids.filter(
+                                (id) => id !== catId
+                              );
+                              setFormData({ ...formData, category_ids: updated });
+                              if (errors.category_ids) {
+                                setErrors({ ...errors, category_ids: "" });
+                              }
+                            }}
+                            disabled={isSubmitting}
+                          >
+                            &times;
+                          </button>
+                        </span>
+                      );
+                    })}
                   </div>
 
                   <select
                     id="category"
                     name="category"
-                    value="" // always reset to empty to allow adding new categories
+                    value=""
                     onChange={(e) => {
-                      const newCategory = e.target.value;
+                      const selectedCategoryId = e.target.value;
+                      console.log('=== SELECT CATEGORY DEBUG ===');
+                      console.log('Selected value (UUID string):', selectedCategoryId);
+                      console.log('Current category_ids:', formData.category_ids);
+                      console.log('Already includes?', formData.category_ids.includes(selectedCategoryId));
+                      
                       if (
-                        newCategory &&
-                        !formData.category.includes(newCategory)
+                        selectedCategoryId &&
+                        !formData.category_ids.includes(selectedCategoryId)
                       ) {
+                        const updatedCategories = [...formData.category_ids, selectedCategoryId];
+                        console.log('Updating category_ids to:', updatedCategories);
+                        
                         setFormData({
                           ...formData,
-                          category: [...formData.category, newCategory],
+                          category_ids: updatedCategories,
                         });
-                        if (errors.category) {
-                          setErrors({ ...errors, category: "" });
+                        if (errors.category_ids) {
+                          setErrors({ ...errors, category_ids: "" });
                         }
+                      } else {
+                        console.log('Category not added - either invalid or already exists');
                       }
-                      e.target.value = ""; // reset dropdown selection after adding
+                      e.target.value = "";
                     }}
                     className="category-select"
+                    disabled={categoriesLoading || isSubmitting}
                   >
                     <option value="" disabled>
-                      Select a category
+                      {categoriesLoading ? "Loading categories..." : "Select a category"}
                     </option>
-                    {["appetizers", "mains", "desserts", "drinks", "sides"].map(
-                      (option) => (
-                        <option
-                          key={option}
-                          value={option}
-                          disabled={formData.category.includes(option)}
-                        >
-                          {option.charAt(0).toUpperCase() + option.slice(1)}
-                        </option>
-                      )
-                    )}
+                    {categories.map((category) => (
+                      <option
+                        key={category.id}
+                        value={category.id}
+                        disabled={formData.category_ids.includes(category.id)}
+                      >
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
-                {errors.category && (
-                  <div className="error-message">{errors.category}</div>
+                {errors.category_ids && (
+                  <div className="error-message">{errors.category_ids}</div>
                 )}
               </div>
 
@@ -450,6 +584,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
                   value={formData.quantity}
                   onChange={handleChange}
                   min="0"
+                  disabled={isSubmitting}
                 />
                 {errors.quantity && (
                   <div className="error-message">{errors.quantity}</div>
@@ -463,12 +598,15 @@ const AddProductModal = ({ isOpen, onClose }) => {
               <div className={`form-group ${errors.price ? "error" : ""}`}>
                 <label htmlFor="price">Product Price</label>
                 <input
-                  type="text"
+                  type="number"
+                  step="0.01"
                   id="price"
                   name="price"
                   placeholder="Enter product price"
                   value={formData.price}
                   onChange={handleChange}
+                  min="0"
+                  disabled={isSubmitting}
                 />
                 {errors.price && (
                   <div className="error-message">{errors.price}</div>
@@ -481,12 +619,15 @@ const AddProductModal = ({ isOpen, onClose }) => {
               >
                 <label htmlFor="discountPrice">Discount Price</label>
                 <input
-                  type="text"
+                  type="number"
+                  step="0.01"
                   id="discountPrice"
                   name="discountPrice"
                   placeholder="Enter Discount price"
                   value={formData.discountPrice}
                   onChange={handleChange}
+                  min="0"
+                  disabled={isSubmitting}
                 />
                 {errors.discountPrice && (
                   <div className="error-message">{errors.discountPrice}</div>
@@ -494,19 +635,37 @@ const AddProductModal = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {/* Product Description */}
-            <div className={`form-group ${errors.description ? "error" : ""}`}>
-              <label htmlFor="description">Product Description</label>
+            {/* Product Short Description */}
+            <div className={`form-group ${errors.short_description ? "error" : ""}`}>
+              <label htmlFor="short_description">Product Short Description</label>
               <textarea
-                id="description"
-                name="description"
-                placeholder="Describe your product"
-                value={formData.description}
+                id="short_description"
+                name="short_description"
+                placeholder="Brief description of your product"
+                value={formData.short_description}
+                onChange={handleChange}
+                rows={3}
+                disabled={isSubmitting}
+              ></textarea>
+              {errors.short_description && (
+                <div className="error-message">{errors.short_description}</div>
+              )}
+            </div>
+
+            {/* Product Long Description */}
+            <div className={`form-group ${errors.long_description ? "error" : ""}`}>
+              <label htmlFor="long_description">Product Long Description</label>
+              <textarea
+                id="long_description"
+                name="long_description"
+                placeholder="Detailed description of your product"
+                value={formData.long_description}
                 onChange={handleChange}
                 rows={5}
+                disabled={isSubmitting}
               ></textarea>
-              {errors.description && (
-                <div className="error-message">{errors.description}</div>
+              {errors.long_description && (
+                <div className="error-message">{errors.long_description}</div>
               )}
             </div>
 
@@ -523,6 +682,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
                 style={{ display: "none" }}
                 accept="image/*"
                 onChange={handleMainImageChange}
+                disabled={isSubmitting}
               />
 
               {/* Display uploaded main image */}
@@ -534,26 +694,28 @@ const AddProductModal = ({ isOpen, onClose }) => {
                       alt="Main Product Preview"
                       className="main-image"
                     />
-                    <button
-                      type="button"
-                      className="remove-image"
-                      onClick={removeMainImage}
-                      aria-label="Remove main image"
-                    >
-                      <X size={16} color="#000" />
-                    </button>
+                    {!isSubmitting && (
+                      <button
+                        type="button"
+                        className="remove-image"
+                        onClick={removeMainImage}
+                        aria-label="Remove main image"
+                      >
+                        <X size={16} color="#000" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ) : (
                 <div
                   className={`main-image-upload-area ${
                     isMainImageDragging ? "dragging" : ""
-                  }`}
-                  onDragEnter={handleMainImageDragEnter}
-                  onDragLeave={handleMainImageDragLeave}
-                  onDragOver={handleMainImageDragOver}
-                  onDrop={handleMainImageDrop}
-                  onClick={triggerMainImageFileInput}
+                  } ${isSubmitting ? "disabled" : ""}`}
+                  onDragEnter={!isSubmitting ? handleMainImageDragEnter : undefined}
+                  onDragLeave={!isSubmitting ? handleMainImageDragLeave : undefined}
+                  onDragOver={!isSubmitting ? handleMainImageDragOver : undefined}
+                  onDrop={!isSubmitting ? handleMainImageDrop : undefined}
+                  onClick={!isSubmitting ? triggerMainImageFileInput : undefined}
                 >
                   <div className="upload-placeholder-main">
                     <Image size={36} color="#aaa" />
@@ -579,32 +741,35 @@ const AddProductModal = ({ isOpen, onClose }) => {
                 accept="image/*"
                 onChange={handleImageChange}
                 multiple
+                disabled={isSubmitting}
               />
 
               {/* Display uploaded additional images in a grid with 3 per row */}
-              {formData.images.length > 0 && (
+              {formData.other_images.length > 0 && (
                 <div className="image-upload-container">
                   <div className="image-preview-grid">
-                    {formData.images.map((img, index) => (
+                    {formData.other_images.map((img, index) => (
                       <div key={index} className="image-preview-item">
                         <img
                           src={img.preview}
                           alt={`Product Preview ${index + 1}`}
                           className="image-preview"
                         />
-                        <button
-                          type="button"
-                          className="remove-image"
-                          onClick={() => removeImage(index)}
-                          aria-label="Remove image"
-                        >
-                          <X size={16} color="#000" />
-                        </button>
+                        {!isSubmitting && (
+                          <button
+                            type="button"
+                            className="remove-image"
+                            onClick={() => removeImage(index)}
+                            aria-label="Remove image"
+                          >
+                            <X size={16} color="#000" />
+                          </button>
+                        )}
                       </div>
                     ))}
 
                     {/* Add more images button (if less than 4) */}
-                    {formData.images.length < 4 && (
+                    {formData.other_images.length < 4 && !isSubmitting && (
                       <div
                         className="add-more-images"
                         onClick={triggerFileInput}
@@ -618,16 +783,16 @@ const AddProductModal = ({ isOpen, onClose }) => {
               )}
 
               {/* Upload area (shown only when no additional images are uploaded) */}
-              {formData.images.length === 0 && (
+              {formData.other_images.length === 0 && (
                 <div
                   className={`image-upload-area ${
                     isDragging ? "dragging" : ""
-                  }`}
-                  onDragEnter={handleDragEnter}
-                  onDragLeave={handleDragLeave}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onClick={triggerFileInput}
+                  } ${isSubmitting ? "disabled" : ""}`}
+                  onDragEnter={!isSubmitting ? handleDragEnter : undefined}
+                  onDragLeave={!isSubmitting ? handleDragLeave : undefined}
+                  onDragOver={!isSubmitting ? handleDragOver : undefined}
+                  onDrop={!isSubmitting ? handleDrop : undefined}
+                  onClick={!isSubmitting ? triggerFileInput : undefined}
                 >
                   <div className="upload-placeholder">
                     <Upload size={36} color="#aaa" />
@@ -642,14 +807,66 @@ const AddProductModal = ({ isOpen, onClose }) => {
                 <div className="error-message">{errors.images}</div>
               )}
             </div>
+
+            {/* Product Visibility Section */}
+            <div className="form-group">
+              <label>Product Visibility</label>
+              <div className="visibility-section">
+                <table className="visibility-table">
+                  <tbody>
+                    <tr>
+                      <td className="checkbox-cell">
+                        <input
+                          type="checkbox"
+                          id="visible"
+                          name="visible"
+                          checked={formData.visible}
+                          onChange={handleChange}
+                          disabled={isSubmitting}
+                          className="visibility-checkbox"
+                        />
+                      </td>
+                      <td className="label-cell">
+                        <label htmlFor="visible" className="visibility-label">
+                          Make this product public
+                        </label>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td className="description-cell">
+                        <span className="visibility-description">
+                          {formData.visible 
+                            ? "✓ This product will be visible to customers" 
+                            : "⚠ This product will be hidden from customers"
+                          }
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           {/* Form Actions */}
           <div className="form-actions">
-            <button type="submit" className="add-button">
-              Add Product
+            <button 
+              type="submit" 
+              className="add-button"
+              disabled={isSubmitting}
+            >
+              {isSubmitting 
+                ? "Adding Product..."
+                : "Add Product"
+              }
             </button>
-            <button type="button" className="cancel-button" onClick={onClose}>
+            <button 
+              type="button" 
+              className="cancel-button" 
+              onClick={handleCloseClick}
+              disabled={isSubmitting}
+            >
               Cancel
             </button>
           </div>

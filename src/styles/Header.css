@@ -102,14 +102,14 @@
     border: 2px solid #fff;
   }
   
-  .user-profile {
+  .user-profile-header {
     display: flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
   }
   
-  .avatar {
+  .avatar-header {
     width: 32px;
     height: 32px;
     border-radius: 50%;

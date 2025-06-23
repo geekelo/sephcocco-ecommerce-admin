@@ -1,0 +1,56 @@
+/* ErrorState.css */
+.error-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    padding: 40px 20px;
+  }
+  
+  .error-content {
+    text-align: center;
+    max-width: 400px;
+  }
+  
+  .error-icon {
+    color: #ef4444;
+    margin-bottom: 16px;
+  }
+  
+  .error-content h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 8px;
+  }
+  
+  .error-content p {
+    font-size: 16px;
+    color: #6b7280;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  
+  .retry-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .retry-button:hover {
+    background-color: #2563eb;
+  }
+  
+  .retry-button:active {
+    transform: translateY(1px);
+  }
+  

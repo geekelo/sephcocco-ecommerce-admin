@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import ImageGallery from './ImageGallery';
 import LikeButton from './LikeButton';
@@ -9,11 +9,25 @@ import { X } from 'lucide-react';
 
 
 const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
-  const [selectedImage, setSelectedImage] = useState(product?.images?.[0]);
+  const [selectedImage, setSelectedImage] = useState(product?.main_image_url);
+  // const [otherImages, setOtherImages] = useState([]);
 
+  // useEffect(() => {
+  //   // Set the main image as the selected image
+  //   if (product.main_image_url) {
+  //     setSelectedImage(product.main_image_url);
+  //   }
+    
+  //   // Set other images
+  //   if (Array.isArray(product.other_image_urls)) {
+  //     setOtherImages(product.other_image_urls);
+  //   }
+  // }, [product]);
+
+  console.log('testing',product);
   
-  const shortDescription = product?.shortDescription || "No description available";
-  const longDescription = product?.longDescription || null;
+  const shortDescription = product?.short_description || "No description available";
+  const longDescription = product?.long_description || null;
 
   if (!product) {
     return <div className="product-loading">Loading product details...</div>;
@@ -21,8 +35,8 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
 
 
   return (
-    <div className="modal-overlay">
-    <div className="product-details-container">
+    <div className="modal-overlay-product-details">
+    <div className="product-container">
     <button onClick={onClose} type="button" className="close-button-product" >
             <X size={24} />
           </button>
@@ -33,7 +47,7 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
         transition={{ duration: 0.5 }}
       >
         <ImageGallery
-          images={product.images}
+          images={product?.other_image_urls}
           selectedImage={selectedImage}
           onSelect={setSelectedImage}
         />
@@ -46,15 +60,15 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
           <p className="stock-status">
           <LikeButton 
               initialLikes={product.likes}
-              isLiked={product.isFavorite}
+              isLiked={product.likes > 0}  
            
             />
-            {product.inStock
-              ? `In stock : ${product.stockCount} Items`
+            {!product.out_of_stock_status
+              ? `In stock : ${product.amount_in_stock} Items`
               : 'Out of stock'}
           </p>
           
-          <div className="product-price">₦{product.price.toFixed(2)}</div>
+          <div className="product-price">₦{product.price}</div>
 
           <div className="product-description">
             <h3>Product Description</h3>

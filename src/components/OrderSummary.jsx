@@ -100,7 +100,7 @@ const OrderSummary = ({
 
   return (
     <>
-      <div className="modal-overlay">
+      <div className="modal-overlay-order-summary">
         <div className="add-product-modal">
           <div className="modal-header">
             <h2>Order Summary(#{id})</h2>

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Pause, UserPlus } from 'lucide-react';
+import React, { act, useEffect, useState } from 'react';
+import { Eye, EyeOff, Pause, UserPlus, X } from 'lucide-react';
 import '../styles/UserAdminFormModal.css';
 import { useRegister } from '../hooks/useRegister';
 import { validateEmail, validatePassword } from '../schema/LoginSchema';
-
+import Cookies from 'js-cookie';
 const UserAdminFormModal = ({
   isEdit,
   activeTab,
@@ -16,13 +16,105 @@ const UserAdminFormModal = ({
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
-
+  const [showPassword, setShowPassword] = useState(false);
   const { mutateAsync: register } = useRegister();
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [outletOptions, setOutletOptions] = useState([]);
+
+
+  useEffect(() => {
+    loadOutlets();
+ 
+  }, [activeTab]);
+ const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+
+    // Real-time validation
+    if (value.trim() === "") {
+      setPasswordError("Password is required");
+    } else if (!validatePassword(value)) {
+      setPasswordError("Password must be at least 6 characters");
+    } else {
+      setPasswordError("");
+    }
+  };
+
+  const loadOutlets = () => {
+    try {
+      const outletsFromCookies = Cookies.get('outlets');
+      if (outletsFromCookies) {
+        const parsedOutlets = JSON.parse(outletsFromCookies);
+        setOutletOptions(Array.isArray(parsedOutlets) ? parsedOutlets : []);
+      } else {
+        console.warn('No outlets found in cookies');
+        setOutletOptions([]);
+      }
+    } catch (error) {
+      console.error('Error parsing outlets from cookies:', error);
+      setOutletOptions([]);
+    } finally {
+     
+    }
+  };
+console.log(outletOptions);
+
+  // Available outlets
+  // const outletOptions = [
+  //   { value: "restaurant", label: "Restaurant" },
+  //   { value: "pharmacy", label: "Pharmacy" },
+  //   { value: "lounge", label: "Lounge" }
+  // ];
 
   // Validation functions
   const validateName = (name) => name.trim().length >= 2;
   const validatePhone = (phone) => /^\+?[\d\s\-\(\)]{10,}$/.test(phone.trim());
   const validateAddress = (address) => address.trim().length >= 5;
+
+  // Handle outlet selection from dropdown
+  const handleOutletSelect = (e) => {
+    const selectedValue = e.target.value;
+    if (!selectedValue) return;
+
+    const currentOutlets = formValues.outlets || [];
+    
+    // Only add if not already selected
+    if (!currentOutlets.includes(selectedValue)) {
+      const updatedOutlets = [...currentOutlets, selectedValue];
+      onChange({ ...formValues, outlets: updatedOutlets });
+
+      // Update validation
+      const newErrors = { ...validationErrors };
+      delete newErrors.outlets;
+      setValidationErrors(newErrors);
+    }
+
+    // Reset select to placeholder
+    e.target.value = '';
+  };
+
+  // Remove a specific outlet
+  const removeOutlet = (outletToRemove) => {
+    const currentOutlets = formValues.outlets || [];
+    const updatedOutlets = currentOutlets.filter(outlet => outlet !== outletToRemove);
+    onChange({ ...formValues, outlets: updatedOutlets });
+
+    // Validation
+    const newErrors = { ...validationErrors };
+    if (updatedOutlets.length === 0) {
+      newErrors.outlets = "Please select at least one outlet";
+    } else {
+      delete newErrors.outlets;
+    }
+    setValidationErrors(newErrors);
+  };
+
+  // Get available options (exclude already selected ones)
+  const getAvailableOptions = () => {
+    const selectedOutlets = formValues.outlets || [];
+    return outletOptions.filter(option => !selectedOutlets.includes(option.value));
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -118,14 +210,6 @@ const UserAdminFormModal = ({
         }
         break;
 
-      case 'outlet':
-        if (!value.trim()) {
-          newErrors.outlet = "Please select an outlet";
-        } else {
-          delete newErrors.outlet;
-        }
-        break;
-
       default:
         break;
     }
@@ -134,43 +218,73 @@ const UserAdminFormModal = ({
   };
 
   const handleFormSubmit = async () => {
+    setIsSubmitting(true)
     try {
+      // Validate outlets before submission
+      if (!formValues.outlets || formValues.outlets.length === 0) {
+        setValidationErrors(prev => ({
+          ...prev,
+          outlets: "Please select at least one outlet"
+        }));
+        return;
+      }
+
       // Merge firstName and lastName into full name
       const fullName = `${formValues.firstName || ''} ${formValues.lastName || ''}`.trim();
-      
-      const payload = {
+      if (activeTab === "admins") {
+  const payload = {
         user: {
-      name: fullName,
-        address: formValues.address || '',
-        email: formValues.email || '',
-        phone_number: formValues.phone_number || '',
-        whatsapp_number: formValues.whatsapp_number || '',
-        password: formValues.password || '',
-        password_confirmation: formValues.password_confirmation || '',
-        role: "admin",
-        outlet: formValues.outlet || ''
+          name: fullName,
+          address: formValues.address || '',
+          email: formValues.email || '',
+          phone_number: formValues.phone_number || '',
+          whatsapp_number: formValues.whatsapp_number || '',
+          password: formValues.password || '',
+          password_confirmation: formValues.password_confirmation || '',
+          role: "admin",
+          outlets: formValues.outlets || [] // Send as array
         }
-  
       };
-console.log(payload);
+      return payload
+      } else if (activeTab === "users") {
+  const payload = {
+        user: {
+          name: fullName,
+          address: formValues.address || '',
+          email: formValues.email || '',
+          phone_number: formValues.phone_number || '',
+          whatsapp_number: formValues.whatsapp_number || '',
+          role: "user",
+       
+        }
+      };
+      return payload
+      }
 
-   const response =   await register(payload);
-   console.log(response);
-   if (response?.message) {
-closeAllModals(); 
-   }
+      console.log(payload);
+
+      const response = await register(payload);
+      console.log(response);
+      if (response?.message) {
+        closeAllModals(); 
+        setIsSubmitting(false)
+      }
      
     } catch (error) {
       console.error('Registration failed:', error);
       // Handle error appropriately
     }
   };
+
   const handleBlur = (e) => {
     const { name, value } = e.target;
     
-    // Trigger validation on blur
-    validateField(name, value);
+    // Trigger validation on blur if validateField function exists
+    if (typeof validateField === 'function') {
+      validateField(name, value);
+    }
   };
+
   return (
     <div className="modal-overlay-form" onClick={closeAllModals}>
       <div className="user-admin-form-modal" onClick={(e) => e.stopPropagation()}>
@@ -285,58 +399,108 @@ closeAllModals();
                 <div className="form-error-form">{validationErrors.whatsapp_number || formErrors.whatsapp_number}</div>
               )}
             </div>
+            {activeTab === "admins" &&          <div className="form-field-form">
+  <label className="form-label-form" htmlFor="password">Password</label>
+  <div className="form-input-wrapper">
+    <input
+      id="password"
+      name="password"
+      type={showPassword ? "text" : "password"}
+      value={formValues.password || ''}
+      onChange={handleInputChange}
+      className={`form-input-form ${validationErrors.password || formErrors.password ? 'error' : ''}`}
+      placeholder="Enter password"
+    />
+    <button
+      type="button"
+      className="password-toggle-icon"
+      onClick={() => setShowPassword(prev => !prev)}
+      tabIndex={-1}
+    >
+      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+    </button>
+  </div>
+  {(validationErrors.password || formErrors.password) && (
+    <div className="form-error-form">{validationErrors.password || formErrors.password}</div>
+  )}
+</div>}
+{activeTab === "admins" &&       <div className="form-field-form">
+  <label className="form-label-form" htmlFor="confirmPassword">Confirm Password</label>
+  <div className="form-input-wrapper">
+    <input
+      id="confirmPassword"
+      name="confirmPassword"
+      type={showConfirmPassword ? "text" : "password"}
+      value={formValues.confirmPassword || ''}
+      onChange={handleInputChange}
+      className={`form-input-form ${validationErrors.confirmPassword || formErrors.confirmPassword ? 'error' : ''}`}
+      placeholder="Confirm password"
+    />
+    <button
+      type="button"
+      className="password-toggle-icon"
+      onClick={() => setShowConfirmPassword(prev => !prev)}
+      tabIndex={-1}
+    >
+      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+    </button>
+  </div>
+  {(validationErrors.confirmPassword || formErrors.confirmPassword) && (
+    <div className="form-error-form">{validationErrors.confirmPassword || formErrors.confirmPassword}</div>
+  )}
+</div>}
 
-            <div className="form-field-form">
-              <label className="form-label-form" htmlFor="password">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={formValues.password || ''}
-                onChange={handleInputChange}
-                className={`form-input-form ${validationErrors.password || formErrors.password ? 'error' : ''}`}
-                placeholder="Enter password"
-              />
-              {(validationErrors.password || formErrors.password) && (
-                <div className="form-error-form">{validationErrors.password || formErrors.password}</div>
+
+
+
+          
+
+            {/* Multi-select Outlets with badges */}
+            {activeTab === "admins" &&   <div className="form-field-form">
+              <label className="form-label-form">Outlets</label>
+              
+              {/* Selected outlets display as badges */}
+              {formValues.outlets && formValues.outlets.length > 0 && (
+                <div className="selected-outlets-badges">
+                  {formValues.outlets.map((outlet) => {
+                    const outletLabel = outletOptions.find(opt => opt === outlet)
+                    return (
+                      <span key={outlet} className="outlet-badge">
+                        {outletLabel}
+                        <button
+                          type="button"
+                          onClick={() => removeOutlet(outlet)}
+                          className="outlet-badge-remove"
+                        >
+                          <X size={14} />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
               )}
-            </div>
 
-            <div className="form-field-form">
-              <label className="form-label-form" htmlFor="password_confirmation">Confirm Password</label>
-              <input
-                id="password_confirmation"
-                name="password_confirmation"
-                type="password"
-                value={formValues.password_confirmation || ''}
-                onChange={handleInputChange}
-                className={`form-input-form ${validationErrors.password_confirmation || formErrors.password_confirmation ? 'error' : ''}`}
-                placeholder="Confirm password"
-              />
-              {(validationErrors.password_confirmation || formErrors.password_confirmation) && (
-                <div className="form-error-form">{validationErrors.password_confirmation || formErrors.password_confirmation}</div>
-              )}
-            </div>
-
-            <div className="form-field-form">
-              <label className="form-label-form" htmlFor="outlet">Outlet</label>
+              {/* Dropdown to add outlets */}
               <select
-                id="outlet"
-                name="outlet"
-                value={formValues.outlet || ''}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                className={`form-select-form ${validationErrors.outlet || formErrors.outlet ? 'error' : ''}`}
+                onChange={handleOutletSelect}
+                className={`form-select-form ${validationErrors.outlets || formErrors.outlets ? 'error' : ''}`}
+                value=""
               >
-                <option disabled value="">Select outlet</option>
-                <option value="restaurant">Restaurant</option>
-                <option value="pharmacy">Pharmacy</option>
-                <option value="lounge">Lounge</option>
+                <option value="">
+                  {getAvailableOptions().length > 0 ? 'Select outlet to add' : 'All outlets selected'}
+                </option>
+                {getAvailableOptions().map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
               </select>
-              {(validationErrors.outlet || formErrors.outlet) && (
-                <div className="form-error-form">{validationErrors.outlet || formErrors.outlet}</div>
+
+              {(validationErrors.outlets || formErrors.outlets) && (
+                <div className="form-error-form">{validationErrors.outlets || formErrors.outlets}</div>
               )}
-            </div>
+            </div>}
+          
 
             {apiError && <div className="form-error-form api-error">{apiError}</div>}
 
@@ -355,7 +519,7 @@ closeAllModals();
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <div className="spinner"></div>
+                  `${isEdit ? 'Updating...' : 'Adding...'}`
                 ) : (
                   `${isEdit ? 'Update' : 'Add'} User`
                 )}

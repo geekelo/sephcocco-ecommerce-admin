@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
-
 import '../styles/ManageAccounts.css';
-import { Users, Shield, UserPlus, Edit3, Trash2, Eye, MoreVertical, Ban, CheckCircle } from 'lucide-react';
+import { Users, Shield, UserPlus, Edit3, Trash2, Eye, MoreVertical, Ban, CheckCircle, Mail, Calendar } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
-import OrderTable from '../components/OrderTable';
+import FlexibleTable from '../components/FlexibleTable';
 import UserAdminFormModal from '../components/UserAdminFormModal';
 import UserViewModal from '../components/UserViewModal';
 import ConfirmActionModal from '../components/ConfirmActionModal';
@@ -75,24 +74,225 @@ const ManageAccounts = () => {
 
   // Column definitions for users table
   const userColumns = [
-    { id: 'user', label: 'User', className: 'user-info' },
-    { id: 'email', label: 'Email', className: 'email' },
-    { id: 'status', label: 'Status', className: 'status' },
-    { id: 'orders', label: 'Orders', className: 'orders' },
-    { id: 'joinDate', label: 'Join Date', className: 'date' },
-    { id: 'lastLogin', label: 'Last Login', className: 'date' },
-    { id: 'actions', label: 'Actions', className: 'actions' }
+    {
+      key: 'user',
+      label: 'User',
+      flex: 2,
+      minWidth: '200px',
+      type: 'avatar',
+      avatarConfig: {
+        nameField: 'name',
+        subField: 'id',
+        size: 'medium',
+        showDetails: true,
+        defaultAvatar: '/default-avatar.png'
+      },
+      accessor: 'avatar'
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      flex: 2,
+      minWidth: '200px',
+      format: (value, data) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Mail size={14} style={{ color: '#6b7280', flexShrink: 0 }} />
+          <span>{value}</span>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      flex: 1,
+      minWidth: '120px',
+      type: 'status',
+      statusConfig: {
+        classMap: {
+          'active': 'status-active',
+          'inactive': 'status-inactive',
+          'suspended': 'status-suspended'
+        },
+        textMap: {
+          'active': 'Active',
+          'inactive': 'Inactive',
+          'suspended': 'Suspended'
+        },
+        showIcon: true,
+        iconMap: {
+          'active': '🟢',
+          'inactive': '⭕',
+          'suspended': '🚫'
+        }
+      }
+    },
+    {
+      key: 'orders',
+      label: 'Orders',
+      flex: 1,
+      minWidth: '100px',
+      format: (value) => `${value} orders`
+    },
+    {
+      key: 'joinDate',
+      label: 'Join Date',
+      flex: 1,
+      minWidth: '120px',
+      format: (value) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6b7280' }}>
+          <Calendar size={14} style={{ color: '#9ca3af', flexShrink: 0 }} />
+          <span>{new Date(value).toLocaleDateString()}</span>
+        </div>
+      )
+    },
+    {
+      key: 'lastLogin',
+      label: 'Last Login',
+      flex: 1,
+      minWidth: '120px',
+      format: (value) => (
+        <div style={{ color: '#6b7280' }}>
+          <span>{new Date(value).toLocaleDateString()}</span>
+        </div>
+      )
+    },
+     {
+    key: 'actions',
+    label: 'Actions',
+    flex: 0,
+    minWidth: '60px',
+    type: 'actions',
+    className: 'actions-column'
+  }
   ];
 
   // Column definitions for admins table
   const adminColumns = [
-    { id: 'admin', label: 'Admin', className: 'user-info' },
-    { id: 'email', label: 'Email', className: 'email' },
-    { id: 'role', label: 'Role', className: 'role' },
-    { id: 'status', label: 'Status', className: 'status' },
-    { id: 'permissions', label: 'Permissions', className: 'permissions' },
-    { id: 'lastLogin', label: 'Last Login', className: 'date' },
-    { id: 'actions', label: 'Actions', className: 'actions' }
+    {
+      key: 'admin',
+      label: 'Admin',
+      flex: 2,
+      minWidth: '200px',
+      type: 'avatar',
+      avatarConfig: {
+        nameField: 'name',
+        subField: 'id',
+        size: 'medium',
+        showDetails: true,
+        defaultAvatar: '/default-avatar.png'
+      },
+      accessor: 'avatar'
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      flex: 2,
+      minWidth: '200px',
+      format: (value, data) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Mail size={14} style={{ color: '#6b7280', flexShrink: 0 }} />
+          <span>{value}</span>
+        </div>
+      )
+    },
+    {
+      key: 'role',
+      label: 'Role',
+      flex: 1,
+      minWidth: '120px',
+      format: (value) => (
+        <span className={`badge role-${value.toLowerCase().replace(' ', '-')}`}>
+          <Shield size={12} style={{ marginRight: '4px' }} />
+          {value}
+        </span>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      flex: 1,
+      minWidth: '120px',
+      type: 'status',
+      statusConfig: {
+        classMap: {
+          'active': 'status-active',
+          'inactive': 'status-inactive',
+          'suspended': 'status-suspended'
+        },
+        textMap: {
+          'active': 'Active',
+          'inactive': 'Inactive',
+          'suspended': 'Suspended'
+        },
+        showIcon: true,
+        iconMap: {
+          'active': '🟢',
+          'inactive': '⭕',
+          'suspended': '🚫'
+        }
+      }
+    },
+    {
+      key: 'permissions',
+      label: 'Permissions',
+      flex: 2,
+      minWidth: '150px'
+    },
+    {
+      key: 'lastLogin',
+      label: 'Last Login',
+      flex: 1,
+      minWidth: '120px',
+      format: (value) => (
+        <div style={{ color: '#6b7280' }}>
+          <span>{new Date(value).toLocaleDateString()}</span>
+        </div>
+      )
+    },
+    {
+    key: 'actions',
+    label: 'Actions',
+    flex: 0,
+    minWidth: '60px',
+    type: 'actions',
+    className: 'actions-column'
+  }
+  ];
+
+  // Actions configuration
+  const accountActions = [
+    {
+      key: 'view',
+      label: 'View Details',
+      icon: '👁️',
+      className: 'view'
+    },
+    {
+      key: 'edit',
+      label: 'Edit Account',
+      icon: '✏️',
+      className: 'edit'
+    },
+    {
+      key: 'suspend',
+      label: 'Suspend Account',
+      icon: '🚫',
+      className: 'suspend',
+      disabled: (data) => data.status === 'suspended'
+    },
+    {
+      key: 'activate',
+      label: 'Activate Account',
+      icon: '✅',
+      className: 'activate',
+      disabled: (data) => data.status === 'active'
+    },
+    {
+      key: 'delete',
+      label: 'Delete Account',
+      icon: '🗑️',
+      className: 'delete'
+    }
   ];
 
   // Handle search
@@ -177,9 +377,9 @@ const ManageAccounts = () => {
     }
   };
 
-  // Handle account actions
-  const handleAccountAction = (action, account) => {
-    switch (action) {
+  // Handle account actions from dropdown
+  const handleAccountAction = (actionKey, account) => {
+    switch (actionKey) {
       case 'view':
         handleViewAccount(account);
         break;
@@ -245,8 +445,6 @@ const ManageAccounts = () => {
 
   return (
     <div className="manage-accounts">
-     
-
       {/* Stats Cards */}
       <div className="stats-grid">
         <div className="stat-card">
@@ -289,14 +487,14 @@ const ManageAccounts = () => {
           </div>
         </div>
       </div>
- <div className="manage-accounts-header">
- 
-        
+
+      <div className="manage-accounts-header">
         <button className="add-account-btn" onClick={handleAddAccount}>
           <UserPlus size={16} />
-          <span>Add User</span>
+          <span>Add {activeTab === 'users' ? 'User' : 'Admin'}</span>
         </button>
       </div>
+
       {/* Tabs */}
       <div className="accounts-tabs">
         <div className="tab-list">
@@ -334,33 +532,32 @@ const ManageAccounts = () => {
 
       {/* Accounts Table */}
       <div className="accounts-table-container">
-        <OrderTable
-          orders={getCurrentData()}
+        <FlexibleTable
+          data={getCurrentData()}
           columns={getCurrentColumns()}
           keyField="id"
-          onViewOrder={handleViewAccount}
-          onAccountAction={handleAccountAction}
-          activeTab={activeTab}
-        />
-        
-        {getCurrentData().length === 0 && (
-          <div className="empty-state">
-            <div className="empty-icon">
-              {activeTab === 'users' ? <Users size={48} /> : <Shield size={48} />}
+          onRowClick={handleViewAccount}
+          onActionClick={handleAccountAction}
+          actions={accountActions}
+          clickableRows={true}
+          emptyState={
+            <div className="empty-state">
+         
+              <h3>No {activeTab} found</h3>
+              <p>
+                {searchTerm || filterStatus 
+                  ? `No ${activeTab} match your current search and filter criteria.`
+                  : `No ${activeTab} have been added yet.`
+                }
+              </p>
+              <button className="add-first-btn" onClick={handleAddAccount}>
+                <UserPlus size={16} />
+                Add First {activeTab === 'users' ? 'User' : 'Admin'}
+              </button>
             </div>
-            <h3>No {activeTab} found</h3>
-            <p>
-              {searchTerm || filterStatus 
-                ? `No ${activeTab} match your current search and filter criteria.`
-                : `No ${activeTab} have been added yet.`
-              }
-            </p>
-            <button className="add-first-btn" onClick={handleAddAccount}>
-              <UserPlus size={16} />
-              Add First {activeTab === 'users' ? 'User' : 'Admin'}
-            </button>
-          </div>
-        )}
+          }
+          className="accounts-table"
+        />
       </div>
 
       {/* View Account Modal */}

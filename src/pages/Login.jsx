@@ -6,7 +6,7 @@ import logo from "../assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
 import { validateEmail, validatePassword } from "../schema/LoginSchema";
 import { useLogin } from "../hooks/useLogin";
-
+import Cookies from 'js-cookie'; 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -77,8 +77,9 @@ const handleSubmit = async (e) => {
     const response = await login(payload);
     if (response?.message) {
     localStorage.setItem('token', response?.token)
+      Cookies.set('outlets', JSON.stringify(response?.user?.outlets), { expires: 1 }); 
     console.log("Login success:", response);
-    navigate("/");
+    navigate("/store");
     }
 
   } catch (error) {

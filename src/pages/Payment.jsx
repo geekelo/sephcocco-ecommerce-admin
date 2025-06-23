@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import OrderTable from "../components/OrderTable";
 import "../styles/OrderPage.css";
@@ -9,99 +9,15 @@ import PaymentSummary from "../components/PaymentSummary";
 import ConfirmActionModal from "../components/ConfirmActionModal";
 import UpdateOrderStatusModal from "../components/UpdateOrderStatusModal";
 import { Mail, X } from 'lucide-react';
+import EmailModal from "../components/EmailModal";
+import FlexibleTable from "../components/FlexibleTable";
+import { paymentActions } from "../columns/paymentActions";
+import { createPaymentColumns } from "../columns/paymentColumns";
+import { EmptyState } from "../components/EmptyState";
 
-// Email Modal Component for Payment Page
-const EmailModal = ({ isOpen, onClose, customerName, customerEmail }) => {
-  const [subject, setSubject] = useState('');
-  const [description, setDescription] = useState('');
-
-  const handleSendEmail = () => {
-    // Here you would typically integrate with your email service
-    console.log('Sending email to:', customerEmail);
-    console.log('Subject:', subject);
-    console.log('Description:', description);
-    
-    // Reset form and close modal
-    setSubject('');
-    setDescription('');
-    onClose();
-    
-    // Show success message (you could add a toast notification here)
-    alert('Email sent successfully!');
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="modal-overlay-confirm">
-      <div className="confirm-action-modal email-modal">
-        <div className="modal-header-confirm">
-          <h2>Send Email</h2>
-          <button className="close-button-confirm" onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
-        
-        <div className="email-modal-content">
-          <div className="customer-info">
-            <p><strong>To:</strong> {customerName}</p>
-            <p><strong>Email:</strong> {customerEmail}</p>
-          </div>
-          
-          <div className="email-form">
-            <div className="form-group">
-              <label htmlFor="subject">Subject:</label>
-              <input
-                type="text"
-                id="subject"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Enter email subject"
-                className="email-input"
-              />
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="description">Description:</label>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter email message"
-                rows="5"
-                className="email-textarea"
-              />
-            </div>
-          </div>
-          
-          <div className="form-actions">
-            <button 
-              className="confirm-button"
-              onClick={handleSendEmail}
-              disabled={!subject.trim() || !description.trim()}
-            >
-              Send Email
-            </button>
-            <button className="cancel-button" onClick={onClose}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const PaymentPage = () => {
-  // Table column configuration for payments
-  const paymentColumns = [
-    { id: "id", label: "Payment ID", className: "order-id" },
-    { id: "amount", label: "Amount", className: "customer" },
-    { id: "method", label: "Method", className: "customer" },
-    { id: "status", label: "Status", className: "status" },
-    { id: "date", label: "Date", className: "date" },
-    { id: "action", label: "Action", className: "action" },
-  ];
+
 
   // Extract payments from orders for the payment table
   const paymentData = initialOrders.flatMap(order => 
@@ -213,7 +129,7 @@ const PaymentPage = () => {
     // Update the payment status in your state/backend here
     setIsUpdatePaymentStatusModal(false);
   };
-
+const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
   // Handler for sending email
   const handleSendEmail = () => {
     if (selectedPayment?.customerEmail) {
@@ -231,12 +147,31 @@ const PaymentPage = () => {
         searchTerm={searchTerm}
       />
       <div className="order-table-container">
-        <OrderTable
+        <FlexibleTable
+  data={paymentData}
+  columns={paymentColumns}
+  actions={paymentActions}
+  keyField="id"
+  onRowClick={handleViewPayment}
+
+  className="orders-table"
+
+  emptyState={
+    <EmptyState 
+      title="No payments records found" 
+   
+     
+      searchTerm={searchTerm} 
+    />
+  }
+/>
+    
+        {/* <OrderTable
           orders={paymentData}
           columns={paymentColumns}
           keyField="id"
           onViewOrder={handleViewPayment}
-        />
+        /> */}
       </div>
 
       {/* Payment Summary Modal - Enhanced with Email Button */}

@@ -1,23 +1,64 @@
 import React from 'react';
-import { Check } from 'lucide-react';
 import '../styles/ImageGallery.css';
 
-const ImageGallery = ({ images, selectedImage, onSelect }) => {
+const ImageGallery = ({ selectedImage, images = [], onSelect }) => {
+  // Debug logging
+  console.log('ImageGallery props:', {
+    selectedImage,
+    images,
+    isImagesArray: Array.isArray(images),
+    selectedImageType: typeof selectedImage
+  });
+
+  // Ensure selectedImage is a string URL
+  const mainImageUrl = typeof selectedImage === 'string' ? selectedImage : '';
+
+  // Ensure images is an array of strings
+  const imageUrls = Array.isArray(images) ? images.filter(url => typeof url === 'string') : [];
+
   return (
     <div className="image-gallery">
-      <img src={selectedImage.url} alt="Selected" className="main-image" />
-      <div className="thumbnail-list">
-      {images.slice(1).map((img, index) => (
-  <div
-    key={index}
-    className={`thumbnail ${selectedImage === img ? 'active' : ''}`}
-    onClick={() => onSelect(img)}
-  >
-    <img src={img.url} alt={`Thumbnail ${index + 1}`} />
-    {selectedImage === img && <Check className="check-icon" size={16} color="#e74c3c" />}
-  </div>
-))}
+      <div className="main-image-container">
+        {mainImageUrl ? (
+          <img
+            src={mainImageUrl}
+            alt="Main product"
+            className="main-image"
+            onError={(e) => {
+              console.error('Error loading main image:', mainImageUrl);
+              e.target.src = 'https://via.placeholder.com/400x400?text=Image+Not+Found';
+            }}
+          />
+        ) : (
+          <div className="main-image-placeholder">
+            <span>No image available</span>
+          </div>
+        )}
       </div>
+      
+      {imageUrls.length > 0 && (
+        <div className="thumbnail-list">
+          {imageUrls.map((imageUrl, index) => (
+            <div
+              key={index}
+              className={`thumbnail ${imageUrl === mainImageUrl ? 'active' : ''}`}
+              onClick={() => onSelect(imageUrl)}
+            >
+              <img
+                src={imageUrl}
+                alt={`Product view ${index + 1}`}
+                onError={(e) => {
+                  console.error('Error loading thumbnail:', imageUrl);
+                  e.target.src = 'https://via.placeholder.com/100x100?text=Error';
+                }}
+              />
+              {imageUrl === mainImageUrl && (
+                <div className="check-icon">✓</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

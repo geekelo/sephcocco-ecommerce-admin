@@ -1,0 +1,288 @@
+/* ===== FLEXIBLE TABLE WRAPPER STYLES ===== */
+.flexible-table {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+}
+
+.flexible-table.loading {
+  position: relative;
+}
+
+/* ===== TABLE HEADER ===== */
+.table-header {
+  display: flex;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+  min-height: 48px;
+}
+
+.table-header-cell {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  border-right: 1px solid #e5e7eb;
+  color: #000;
+  overflow: hidden;
+  position: relative;
+}
+
+.table-header-cell:last-child {
+  border-right: none;
+}
+
+.header-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+/* ===== TABLE BODY ===== */
+.table-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ===== EMPTY STATE ===== */
+.table-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #6b7280;
+  flex: 1;
+}
+
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+  color: #d1d5db;
+}
+
+.table-empty-state h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.table-empty-state p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+/* ===== LOADING STATE ===== */
+.table-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  flex: 1;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #f3f4f6;
+  border-top: 2px solid #6b7280;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner span {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ===== SKELETON LOADING STYLES ===== */
+.skeleton-row {
+  pointer-events: none;
+}
+
+.skeleton-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* Base skeleton animation */
+@keyframes skeleton-pulse {
+  0% {
+    background-color: #f3f4f6;
+  }
+  50% {
+    background-color: #e5e7eb;
+  }
+  100% {
+    background-color: #f3f4f6;
+  }
+}
+
+.skeleton-text {
+  height: 14px;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background-color: #f3f4f6;
+}
+
+.skeleton-text-default {
+  width: 80%;
+}
+
+.skeleton-text-medium {
+  width: 60%;
+  height: 14px;
+  margin-bottom: 4px;
+}
+
+.skeleton-text-small {
+  width: 40%;
+  height: 12px;
+}
+
+.skeleton-text-currency {
+  width: 70px;
+}
+
+.skeleton-text-date {
+  width: 90px;
+}
+
+/* Avatar skeleton */
+.skeleton-avatar-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skeleton-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background-color: #f3f4f6;
+  flex-shrink: 0;
+}
+
+.skeleton-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+/* Badge skeleton */
+.skeleton-badge {
+  width: 60px;
+  height: 20px;
+  border-radius: 12px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background-color: #f3f4f6;
+}
+
+/* Action skeleton */
+.skeleton-action {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background-color: #f3f4f6;
+  margin: 0 auto;
+}
+
+/* Stagger animation for better effect */
+.skeleton-row:nth-child(1) .skeleton-text,
+.skeleton-row:nth-child(1) .skeleton-avatar,
+.skeleton-row:nth-child(1) .skeleton-badge,
+.skeleton-row:nth-child(1) .skeleton-action {
+  animation-delay: 0s;
+}
+
+.skeleton-row:nth-child(2) .skeleton-text,
+.skeleton-row:nth-child(2) .skeleton-avatar,
+.skeleton-row:nth-child(2) .skeleton-badge,
+.skeleton-row:nth-child(2) .skeleton-action {
+  animation-delay: 0.1s;
+}
+
+.skeleton-row:nth-child(3) .skeleton-text,
+.skeleton-row:nth-child(3) .skeleton-avatar,
+.skeleton-row:nth-child(3) .skeleton-badge,
+.skeleton-row:nth-child(3) .skeleton-action {
+  animation-delay: 0.2s;
+}
+
+.skeleton-row:nth-child(4) .skeleton-text,
+.skeleton-row:nth-child(4) .skeleton-avatar,
+.skeleton-row:nth-child(4) .skeleton-badge,
+.skeleton-row:nth-child(4) .skeleton-action {
+  animation-delay: 0.3s;
+}
+
+.skeleton-row:nth-child(5) .skeleton-text,
+.skeleton-row:nth-child(5) .skeleton-avatar,
+.skeleton-row:nth-child(5) .skeleton-badge,
+.skeleton-row:nth-child(5) .skeleton-action {
+  animation-delay: 0.4s;
+}
+
+/* ===== RESPONSIVE DESIGN FOR TABLE ===== */
+@media (max-width: 768px) {
+  .flexible-table {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .table-header {
+    display: none;
+  }
+
+  .table-empty-state,
+  .table-loading-state {
+    padding: 40px 20px;
+  }
+
+  .empty-icon {
+    width: 48px;
+    height: 48px;
+  }
+}

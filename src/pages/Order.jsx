@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import OrderTable from "../components/OrderTable";
 import OrderSummary from "../components/OrderSummary";
@@ -9,18 +9,22 @@ import ProductDetails from "../components/ProductDetails";
 import PaymentSummary from "../components/PaymentSummary";
 import ConfirmActionModal from "../components/ConfirmActionModal";
 import UpdateOrderStatusModal from "../components/UpdateOrderStatusModal";
+import FlexibleTable from "../components/FlexibleTable";
+import { EmptyState } from "../components/EmptyState";
+import { orderActions } from "../columns/orderActions";
+import { createOrderColumns } from "../columns/orderColumns";
 
 
 const OrderPage = () => {
   // Table column configuration
-  const orderColumns = [
-    { id: "id", label: "Order ID", className: "order-id" },
-    { id: "customer", label: "Customer", className: "customer" },
-    { id: "status", label: "Status", className: "status" },
-    { id: "amount", label: "Total Amount", className: "amount" },
-    { id: "date", label: "Date", className: "date" },
-    { id: "action", label: "Action", className: "action" },
-  ];
+  // const orderColumns = [
+  //   { id: "id", label: "Order ID", className: "order-id" },
+  //   { id: "customer", label: "Customer", className: "customer" },
+  //   { id: "status", label: "Status", className: "status" },
+  //   { id: "amount", label: "Total Amount", className: "amount" },
+  //   { id: "date", label: "Date", className: "date" },
+  //   { id: "action", label: "Action", className: "action" },
+  // ];
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditModal, setIsEditModal] = useState(false);
@@ -145,7 +149,7 @@ const OrderPage = () => {
     // Update the order status in your state/backend here
     // You might want to update the selectedOrder state or refetch data
   };
-
+  const orderColumns = useMemo(() => createOrderColumns(handleViewOrder), []);
   // Handler for discarding order
   const handleDiscardOrder = () => {
     setIsDiscardOrderModal(true);
@@ -169,12 +173,34 @@ const OrderPage = () => {
             searchTerm={searchTerm}
           />
           <div className="order-table-container">
-            <OrderTable
+             <FlexibleTable
+  data={initialOrders} 
+  columns={orderColumns}
+  actions={orderActions}
+  keyField="id"
+  onRowClick={handleViewOrder}
+ onActionClick={(actionKey, data) => {
+    if (actionKey === 'view') {
+      handleViewOrder(data);
+    }
+  }}
+  className="orders-table"
+
+  emptyState={
+    <EmptyState 
+      title="No orders found" 
+    
+  
+      searchTerm={searchTerm} 
+    />
+  }
+/>
+            {/* <OrderTable
               orders={initialOrders}
               columns={orderColumns}
               keyField="id"
               onViewOrder={handleViewOrder}
-            />
+            /> */}
           </div>
         </>
       ) : (

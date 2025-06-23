@@ -1,5 +1,5 @@
 /* Modal overlay for order/payment summary */
-.modal-overlay {
+.modal-overlay-order-summary {
   position: absolute;
   top: 0;
   left: 0;

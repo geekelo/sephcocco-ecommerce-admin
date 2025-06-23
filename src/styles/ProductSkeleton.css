@@ -1,0 +1,30 @@
+.skeleton-product-card {
+  background: #f4f4f4;
+  border-radius: 10px;
+  padding: 1rem;
+  animation: productPulse 1.5s infinite;
+}
+
+.skeleton-image {
+  height: 150px;
+  background: #ddd;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.skeleton-content .skeleton-line {
+  height: 12px;
+  background: #e0e0e0;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+@keyframes productPulse {
+  0% { background-color: #f0f0f0; }
+  50% { background-color: #e0e0e0; }
+  100% { background-color: #f0f0f0; }
+}
