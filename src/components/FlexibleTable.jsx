@@ -49,7 +49,7 @@ const FlexibleTable = ({
       );
     }
     
-    if (columnKey.includes('status') || columnKey.includes('badge') || columnKey.includes('tag')) {
+    if (columnKey.includes('status') || columnKey.includes('badge') || columnKey.includes('tag') || columnKey.includes('stages')) {
       return <div className="skeleton-badge"></div>;
     }
     
@@ -101,6 +101,24 @@ const FlexibleTable = ({
     </div>
   );
 
+  // Get the orders data - handle both direct array and nested object structure
+  const getOrdersData = () => {
+    if (!data) return [];
+    
+    // If data is already an array, return it
+    if (Array.isArray(data)) return data;
+    
+    // If data has orders property, return that
+    if (data.orders && Array.isArray(data.orders)) return data.orders;
+    
+    // If data has data property with orders, return that
+    if (data.data && data.data.orders && Array.isArray(data.data.orders)) return data.data.orders;
+    
+    return [];
+  };
+
+  const ordersData = getOrdersData();
+
   return (
     <div className={`flexible-table ${isLoading ? 'loading' : ''} ${className}`}>
       {/* Table Header - Always show when loading to maintain structure */}
@@ -127,8 +145,8 @@ const FlexibleTable = ({
         loadingState || defaultLoadingState
       ) : (
         <div className={`table-body ${bodyClassName}`}>
-          {data && data.length > 0 ? (
-            data.map((item, index) => (
+          {ordersData.length > 0 ? (
+            ordersData.map((item, index) => (
               <FlexibleTableRow
                 key={item[keyField] || index}
                 data={item}

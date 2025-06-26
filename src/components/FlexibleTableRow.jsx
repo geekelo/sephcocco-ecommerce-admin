@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, Eye, Calendar, DollarSign } from 'lucide-react';
 import '../styles/row.css';
 
 const FlexibleTableRow = ({ 
@@ -38,12 +38,10 @@ const FlexibleTableRow = ({
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
       
-      // Calculate position relative to viewport
-      const top = rect.bottom + scrollTop + 4; // 4px gap
-      const left = rect.right + scrollLeft - 160; // Align right edge (160px is menu width)
+      const top = rect.bottom + scrollTop + 4;
+      const left = rect.right + scrollLeft - 160;
       
-      // Adjust if dropdown would go off-screen
-      const adjustedLeft = Math.max(16, Math.min(left, window.innerWidth - 176)); // 16px margin, 160px width + 16px margin
+      const adjustedLeft = Math.max(16, Math.min(left, window.innerWidth - 176));
       const adjustedTop = rect.bottom + 160 > window.innerHeight ? rect.top + scrollTop - 160 - 4 : top;
       
       setDropdownPosition({
@@ -53,7 +51,84 @@ const FlexibleTableRow = ({
     }
   }, [showActions]);
 
-  // Default cell renderer
+  // Utility functions
+  const formatCurrency = (value) => {
+    if (value === null || value === undefined) return '-';
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN'
+    }).format(value);
+  };
+  
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const capitalizeText = (text) => {
+    if (!text) return '-';
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+  };
+
+  const getStatusClass = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'active':
+      case 'completed':
+      case 'delivered':
+        return 'status-completed status-active';
+      case 'pending':
+      case 'processing':
+      case 'confirmed':
+        return 'status-pending';
+      case 'cancelled':
+      case 'inactive':
+      case 'rejected':
+        return 'status-cancelled';
+      default:
+        return 'status-pending';
+    }
+  };
+
+  const getStageClass = (stage) => {
+    switch (stage?.toLowerCase()) {
+      case 'completed':
+      case 'shipped':
+      case 'delivered':
+        return 'status-completed';
+      case 'processing':
+      case 'confirmed':
+        return 'status-processing';
+      case 'pending':
+      case 'awaiting':
+        return 'status-pending';
+      case 'cancelled':
+      case 'rejected':
+        return 'status-cancelled';
+      default:
+        return 'badge';
+    }
+  };
+
+  const renderStages = (stages) => {
+    if (!stages || !Array.isArray(stages)) return '-';
+    
+    return (
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+        {stages.map((stage, index) => (
+          <span key={index} className={`status-badge ${getStageClass(stage)}`}>
+            {capitalizeText(stage)}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
+  // Default cell renderer with enhanced type handling
   const defaultCellRenderer = (column, data, value) => {
     // Handle different cell types based on column configuration
     if (column.type === 'custom' && column.render) {
@@ -90,6 +165,64 @@ const FlexibleTableRow = ({
 
     if (column.type === 'button' && column.buttonConfig) {
       return renderButtonCell(value, data, column.buttonConfig);
+    }
+
+    // Enhanced auto-detection based on column key
+    const columnKey = column.key?.toLowerCase() || '';
+    
+    // Currency fields
+    if (columnKey.includes('price') || columnKey.includes('cost') || columnKey.includes('amount')) {
+      return (
+        <div className="currency-cell">
+  
+          <span className="currency-value">{formatCurrency(value)}</span>
+        </div>
+      );
+    }
+    
+    // Date fields
+    if (columnKey.includes('date') || columnKey.includes('created') || columnKey.includes('updated')) {
+      return (
+        <div className="date-cell">
+          <Calendar size={14} className="date-icon" />
+          <span className="date-text">{formatDate(value)}</span>
+        </div>
+      );
+    }
+    
+    // Status field
+    if (columnKey === 'status') {
+      return (
+        <span className={`status-badge ${getStatusClass(value)}`}>
+          {capitalizeText(value)}
+        </span>
+      );
+    }
+    
+    // Stages field
+    if (columnKey === 'stages') {
+      return renderStages(value);
+    }
+    
+    // Action field
+    if (columnKey === 'action' || column.type === 'button') {
+      return (
+        <button
+          className={`cell-button ${column.buttonConfig?.className || 'view-button'}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (column.buttonConfig?.onClick) {
+              column.buttonConfig.onClick(data);
+            }
+            if (onActionClick) {
+              onActionClick('view', data);
+            }
+          }}
+        >
+          <Eye size={14} className="button-icon" />
+          {column.buttonConfig?.text || 'View'}
+        </button>
+      );
     }
 
     // Default text rendering with optional formatting
@@ -305,7 +438,7 @@ const FlexibleTableRow = ({
       {columns.map((column) => {
         const value = column.accessor 
           ? column.accessor.split('.').reduce((obj, key) => obj?.[key], data)
-          : data[column.key];
+          : data[column.key] || (column.key.includes('.') ? column.key.split('.').reduce((obj, key) => obj?.[key], data) : data[column.key]);
 
         return (
           <div
