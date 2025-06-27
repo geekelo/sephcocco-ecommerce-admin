@@ -1,116 +1,118 @@
 import React, { useState, useRef, useEffect } from 'react';
-import '../styles/SearchBar.css';
 import { Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import '../styles/SearchBar.css';
 
 const SearchBar = ({ 
-  onSearch, 
-  onFilter, 
-  searchTerm, 
+  onApply, // <-- new
   filterOptions = [],
   placeholder = "Search for anything",
   filterLabel = "Filter by"
 }) => {
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('All Status');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedFilters, setSelectedFilters] = useState('All Status');
   const dropdownRef = useRef(null);
 
-  // Default filter options if none provided
-  const defaultFilterOptions = [
-    'All Status',
-    'active',
-    'inactive',
-    'suspended'
-  ];
-
+  const defaultFilterOptions = ['All Status', 'active', 'inactive', 'suspended'];
   const currentFilterOptions = filterOptions.length > 0 ? filterOptions : defaultFilterOptions;
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsFilterOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleFilterToggle = () => {
-    setIsFilterOpen(!isFilterOpen);
-  };
-
-  const handleFilterChange = (value) => {
-    setSelectedFilters(value);
-    setIsFilterOpen(false); // Close dropdown after selection
-        
-    // Call the onFilter callback with the updated filter
-    if (onFilter) {
-      onFilter(value === 'All Status' ? '' : value);
-    }
+  const handleApply = () => {
+    onApply({
+     
+        status: status === 'All Status' ? '' : status.toLowerCase(),
+        search_terms: search,
+        start_date: startDate,
+        end_date: endDate
+      
+    
+    });
   };
 
   const clearFilters = () => {
-    setSelectedFilters('All Status');
-    if (onFilter) {
-      onFilter('');
-    }
+    setStatus('All Status');
+    setStartDate('');
+    setEndDate('');
+    setSearch('');
+    onApply({ status: '', search_terms: '', start_date: '', end_date: '' });
   };
-
-  const hasActiveFilters = selectedFilters !== 'All Status';
 
   return (
     <div className="search-filter-section">
+      {/* Search input */}
       <div className="search-box">
         <Search size={16} className="search-icon" />
         <input
           type="text"
           placeholder={placeholder}
-          value={searchTerm}
-          onChange={onSearch}
-          className="search-input"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="searchfilter-input"
         />
       </div>
 
-      <div className="filter-container">
-        <div className="filter-dropdown-wrapper" ref={dropdownRef}>
-          <button
-            className={`filter-button ${hasActiveFilters ? 'has-filters' : ''}`}
-            onClick={handleFilterToggle}
-          >
-            <SlidersHorizontal size={16} />
-            <span>{filterLabel}</span>
-            {hasActiveFilters && <span className="filter-count">1</span>}
-            <ChevronDown size={14} className={`chevron ${isFilterOpen ? 'rotated' : ''}`} />
-          </button>
+      {/* Status Filter Dropdown */}
+      <div className="filter-container" ref={dropdownRef}>
+        <button className="filter-button" onClick={() => setIsFilterOpen(!isFilterOpen)}>
+          <SlidersHorizontal size={16} />
+          <span>{filterLabel}</span>
+          {status !== 'All Status' && <span className="filter-count">1</span>}
+          <ChevronDown size={14} className={`chevron ${isFilterOpen ? 'rotated' : ''}`} />
+        </button>
 
-          {isFilterOpen && (
-            <div className="filter-dropdown">
-              {hasActiveFilters && (
-                <div className="filter-header">
-                  <button className="clear-filters" onClick={clearFilters}>
-                    Clear
-                  </button>
+        {isFilterOpen && (
+          <div className="filter-dropdown">
+            <div className="filter-options">
+              {currentFilterOptions.map((option) => (
+                <div
+                  key={option}
+                  className={`filter-option ${status === option ? 'active' : ''}`}
+                  onClick={() => setStatus(option)}
+                >
+                  {option}
                 </div>
-              )}
-
-              <div className="filter-options">
-                {currentFilterOptions.map((option) => (
-                  <div
-                    key={option}
-                    className={`filter-option ${selectedFilters === option ? 'active' : ''}`}
-                    onClick={() => handleFilterChange(option)}
-                  >
-                    {option}
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
+
+      {/* Date Inputs */}
+      <p className='date-text'>Start Date:</p>
+      <input
+        type="date"
+        value={startDate}
+        onChange={(e) => setStartDate(e.target.value)}
+        className="date-picker"
+        placeholder="Start Date"
+      />
+      <p className='date-text'>End Date:</p>
+      <input
+        type="date"
+        value={endDate}
+        onChange={(e) => setEndDate(e.target.value)}
+        className="date-picker"
+        placeholder="End Date"
+      />
+
+      {/* Apply Filters Button */}
+      <button className="apply-button" onClick={handleApply}>
+        Apply 
+      </button>
+
+      {/* Optional clear */}
+    
     </div>
   );
 };

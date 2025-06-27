@@ -11,6 +11,48 @@
   margin-top: 60px;
   padding-left: 240px;
 }
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-completed,
+.status-active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-cancelled,
+.status-inactive,
+.status-suspended {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-processing {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
 
 /* Confirm action modal overlay */
 .modal-overlay-confirm {

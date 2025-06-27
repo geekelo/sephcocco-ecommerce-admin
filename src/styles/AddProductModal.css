@@ -344,7 +344,7 @@
     font-weight: 500;
   }
   
-  input[type="text"],
+ 
   input[type="number"],
   select,
   textarea {
@@ -366,13 +366,8 @@
     padding-right: 30px;
   }
   
-  input:focus,
-  select:focus,
-  textarea:focus {
-    outline: none;
-    border-color: #aaa;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
-  }
+ 
+
   
   textarea {
     resize: vertical;

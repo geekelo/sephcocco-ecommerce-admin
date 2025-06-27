@@ -6,25 +6,27 @@ import { getActiveOutlet } from '../utils/getActiveOutlets';
 
 const ProductCard = ({ product, onView, onEdit, onDelete, onVisibilityChange }) => {
   const {
-    id: productId,
+    order_number: productId,
     name,
     main_image_url,
     price,
     likes,
     amount_in_stock,
     out_of_stock_status,
-    visibility
+    visible
   } = product;
 const active_outlet = getActiveOutlet()
-  const [isVisible, setIsVisible] = useState(visibility);
+  const [isVisible, setIsVisible] = useState(visible);
   const switchVisibilityMutation = useSwitchProductVisibility();
+console.log('okk',product);
 
   const handleVisibilityToggle = async () => {
     try {
-      await switchVisibilityMutation.mutateAsync({
+    const res =  await switchVisibilityMutation.mutateAsync({
         active_outlet,
         productId
       });
+      console.log(res);
       
       // Toggle the local state
       const newVisibility = !isVisible;
@@ -100,23 +102,24 @@ const active_outlet = getActiveOutlet()
           </div>
 
           <div className="product-actions">
-            <button
+            {onEdit &&    <button
               className="action-button-product edit-button"
               onClick={onEdit}
               title="Edit product"
             >
               <Edit size={16} className="edit-icon" />
               <span>Edit</span>
-            </button>
-
-            <button
+            </button>}
+         
+            {onDelete &&   <button
               className="action-button-product delete-button-product"
               onClick={onDelete}
               title="Delete product"
             >
               <Trash2 size={16} className="delete-icon" />
               <span>Delete</span>
-            </button>
+            </button>}
+          
           </div>
         </div>
       </div>

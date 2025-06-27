@@ -9,6 +9,8 @@ import { X } from 'lucide-react';
 
 
 const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
+  console.log(product);
+  
   const [selectedImage, setSelectedImage] = useState(product?.main_image_url);
   // const [otherImages, setOtherImages] = useState([]);
 
@@ -78,14 +80,14 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
             />
           </div>
           
-          
-          <ActionButtons 
+          {onEdit && onDelete &&   <ActionButtons 
           onEdit={onEdit}
           
   
             onDelete={onDelete}
     
-          />
+          />}
+        
         </div>
       </motion.div>
     </div>

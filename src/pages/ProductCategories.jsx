@@ -17,9 +17,10 @@ import { useViewProductCategories } from "../hooks/useGetProductCategories";
 import Cookies from 'js-cookie'; 
 import { categoryColumns } from "../columns/categoryColumns.jsx";
 import { categoryActions } from "../columns/categoryActions.jsx";
-import { getActiveOutlet } from "../../../sephcocco-lounge-user/src/utils/getActiveOutlets.js";
+
 import { ErrorState } from "../components/ErrorState.jsx";
 import { EmptyState } from "../components/EmptyState.jsx";
+import { getActiveOutlet } from "../utils/getActiveOutlets.js";
 
 const ProductCategoriesPage = () => {
  

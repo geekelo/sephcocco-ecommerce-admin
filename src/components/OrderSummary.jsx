@@ -5,6 +5,8 @@ import OrderTable from './OrderTable';
 import '../styles/OrderSummary.css';
 import InfoCard from './InfoCard';
 import EmailModal from './EmailModal';
+import { formatDate } from '../utils/formatDate';
+import FlexibleTable from './FlexibleTable';
 
 
 
@@ -22,7 +24,7 @@ const OrderSummary = ({
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   const {
-    id,
+    order_number,
     customerName,
     customerEmail, // Added customer email
     phoneNumber,
@@ -31,46 +33,42 @@ const OrderSummary = ({
     paymentMethod,
     paymentStatus,
     notes,
-    products,
+    product,
     payments
   } = order;
-
-  // Convert products to the format expected by ProductCard
-  const formattedProducts = products.map(product => ({
-    name: product.name,
-    image: product.image,
-    price: product.price,
-    rating: product.quantity, // Using quantity in place of rating
-    stockCount: product.stockCount,
-    stockStatus: "In stock"
-  }));
+console.log('prod',order);
 
   // Prepare info card data with email
   const leftCardItems = [
-    { label: "Order ID:", value: id },
-    { label: "Customer Name:", value: customerName },
-    { 
-      label: "Customer Email:", 
-      value: customerEmail || "Not provided",
-      isEmail: true 
+    { label: "Order ID:", value: order.order_number,isCopyable: true },
+    { label: "Customer Name:", value: order.customer.name },
+    {
+      label: "Customer Email:",
+      value: order.customer.email || "Not provided",
+      isEmail: true
     },
-    { 
-      label: "Phone Number:", 
-      value: phoneNumber,
-      isPhone: true 
+    {
+      label: "Phone Number:",
+      value: order.customer.whatsapp_number,
+      isPhone: true
     },
-    { label: "Order Date:", value: orderDate }
+    {
+      label: "Address:",
+      value: order.customer.address
+    },
+    { label: "Order Date:", value: formatDate(order.customer.created_at) }
   ];
+  
 
   const rightCardItems = [
-    { label: "Order Status:", value: status },
+    { label: "Order Status:", value: order.status,badge: true },
     { label: "Payment Method:", value: paymentMethod },
-    { label: "Payment Status:", value: paymentStatus },
+    { label: "Payment Status:", value: paymentStatus,badge: true },
     { label: "Order Notes:", value: notes || "None" }
   ];
 
   // Format payments for the order table
-  const formattedPayments = payments.map(payment => ({
+  const formattedPayments = payments?.map(payment => ({
     id: payment.id,
     customer: '', // Not showing customer in payment table
     amount: payment.amount,
@@ -103,7 +101,7 @@ const OrderSummary = ({
       <div className="modal-overlay-order-summary">
         <div className="add-product-modal">
           <div className="modal-header">
-            <h2>Order Summary(#{id})</h2>
+            <h2>Order Summary</h2>
             <div className="header-actions">
               {/* Email button */}
               <button 
@@ -131,21 +129,20 @@ const OrderSummary = ({
             <div className="ordered-products-section">
               <h3>Ordered Products</h3>
               <div className="products-grid">
-                {formattedProducts.map((product, index) => (
+               
                   <ProductCard
-                    key={index}
-                    product={product}
+                   
+                    product={order.product}
                     onView={onView}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
+                  
                   />
-                ))}
+                
               </div>
             </div>
 
             <div className="linked-payment-section">
               <h3>Linked Payment</h3>
-              <OrderTable
+              <FlexibleTable
                 orders={formattedPayments}
                 columns={paymentColumns}
                 keyField="id"

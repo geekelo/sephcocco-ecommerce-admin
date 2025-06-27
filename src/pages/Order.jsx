@@ -1,32 +1,44 @@
 import React, { useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
-import OrderTable from "../components/OrderTable";
+import FlexibleTable from "../components/FlexibleTable";
+import Pagination from "../components/Pagination";
 import OrderSummary from "../components/OrderSummary";
-import "../styles/OrderPage.css";
-import { initialOrders, mockCategories, mockProduct } from "../constants/data";
-import EditProductModal from "../components/EditModal";
 import ProductDetails from "../components/ProductDetails";
+import EditProductModal from "../components/EditModal";
 import PaymentSummary from "../components/PaymentSummary";
 import ConfirmActionModal from "../components/ConfirmActionModal";
 import UpdateOrderStatusModal from "../components/UpdateOrderStatusModal";
-import FlexibleTable from "../components/FlexibleTable";
 import { EmptyState } from "../components/EmptyState";
 import { orderActions } from "../columns/orderActions";
 import { createOrderColumns } from "../columns/orderColumns";
+import { useGetOrder } from "../hooks/useGetOrder";
+import { getActiveOutlet } from "../utils/getActiveOutlets";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 
+const itemsPerPage = 10;
 
 const OrderPage = () => {
-  // Table column configuration
-  // const orderColumns = [
-  //   { id: "id", label: "Order ID", className: "order-id" },
-  //   { id: "customer", label: "Customer", className: "customer" },
-  //   { id: "status", label: "Status", className: "status" },
-  //   { id: "amount", label: "Total Amount", className: "amount" },
-  //   { id: "date", label: "Date", className: "date" },
-  //   { id: "action", label: "Action", className: "action" },
-  // ];
+  const [filters, setFilters] = useState({
+    search_terms: "",
+    status: "",
+    start_date: "",
+    end_date: "",
+  });
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const activeOutlet = getActiveOutlet();
+
+  const { data, isLoading } = useGetOrder(activeOutlet, filters, 
+  currentPage,
+     itemsPerPage,
+  );
+
+  const orders = data?.orders || [];
+  const meta = data?.meta || {};
+
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderSummary, setShowOrderSummary] = useState(false);
+
   const [isEditModal, setIsEditModal] = useState(false);
   const [isDeleteModal, setIsDeleteModal] = useState(false);
   const [isViewModal, setIsViewModal] = useState(false);
@@ -36,101 +48,21 @@ const OrderPage = () => {
   const [isUpdateStatusModal, setIsUpdateStatusModal] = useState(false);
   const [isDiscardOrderModal, setIsDiscardOrderModal] = useState(false);
   const [isDiscardPaymentModal, setIsDiscardPaymentModal] = useState(false);
-  
-  // Add state for order summary
-  const [showOrderSummary, setShowOrderSummary] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+  const handleApplyFilters = ({ status, search_terms, start_date, end_date }) => {
+    setFilters({ status, search_terms, start_date, end_date });
+    setCurrentPage(1);
   };
 
-  const handleFilter = () => {
-    console.log("Filter functionality to be implemented");
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
-  const handlePaymentBack = () => {
-    setIsViewPaymentModal(false);
-  };
-
-  const handleEditPayment = () => {
-    setIsDeleteModal(false);
-    setIsViewModal(false);
-    setIsEditModal(true);
-  };
-
-  const handleDeletePayment = () => {
-    setIsEditModal(false);
-    setIsViewModal(false);
-    setIsDeleteModal(true);
-  };
-
-  const handleDiscardPayment = () => {
-    setIsDiscardPaymentModal(true);
-  };
-
-  const handleConfirmDiscardPayment = () => {
-    console.log("Discarding payment for:", selectedOrder?.id);
-    setIsViewPaymentModal(false);
-    setIsDiscardPaymentModal(false);
-  };
-
-  const handleVerify = () => {
-    console.log("Verifying payment for:", selectedOrder?.id);
-    setIsVerifyModal(true);
-  };
-
-  const handleProductViewPayment = () => {
-    setIsEditModal(false);
-    setIsDeleteModal(false);
-    setIsViewModal(true);
-  };
-
-  const handleEdit = () => {
-    setIsViewModal(false);
-    setIsDeleteModal(false);
-    setIsEditModal(true);
-  };
-
-  const handleDelete = () => {
-    setIsViewModal(false);
-    setIsEditModal(false);
-    setIsDeleteModal(true);
-  };
-
-  const handleConfirm = () => {
-    console.log("Deleting product:", mockProduct.name);
-    setIsDeleteModal(false);
-  };
-
-  const handleVerifyConfirm = () => {
-    console.log("Payment verified successfully");
-    setIsVerifyModal(false);
-    setIsSuccessModal(true);
-  };
-
-  const handlePaymentViewOrder = () => {
-    setIsViewPaymentModal(false);
-    setShowOrderSummary(false);
-  };
-
-  const handleViewPayment = () => {
-    setIsViewPaymentModal(true);
-  };
-
-  const handleView = () => {
-    setIsEditModal(false);
-    setIsDeleteModal(false);
-    setIsViewModal(true);
-  };
-
-  // Handler for viewing an order
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
     setShowOrderSummary(true);
   };
 
-  // Handler for going back to order list
   const handleBackToOrders = () => {
     setShowOrderSummary(false);
     setSelectedOrder(null);
@@ -139,198 +71,174 @@ const OrderPage = () => {
     setIsDeleteModal(false);
   };
 
-  // Handler for updating order status
-  const handleUpdateStatus = () => {
-    setIsUpdateStatusModal(true);
-  };
-
-  const handleConfirmStatusUpdate = (newStatus) => {
-    console.log("Updating order status to:", newStatus, "for order:", selectedOrder.id);
-    // Update the order status in your state/backend here
-    // You might want to update the selectedOrder state or refetch data
-  };
   const orderColumns = useMemo(() => createOrderColumns(handleViewOrder), []);
-  // Handler for discarding order
-  const handleDiscardOrder = () => {
-    setIsDiscardOrderModal(true);
-  };
-
-  const handleConfirmDiscardOrder = () => {
-    console.log("Discarding order:", selectedOrder.id);
-    setShowOrderSummary(false);
-    setIsDiscardOrderModal(false);
-    setSelectedOrder(null);
-  };
 
   return (
     <div className="order-page">
       {!showOrderSummary ? (
-        // Order list view
         <>
           <SearchBar
-            onSearch={handleSearchChange}
-            onFilter={handleFilter}
-            searchTerm={searchTerm}
+            onApply={handleApplyFilters}
+            filterOptions={["All Status", "Pending", "Paid","Delivering", "Completed"]}
+            placeholder="Search orders..."
+            filterLabel="Filter by"
           />
-          <div className="order-table-container">
-             <FlexibleTable
-  data={initialOrders} 
-  columns={orderColumns}
-  actions={orderActions}
-  keyField="id"
-  onRowClick={handleViewOrder}
- onActionClick={(actionKey, data) => {
-    if (actionKey === 'view') {
-      handleViewOrder(data);
-    }
-  }}
-  className="orders-table"
 
-  emptyState={
-    <EmptyState 
-      title="No orders found" 
-    
-  
-      searchTerm={searchTerm} 
-    />
-  }
-/>
-            {/* <OrderTable
-              orders={initialOrders}
-              columns={orderColumns}
-              keyField="id"
-              onViewOrder={handleViewOrder}
-            /> */}
+          <div className="order-table-container">
+            {isLoading ? (
+              <LoadingSkeleton itemsPerPage={itemsPerPage} />
+            ) : orders.length > 0 ? (
+              <>
+                <FlexibleTable
+                  data={orders}
+                  columns={orderColumns}
+                  actions={orderActions}
+                  keyField="id"
+                  onRowClick={handleViewOrder}
+                  onActionClick={(actionKey, data) => {
+                    if (actionKey === "view") {
+                      handleViewOrder(data);
+                    }
+                  }}
+                  className="orders-table"
+                />
+
+                <Pagination
+                  currentPage={meta.current_page || 1}
+                  totalPages={meta.total_pages || 1}
+                  onPageChange={handlePageChange}
+                  totalItems={meta.total_count || 0}
+                  
+                  showInfo={true}
+                />
+              </>
+            ) : (
+              <EmptyState title="No orders found" searchTerm={filters.search_terms} />
+            )}
           </div>
         </>
       ) : (
-        <>
-          <OrderSummary
-            order={selectedOrder}
-            onBack={handleBackToOrders}
-            onUpdateStatus={handleUpdateStatus}
-            onDiscard={handleDiscardOrder}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onView={handleView}
-            onViewPayment={handleViewPayment}
-          />
-        </>
+        <OrderSummary
+          order={selectedOrder}
+          onBack={handleBackToOrders}
+          onUpdateStatus={() => setIsUpdateStatusModal(true)}
+          onDiscard={() => setIsDiscardOrderModal(true)}
+          onEdit={() => setIsEditModal(true)}
+          onDelete={() => setIsDeleteModal(true)}
+          onView={() => setIsViewModal(true)}
+          onViewPayment={() => setIsViewPaymentModal(true)}
+        />
       )}
 
-      {/* Payment Summary Modal */}
+      {/* Modals */}
       {isViewPaymentModal && (
         <PaymentSummary
           order={selectedOrder}
-          onBack={handlePaymentBack}
-          onViewOrder={handlePaymentViewOrder}
-          onVerify={handleVerify}
-          onDiscard={handleDiscardPayment}
-          onEdit={handleEditPayment}
-          onDelete={handleDeletePayment}
-          onView={handleProductViewPayment}
+          onBack={() => setIsViewPaymentModal(false)}
+          onViewOrder={() => {
+            setIsViewPaymentModal(false);
+            setShowOrderSummary(false);
+          }}
+          onVerify={() => setIsVerifyModal(true)}
+          onDiscard={() => setIsDiscardPaymentModal(true)}
+          onEdit={() => setIsEditModal(true)}
+          onDelete={() => setIsDeleteModal(true)}
+          onView={() => setIsViewModal(true)}
         />
       )}
 
-      {/* Product Details Modal */}
       {isViewModal && (
-        <ProductDetails
-          product={mockProduct}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onClose={() => setIsViewModal(false)}
-        />
+        <ProductDetails product={selectedOrder?.product} onClose={() => setIsViewModal(false)} />
       )}
 
-      {/* Edit Product Modal */}
       {isEditModal && (
         <EditProductModal
           isOpen={isEditModal}
           onClose={() => setIsEditModal(false)}
-          product={mockProduct}
-          categories={mockCategories}
+          product={selectedOrder?.product}
         />
       )}
 
-      {/* Update Order Status Modal */}
       {isUpdateStatusModal && (
         <UpdateOrderStatusModal
           isOpen={isUpdateStatusModal}
           onClose={() => setIsUpdateStatusModal(false)}
-          onConfirm={handleConfirmStatusUpdate}
+          onConfirm={(newStatus) => {
+            console.log("Updating order status to:", newStatus);
+            setIsUpdateStatusModal(false);
+          }}
           currentStatus={selectedOrder?.status}
         />
       )}
 
-      {/* Delete Product Confirmation Modal */}
       {isDeleteModal && (
         <ConfirmActionModal
           isOpen={isDeleteModal}
           onClose={() => setIsDeleteModal(false)}
-          onConfirm={handleConfirm}
+          onConfirm={() => {
+            console.log("Deleting product:", selectedOrder?.product?.name);
+            setIsDeleteModal(false);
+          }}
           type="delete"
           title="Confirm Delete"
           message={
-            <>
-              Are you sure you want to delete{" "}
-              <strong>{mockProduct.name}</strong>?
-            </>
+            <>Are you sure you want to delete <strong>{selectedOrder?.product?.name}</strong>?</>
           }
         />
       )}
 
-      {/* Discard Order Confirmation Modal */}
       {isDiscardOrderModal && (
         <ConfirmActionModal
           isOpen={isDiscardOrderModal}
           onClose={() => setIsDiscardOrderModal(false)}
-          onConfirm={handleConfirmDiscardOrder}
+          onConfirm={() => {
+            console.log("Discarding order:", selectedOrder?.id);
+            setShowOrderSummary(false);
+            setIsDiscardOrderModal(false);
+            setSelectedOrder(null);
+          }}
           type="discard"
           title="Confirm Discard Order"
           message={
-            <>
-              Are you sure you want to discard order{" "}
-              <strong>#{selectedOrder?.id}</strong>? This action cannot be undone.
-            </>
+            <>Are you sure you want to discard order <strong>#{selectedOrder?.name}</strong>? This action cannot be undone.</>
           }
         />
       )}
 
-      {/* Discard Payment Confirmation Modal */}
       {isDiscardPaymentModal && (
         <ConfirmActionModal
           isOpen={isDiscardPaymentModal}
           onClose={() => setIsDiscardPaymentModal(false)}
-          onConfirm={handleConfirmDiscardPayment}
+          onConfirm={() => {
+            console.log("Discarding payment for order:", selectedOrder?.id);
+            setIsViewPaymentModal(false);
+            setIsDiscardPaymentModal(false);
+          }}
           type="discardPayment"
           title="Confirm Discard Payment"
           message={
-            <>
-              Are you sure you want to discard this payment? This action cannot be undone.
-            </>
+            <>Are you sure you want to discard this payment? This action cannot be undone.</>
           }
         />
       )}
 
-      {/* Verify Payment Confirmation Modal */}
       {isVerifyModal && (
         <ConfirmActionModal
           isOpen={isVerifyModal}
           onClose={() => setIsVerifyModal(false)}
-          onConfirm={handleVerifyConfirm}
+          onConfirm={() => {
+            console.log("Payment verified successfully");
+            setIsVerifyModal(false);
+            setIsSuccessModal(true);
+          }}
           type="verify"
           title="Confirm Verification"
           message={
-            <>
-              Are you sure you want to verify this payment made by{" "}
-              <strong>{selectedOrder?.customerName}</strong> with Payment ID{" "}
-              <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>?
-            </>
+            <>Are you sure you want to verify this payment made by <strong>{selectedOrder?.customerName}</strong> with Payment ID <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>?</>
           }
         />
       )}
 
-      {/* Success Modal */}
       {isSuccessModal && (
         <ConfirmActionModal
           isOpen={isSuccessModal}
@@ -338,11 +246,7 @@ const OrderPage = () => {
           type="success"
           title="Verification Successful"
           message={
-            <>
-              You have successfully verified this payment made by{" "}
-              <strong>{selectedOrder?.customerName}</strong> with Payment ID{" "}
-              <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>
-            </>
+            <>You have successfully verified this payment made by <strong>{selectedOrder?.customerName}</strong> with Payment ID <strong>"{selectedOrder?.payments?.[0]?.id}"</strong></>
           }
         />
       )}
