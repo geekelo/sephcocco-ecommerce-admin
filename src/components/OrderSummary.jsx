@@ -64,7 +64,7 @@ console.log('prod',order);
     { label: "Order Status:", value: order.status,badge: true },
     { label: "Payment Method:", value: paymentMethod },
     { label: "Payment Status:", value: paymentStatus,badge: true },
-    { label: "Order Notes:", value: notes || "None" }
+    { label: "Order Notes:", value: order.additional_notes || '--/--' }
   ];
 
   // Format payments for the order table

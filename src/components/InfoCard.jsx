@@ -37,7 +37,7 @@ const InfoCard = ({ items }) => {
         return 'status-badge status-completed';
       case 'cancelled':
         return 'status-badge status-cancelled';
-      case 'processing':
+      case 'delivering':
         return 'status-badge status-processing';
       case 'active':
         return 'status-badge status-active';
