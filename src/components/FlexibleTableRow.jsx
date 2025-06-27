@@ -82,7 +82,7 @@ const FlexibleTableRow = ({
       case 'delivered':
         return 'status-completed status-active';
       case 'pending':
-      case 'processing':
+      case 'delivering':
       case 'confirmed':
         return 'status-pending';
       case 'cancelled':
@@ -100,7 +100,7 @@ const FlexibleTableRow = ({
       case 'shipped':
       case 'delivered':
         return 'status-completed';
-      case 'processing':
+      case 'delivering':
       case 'confirmed':
         return 'status-processing';
       case 'pending':
@@ -140,6 +140,9 @@ const FlexibleTableRow = ({
     }
 
     if (column.type === 'status' && column.statusConfig) {
+      return renderStatusCell(value, column.statusConfig);
+    }
+    if (column.type === 'current_stage' && column.statusConfig) {
       return renderStatusCell(value, column.statusConfig);
     }
 
@@ -198,6 +201,13 @@ const FlexibleTableRow = ({
         </span>
       );
     }
+    if (columnKey === 'current_stage') {
+      return (
+        <span className={`status-badge ${getStatusClass(value)}`}>
+          {capitalizeText(value)}
+        </span>
+      );
+    }
     
     // Stages field
     if (columnKey === 'stages') {
@@ -235,8 +245,8 @@ const FlexibleTableRow = ({
 
   // Status cell renderer
   const renderStatusCell = (value, config) => {
-    const statusClass = config.classMap?.[value] || config.defaultClass || '';
-    const statusText = config.textMap?.[value] || value;
+    const statusClass = config?.classMap?.[value] || config?.defaultClass || '';
+    const statusText = config?.textMap?.[value] || value;
     
     return (
       <span className={`status-badge ${statusClass}`}>
