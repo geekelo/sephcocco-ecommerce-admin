@@ -24,7 +24,9 @@
   color: #9ca3af;
   margin-right: 6px;
 }
-
+.date-text{
+  color: #000;
+}
 .searchfilter-input {
   border: none;
   outline: none;
