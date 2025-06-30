@@ -15,10 +15,14 @@ import { toast } from "react-toastify";
 import { mockCategories } from "../constants/data";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import { useViewAllProduct } from "../hooks/useGetAllProduct";
+import { mockCategories } from '../constants/data';
+
+
 import { useDeleteProduct } from '../hooks/useDeleteProduct';
 import { useViewProductId } from '../hooks/useGetProductById';
 import { ErrorState } from '../components/ErrorState';
 import { EmptyState } from '../components/EmptyState';
+import { getActiveOutlet } from '../utils/getActiveOutlets';
 
 const ProductsPage = () => {
   const activeOutlet = getActiveOutlet();

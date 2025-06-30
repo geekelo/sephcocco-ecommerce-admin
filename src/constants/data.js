@@ -5,6 +5,18 @@ import ProductImage from '../assets/productimage.png'
     { id: 'lounge', name: 'Go To Lounge', icon: 'lounge' }
   ];
 
+export  const navItems = [
+    { name: 'Hello, Welcome Back!', path: '/' },
+    { name: 'Orders', path: '/orders' },
+    { name: 'Product Categories', path: '/products-categories' },
+    { name: 'Products', path: '/products' },
+    { name: 'Payments', path: '/payments' },
+    { name: 'Messages', path: '/messages' },
+    { name: 'Activities', path: '/activities' },
+    { name: 'Analytics', path: '/analytics' },
+    { name: 'Settings', path: '/settings' },
+    { name: 'Manage Accounts', path: '/manage-accounts' },
+  ];
   
 export const sampleProducts = [
     {
