@@ -1,0 +1,38 @@
+.admin-faq-page {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 1rem;
+    font-family: Arial, sans-serif;
+    color: #111;
+  }
+  .page-header-faq {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .admin-faq-page h2 {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #111;
+    margin-bottom: 1rem;
+    text-align: left;
+  }
+  
+  .add-faq-btn {
+    background-color: #F93A01;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    float: right;
+    margin-bottom: 1.5rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .add-faq-btn:hover {
+    background-color: #F93A01;
+  }
+  
