@@ -14,7 +14,7 @@ export const FaqAccordion = ({ faqs, onEdit, onDelete }) => {
       {faqs.map((faq, index) => (
         <div key={index} className="faq-card">
           <div className="faq-header" onClick={() => toggle(index)}>
-            <h4 className="faq-question">{faq.question}</h4>
+            <h4 className="faq-question">{faq.title}</h4>
             <div className="faq-icons">
               <button
                 className="icon-btn"
@@ -29,7 +29,7 @@ export const FaqAccordion = ({ faqs, onEdit, onDelete }) => {
                 className="icon-btn"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete(index);
+                  onDelete(faq.id);
                 }}
               >
                 <Trash2 size={18} color='#000' />

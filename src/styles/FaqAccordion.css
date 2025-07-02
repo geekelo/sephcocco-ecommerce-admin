@@ -10,6 +10,7 @@
     padding: 1rem;
     background-color: #fff;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    color: #111;
   }
   
   .faq-header {
@@ -17,6 +18,7 @@
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
+    color: #111;
   }
   
   .faq-question {
