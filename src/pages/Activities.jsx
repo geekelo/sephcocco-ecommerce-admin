@@ -1,21 +1,55 @@
-import React from 'react'
-import { activities } from '../constants/data'
-import ActivitiesCard from '../components/ActivitiesCard'
+import React, { useState } from 'react';
+import { activities } from '../constants/data';
+import ActivitiesCard from '../components/ActivitiesCard';
+
+import { useViewActivities } from '../hooks/useGetActivities';
+import { getActiveOutlet } from '../utils/getActiveOutlets';
+import AdminModal from '../components/AdminModal';
 
 export default function ActivitiesPage() {
-    const handleProductView = () => {
-        console.log('click me');
-        
-    }
+  const active_outlet = getActiveOutlet();
+  const { data: activitiesData } = useViewActivities(active_outlet);
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
+  
+  console.log('activities data:', activitiesData);
+  
+  const handleProductView = () => {
+    console.log('click me');
+  };
+
+  const handleAdminClick = (adminData) => {
+    console.log('Admin clicked:', adminData);
+    setSelectedAdmin(adminData);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedAdmin(null);
+  };
+
   return (
-        <div className="activities-products-grid">
-          {activities.map(item => (
-            <ActivitiesCard
-              key={item.id}
-              activity={item}
-              onView={handleProductView}
-            />
-          ))}
-        </div>
-  )
+    <>
+      <div className="activities-products-grid">
+        {activitiesData?.admin_activities?.map(item => (
+          <ActivitiesCard
+            key={item.id}
+            activity={item}
+            onView={handleProductView}
+            onAdminClick={handleAdminClick}
+          />
+        ))}
+      </div>
+
+      {/* Admin Details Modal */}
+      <AdminModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        adminData={selectedAdmin}
+      />
+    </>
+  );
 }

@@ -1,0 +1,216 @@
+/* AdminModal.css */
+.modal-overlay-admin {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  
+  .admin-modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 95vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalSlideIn 0.3s ease-out;
+  }
+  
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+  
+  .admin-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .admin-modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+  }
+  
+  .admin-modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    color: #6b7280;
+    transition: all 0.2s;
+  }
+  
+  .admin-modal-close:hover {
+    background-color: #f3f4f6;
+    color: #374151;
+  }
+  
+  .admin-modal-body {
+    padding: 24px;
+  }
+  
+  .admin-profile-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: #f9fafb;
+    border-radius: 8px;
+  }
+  
+  .admin-avatar {
+    width: 60px;
+    height: 60px;
+    background-color: #3b82f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  
+  .admin-basic-info {
+    flex: 1;
+  }
+  
+  .admin-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 8px 0;
+    text-transform: capitalize;
+  }
+  
+  .admin-role {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #059669;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+  
+  .admin-contact-section {
+    margin-bottom: 16px;
+  }
+  
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 16px 0;
+  }
+  
+  .contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  .contact-item:last-child {
+    border-bottom: none;
+  }
+  
+  .contact-item svg {
+    color: #6b7280;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  
+  .contact-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+  
+  .contact-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .contact-value {
+    font-size: 14px;
+    color: #1f2937;
+    word-break: break-all;
+  }
+  
+  .admin-modal-footer {
+    padding: 16px 24px 24px 24px;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .admin-modal-close-btn {
+    width: 100%;
+    background-color: #6b7280;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .admin-modal-close-btn:hover {
+    background-color: #4b5563;
+  }
+  
+  /* Mobile Responsive */
+  @media screen and (max-width: 500px) {
+    .modal-overlay-admin {
+      padding: 10px;
+    }
+    
+    .admin-modal-content {
+      max-height: 95vh;
+    }
+    
+    .admin-modal-header,
+    .admin-modal-body,
+    .admin-modal-footer {
+      padding: 16px;
+    }
+    
+    .admin-profile-section {
+      flex-direction: column;
+      text-align: center;
+      gap: 12px;
+    }
+    
+    .admin-name {
+      font-size: 16px;
+    }
+    
+    .contact-item {
+      padding: 10px 0;
+    }
+  }

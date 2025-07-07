@@ -1,3 +1,5 @@
+/* Updated ActivitiesCard.css - Add these new styles to your existing CSS */
+
 .activities-card-container {
   display: flex;
   align-items: center;
@@ -9,14 +11,14 @@
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   border: 1px solid #27272770;
- 
 }
+
 .activities-card-desc {
     display: flex;
     align-items: center;
     gap: 12px;
-
 }
+
 .activities-card-icon {
   width: 30px;
   height: 30px;
@@ -37,31 +39,74 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  text-align: center;
+  text-align: left; /* Changed from center to left */
   padding: 0 16px;
   flex-grow: 1;
 }
 
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+/* NEW: Clickable admin name styles */
+.admin-name-clickable {
+  color: #3b82f6;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: 0 -4px;
+}
+
+.admin-name-clickable:hover {
+  color: #1d4ed8;
+  background-color: #eff6ff;
+  text-decoration: underline;
+}
+
+.admin-name-clickable:active {
+  transform: translateY(1px);
+}
+
 .card-date {
     display: flex;
-    gap: 4px;
+    gap: 8px;
+    align-items: center;
 }
-  .activities-products-grid {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 24px;
-    padding: 24px;
-  }
+
+.date-label,
+.time-label {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.time-label {
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.activities-products-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 24px;
+  padding: 24px;
+}
+
 .activities-card-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1f2937; /* Tailwind gray-800 */
+  color: #1f2937;
   margin: 0;
 }
 
 .activities-card-date {
   font-size: 14px;
-  color: #6b7280; /* Tailwind gray-500 */
+  color: #6b7280;
 }
 
 .activities-card-footer {
@@ -96,7 +141,26 @@
     flex-direction: column;
     align-items: flex-start;
   }
+  
   .activities-card-desc {
     margin-bottom: 15px;
+    width: 100%;
+  }
+  
+  .activities-card-info {
+    padding: 0 8px;
+  }
+  
+  .title {
+    font-size: 14px;
+  }
+  
+  .card-date {
+    gap: 6px;
+  }
+  
+  .date-label,
+  .time-label {
+    font-size: 12px;
   }
 }
