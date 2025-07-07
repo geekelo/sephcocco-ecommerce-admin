@@ -5,6 +5,7 @@ import ActivitiesCard from '../components/ActivitiesCard';
 import { useViewActivities } from '../hooks/useGetActivities';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 import AdminModal from '../components/AdminModal';
+import SearchBar from '../components/SearchBar';
 
 export default function ActivitiesPage() {
   const active_outlet = getActiveOutlet();
@@ -30,10 +31,25 @@ export default function ActivitiesPage() {
     setIsModalOpen(false);
     setSelectedAdmin(null);
   };
+  const [searchTerm, setSearchTerm] = useState("");
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleFilter = () => {
+    console.log("Filter functionality to be implemented");
+  };
 
   return (
     <>
+    
       <div className="activities-products-grid">
+      <SearchBar
+        onSearch={handleSearchChange}
+        onFilter={handleFilter}
+        searchTerm={searchTerm}
+        filterOptions={['Created','Updated','Deleted']}
+      />
         {activitiesData?.admin_activities?.map(item => (
           <ActivitiesCard
             key={item.id}

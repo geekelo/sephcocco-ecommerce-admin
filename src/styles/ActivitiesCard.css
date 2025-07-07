@@ -164,3 +164,62 @@
     font-size: 12px;
   }
 }
+
+/* Add these styles to your existing ActivitiesCard.css file */
+
+.activities-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+/* Icon styles for different activity types */
+.activity-icon-created {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.activity-icon-updated {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.activity-icon-deleted {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.activity-icon-default {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+/* Icon hover effects */
+.activities-card-icon:hover {
+  transform: scale(1.05);
+}
+
+.activity-icon-created:hover {
+  background-color: #c8e6c9;
+}
+
+.activity-icon-updated:hover {
+  background-color: #ffe0b2;
+}
+
+.activity-icon-deleted:hover {
+  background-color: #ffcdd2;
+}
+
+.activity-icon-default:hover {
+  background-color: #eeeeee;
+}
+
+/* Ensure the activity-icon class has proper sizing */
+.activity-icon {
+  width: 20px;
+  height: 20px;
+}

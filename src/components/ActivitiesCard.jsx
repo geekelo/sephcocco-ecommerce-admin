@@ -1,28 +1,60 @@
 import React from 'react';
-import { Eye, Plus } from 'lucide-react';
+import { Eye, Plus, Edit, Trash2 } from 'lucide-react';
 import '../styles/ActivitiesCard.css';
 import AddIcon from '../assets/add.svg';
 import { formatDate } from '../utils/formatDate';
 import { formatTime } from '../utils/formatTime';
 
-
 export default function ActivitiesCard({ activity, onAdminClick }) {
   const handleAdminNameClick = (e) => {
-    e.stopPropagation()
+    e.stopPropagation();
     onAdminClick(activity.sephcocco_user);
+  };
+
+  // Function to get icon based on activity type
+  const getActivityIcon = (activityType) => {
+    const type = activityType?.toLowerCase();
+    
+    switch (type) {
+      case 'created':
+        return <Plus className="activity-icon" size={20} />;
+      case 'updated':
+        return <Edit className="activity-icon" size={20} />;
+      case 'deleted':
+        return <Trash2 className="activity-icon" size={20} />;
+      default:
+        // Fallback to your existing AddIcon
+        return <img src={AddIcon} alt='activity icon' className='add-icon'/>;
+    }
+  };
+
+  // Function to get icon color/style based on activity type
+  const getIconClassName = (activityType) => {
+    const type = activityType?.toLowerCase();
+    
+    switch (type) {
+      case 'created':
+        return 'activity-icon-created';
+      case 'updated':
+        return 'activity-icon-updated';
+      case 'deleted':
+        return 'activity-icon-deleted';
+      default:
+        return 'activity-icon-default';
+    }
   };
 
   return (
     <div className="activities-card-container">
       <div className='activities-card-desc'>
-        <div className="activities-card-icon">
-          <img src={AddIcon} alt='add icon' className='add-icon'/>
+        <div className={`activities-card-icon ${getIconClassName(activity?.activity_type)}`}>
+          {getActivityIcon(activity?.activity_type)}
         </div>
         <div className="activities-card-info">
           <h3 className="title">
             {activity?.activity_description} by{' '}
-            <span 
-              className="admin-name-clickable" 
+            <span
+              className="admin-name-clickable"
               onClick={handleAdminNameClick}
               title="Click to view admin details"
             >
