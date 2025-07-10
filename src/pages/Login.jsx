@@ -72,7 +72,7 @@ const handleSubmit = async (e) => {
     const payload = {
      user: { email, password}
     }
-    console.log(payload);
+
     
     const response = await login(payload);
     if (response?.message) {

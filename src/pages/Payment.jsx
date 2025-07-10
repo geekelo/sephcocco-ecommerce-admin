@@ -14,10 +14,12 @@ import FlexibleTable from "../components/FlexibleTable";
 import { paymentActions } from "../columns/paymentActions";
 import { createPaymentColumns } from "../columns/paymentColumns";
 import { EmptyState } from "../components/EmptyState";
+import { useViewPayment } from "../hooks/usePayment";
 
 
 const PaymentPage = () => {
-
+const {data: payment} = useViewPayment()
+console.log('pay',payment);
 
   // Extract payments from orders for the payment table
   const paymentData = initialOrders.flatMap(order => 
