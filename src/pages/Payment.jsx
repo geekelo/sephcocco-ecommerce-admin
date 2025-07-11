@@ -15,28 +15,38 @@ import { paymentActions } from "../columns/paymentActions";
 import { createPaymentColumns } from "../columns/paymentColumns";
 import { EmptyState } from "../components/EmptyState";
 import { useViewPayment } from "../hooks/usePayment";
+import { getActiveOutlet } from "../utils/getActiveOutlets";
 
 
 const PaymentPage = () => {
-const {data: payment} = useViewPayment()
+  const activeOutlet = getActiveOutlet()
+const {data: payment} = useViewPayment(activeOutlet)
 console.log('pay',payment);
 
   // Extract payments from orders for the payment table
-  const paymentData = initialOrders.flatMap(order => 
-    order.payments.map(payment => ({
-      ...payment,
-      customerName: order.customerName,
-      customerEmail: order.customerEmail, // Added customer email
+  const paymentData = payment?.payments?.flatMap(payment =>
+    payment.paid_orders?.map(order => ({
+      id: payment.id, // Add this for unique identification
+      customerName: order.customer?.name,
+      customerEmail: order.customer?.email,
       orderId: order.id,
-      phoneNumber: order.phoneNumber,
-      orderDate: order.orderDate,
+      phoneNumber: order.customer?.phone_number,
+      orderDate: order.created_at,
       orderStatus: order.status,
-      paymentMethod: order.paymentMethod,
-      paymentStatus: order.paymentStatus,
+      paymentMethod: payment.payment_method, // Use payment.payment_method instead
+      status: payment.status,
       notes: order.notes,
-      products: order.products
-    }))
-  );
+      products: order.product, // This is a single object, not an array
+      amount: payment.amount,
+      transactionId: payment.transaction_id,
+      paymentDate: payment.created_at,
+      orderNumber: order.order_number,
+      // Add any other fields you need
+      totalPrice: order.total_price
+    })) || []
+  ) || [];
+  console.log('oddd',paymentData);
+  
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditProductModal, setIsEditProductModal] = useState(false);
@@ -194,7 +204,7 @@ const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
       {/* Product Details Modal */}
       {isViewProductModal && (
         <ProductDetails
-          product={mockProduct}
+          product={selectedPayment.products}
           onEdit={handleEditProduct}
           onDelete={handleDeleteProduct}
           onClose={() => setIsViewProductModal(false)}
