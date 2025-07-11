@@ -16,13 +16,21 @@ import { createPaymentColumns } from "../columns/paymentColumns";
 import { EmptyState } from "../components/EmptyState";
 import { useViewPayment } from "../hooks/usePayment";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
-
+import LoadingSkeleton from "../components/LoadingSkeleton";
+import Pagination from "../components/Pagination";
+const itemsPerPage = 10;
 
 const PaymentPage = () => {
   const activeOutlet = getActiveOutlet()
-const {data: payment} = useViewPayment(activeOutlet)
+const {data: payment, isLoading} = useViewPayment(activeOutlet)
+const [filters, setFilters] = useState({
+  search_terms: "",
+  status: "",
+  start_date: "",
+  end_date: "",
+});
 console.log('pay',payment);
-
+const meta = payment?.meta || {};
   // Extract payments from orders for the payment table
   const paymentData = payment?.payments?.flatMap(payment =>
     payment.paid_orders?.map(order => ({
@@ -150,16 +158,28 @@ const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
       alert('Customer email is not available for this payment.');
     }
   };
+  const handleApplyFilters = ({ status, search_terms, start_date, end_date }) => {
+    setFilters({ status, search_terms, start_date, end_date });
+    setCurrentPage(1);
+  };
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   return (
     <div className="order-page">
       <SearchBar
-        onSearch={handleSearchChange}
-        onFilter={handleFilter}
-        searchTerm={searchTerm}
+           onApply={handleApplyFilters}
+           filterOptions={["All Status", "Pending", "Paid", "Confirmed", "Cancelled","Declined"]}
+           placeholder="Search..."
+           filterLabel="Filter by"
       />
       <div className="order-table-container">
-        <FlexibleTable
+      {isLoading ? (
+              <LoadingSkeleton itemsPerPage={itemsPerPage} />
+            ) : paymentData?.length > 0 ? (
+              <>
+                       <FlexibleTable
   data={paymentData}
   columns={paymentColumns}
   actions={paymentActions}
@@ -177,6 +197,21 @@ const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
     />
   }
 />
+
+                <Pagination
+                  currentPage={meta.current_page || 1}
+                  totalPages={meta.total_pages || 1}
+                  onPageChange={handlePageChange}
+                  totalItems={meta.total_count || 0}
+                  
+                  showInfo={true}
+                />
+              </>
+            ) : (
+              <EmptyState title="No orders found" searchTerm={filters.search_terms} />
+            )}
+        
+
     
         {/* <OrderTable
           orders={paymentData}
