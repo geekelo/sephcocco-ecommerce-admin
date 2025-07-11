@@ -21,14 +21,20 @@ import Pagination from "../components/Pagination";
 const itemsPerPage = 10;
 
 const PaymentPage = () => {
+  const [filters, setFilters] = useState({
+    search_terms: "",
+    status: "",
+    start_date: "",
+    end_date: "",
+  });
+  const [currentPage, setCurrentPage] = useState(1);
   const activeOutlet = getActiveOutlet()
-const {data: payment, isLoading} = useViewPayment(activeOutlet)
-const [filters, setFilters] = useState({
-  search_terms: "",
-  status: "",
-  start_date: "",
-  end_date: "",
-});
+  const { data: payment, isLoading } = useViewPayment(activeOutlet, filters, 
+    currentPage,
+       itemsPerPage,
+    );
+
+
 console.log('pay',payment);
 const meta = payment?.meta || {};
   // Extract payments from orders for the payment table
