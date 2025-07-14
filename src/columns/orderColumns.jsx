@@ -7,8 +7,9 @@ export const createOrderColumns = (handleViewOrder) => [
   { key: "unit_price", label: "Unit Price", width: "140px" },
   { key: "total_price", label: "Total Price", width: "140px" },
   { key: "total_cost", label: "Total Cost", width: "140px" },
-  { key: "stages", label: "Stages", width: "120px", type: "stages" },
+  { key: "current_stage", label: "Current stage", width: "120px", type: "current_stage" },
   { key: "status", label: "Status", width: "120px", type: "status" },
+  
   
   
   { key: "created_at", label: "Date", width: "120px" },

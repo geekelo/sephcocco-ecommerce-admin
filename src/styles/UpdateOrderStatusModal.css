@@ -1,12 +1,16 @@
-
 .update-status-modal {
   width: 500px;
   max-width: 90%;
+  min-height: 400px;
+  max-height: 80vh;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   margin: 4rem auto;
   padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .update-status-title {
@@ -26,22 +30,23 @@
 
 .status-options {
   display: flex;
-  
   flex-direction: column;
   gap: 12px;
   margin-bottom: 24px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .status-option {
   display: flex;
   align-items: center;
-
   padding: 12px 16px;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   background-color: #fff;
+  position: relative;
 }
 
 .status-option:hover {
@@ -70,6 +75,51 @@
   font-size: 16px;
   font-weight: 500;
   color: #333;
+  flex: 1;
+}
+
+/* Completed dropdown styles */
+.completed-container {
+  position: relative;
+}
+
+.completed-option {
+  justify-content: space-between;
+}
+
+.dropdown-arrow {
+  transition: transform 0.2s ease;
+  color: #666;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.completed-dropdown {
+  margin-top: 8px;
+  margin-left: 16px;
+  border-left: 2px solid #e0e0e0;
+  padding-left: 8px;
+}
+
+.dropdown-option {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.dropdown-option:last-child {
+  margin-bottom: 0;
+}
+
+.dropdown-option .status-indicator {
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.dropdown-option .status-text {
+  font-size: 14px;
 }
 
 .update-status-button {
@@ -122,6 +172,8 @@
 @media (max-width: 576px) {
   .update-status-modal {
     width: 95%;
+    min-height: 350px;
+    max-height: 90vh;
     margin: 2rem auto;
     padding: 16px;
   }
@@ -145,5 +197,14 @@
   .status-indicator {
     font-size: 18px;
     margin-right: 8px;
+  }
+
+  .dropdown-option .status-indicator {
+    font-size: 14px;
+    margin-right: 6px;
+  }
+
+  .dropdown-option .status-text {
+    font-size: 12px;
   }
 }

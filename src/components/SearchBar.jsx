@@ -6,7 +6,8 @@ const SearchBar = ({
   onApply, // <-- new
   filterOptions = [],
   placeholder = "Search for anything",
-  filterLabel = "Filter by"
+  filterLabel = "Filter by",
+  filterKey = 'status',
 }) => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('All Status');
@@ -31,12 +32,13 @@ const SearchBar = ({
   const handleApply = () => {
     onApply({
      
-        status: status === 'All Status' ? '' : status.toLowerCase(),
+      [filterKey]: status === 'All Status' ? '' : status.toLowerCase(),
+
         search_terms: search,
         start_date: startDate,
         end_date: endDate
       
-    
+        
     });
   };
 
@@ -45,7 +47,7 @@ const SearchBar = ({
     setStartDate('');
     setEndDate('');
     setSearch('');
-    onApply({ status: '', search_terms: '', start_date: '', end_date: '' });
+    onApply({ [filterKey]: '', search_terms: '', start_date: '', end_date: '' });
   };
 
   return (

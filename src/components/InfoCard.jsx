@@ -16,6 +16,45 @@ const InfoCard = ({ items }) => {
       window.location.href = `tel:${phone}`;
     }
   };
+  
+  const getStageClass = (stage) => {
+    switch (stage?.toLowerCase()) {
+      case 'completed':
+      case 'shipped':
+      case 'delivered':
+        return 'status-completed';
+      case 'delivering':
+      case 'confirmed':
+        return 'status-processing';
+      case 'pending':
+      case 'awaiting':
+        return 'status-pending';
+      case 'cancelled':
+      case 'rejected':
+        return 'status-cancelled';
+      default:
+        return 'badge';
+    }
+  };
+  
+  const capitalizeText = (text) => {
+    if (!text) return '-';
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+  };
+
+  const renderStages = (stages) => {
+    if (!stages || !Array.isArray(stages)) return '-';
+    
+    return (
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+        {stages.map((stage, index) => (
+          <span key={index} className={`status-badge ${getStageClass(stage)}`}>
+            {capitalizeText(stage)}
+          </span>
+        ))}
+      </div>
+    );
+  };
 
   const handleCopy = (text, index) => {
     if (text) {
@@ -29,7 +68,8 @@ const InfoCard = ({ items }) => {
   };
 
   const getStatusBadgeClass = (value) => {
-    const status = value?.toLowerCase();
+    // Convert value to string and then to lowercase
+    const status = String(value || '').toLowerCase();
     switch (status) {
       case 'pending':
         return 'status-badge status-pending';
@@ -37,7 +77,7 @@ const InfoCard = ({ items }) => {
         return 'status-badge status-completed';
       case 'cancelled':
         return 'status-badge status-cancelled';
-      case 'processing':
+      case 'delivering':
         return 'status-badge status-processing';
       case 'active':
         return 'status-badge status-active';
@@ -69,10 +109,10 @@ const InfoCard = ({ items }) => {
           >
             {item.isEmail && <Mail size={14} />}
             {item.isPhone && <Phone size={14} />}
-            
+            {item.isStages && renderStages(item.value)}
             {item.badge ? (
               <span className={getStatusBadgeClass(item.value)}>
-                {item?.value?.toUpperCase()}
+                {String(item?.value || '').toUpperCase()}
               </span>
             ) : (
               <>

@@ -1,21 +1,125 @@
-import React from 'react'
-import { activities } from '../constants/data'
-import ActivitiesCard from '../components/ActivitiesCard'
+import React, { useState } from 'react';
+import { useViewActivities } from '../hooks/useGetActivities';
+import { getActiveOutlet } from '../utils/getActiveOutlets';
+import ActivitiesCard from '../components/ActivitiesCard';
+import AdminModal from '../components/AdminModal';
+import SearchBar from '../components/SearchBar';
+import Pagination from '../components/Pagination'; 
+
+const itemsPerPage = 10;
 
 export default function ActivitiesPage() {
-    const handleProductView = () => {
-        console.log('click me');
-        
-    }
+  const active_outlet = getActiveOutlet();
+
+  // Filters
+  const [filters, setFilters] = useState({
+    search_terms: '',
+    activity_type: '',
+    start_date: '',
+    end_date: '',
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
+
+  // Search state
+  const [searchTerm, setSearchTerm] = useState('');
+console.log('actt',filters);
+
+  // Query
+  const { data: activitiesData, isLoading, refetch } = useViewActivities(
+    active_outlet,
+    filters,
+    currentPage,
+    itemsPerPage
+  );
+
+  const activities = activitiesData?.admin_activities || [];
+  const meta = activitiesData?.meta || {};
+
+  // Handle admin card click
+  const handleAdminClick = (adminData) => {
+    setSelectedAdmin(adminData);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedAdmin(null);
+    setIsModalOpen(false);
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setFilters((prev) => ({
+      ...prev,
+      search_terms: value,
+    }));
+    setCurrentPage(1);
+  };
+
+  const handleApplyFilters = ({ activity_type, start_date,search_terms, end_date }) => {
+    setFilters((prev) => ({
+      ...prev,
+      activity_type,
+      search_terms,
+      start_date,
+      end_date,
+    }));
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   return (
-        <div className="activities-products-grid">
-          {activities.map(item => (
+    <>
+      <SearchBar
+        onSearch={handleSearchChange}
+        onApply={handleApplyFilters}
+        searchTerm={searchTerm}
+        filterOptions={['Create', 'Update', 'Delete']}
+        filterKey="activity_type"
+      />
+
+      <div className="activities-products-grid mt-6">
+        {isLoading ? (
+          <p>Loading activities...</p>
+        ) : activities.length === 0 ? (
+          <p>No activities found.</p>
+        ) : (
+          activities.map((item) => (
             <ActivitiesCard
               key={item.id}
               activity={item}
-              onView={handleProductView}
+              onView={() => console.log('View product')}
+              onAdminClick={handleAdminClick}
             />
-          ))}
-        </div>
-  )
+          ))
+        )}
+      </div>
+
+      {/* Pagination */}
+      <div className="mt-6">
+        <Pagination
+          currentPage={meta.current_page || 1}
+          totalPages={meta.total_pages || 1}
+          onPageChange={handlePageChange}
+          totalItems={meta.total_count || 0}
+          showInfo={true}
+        />
+      </div>
+
+      {/* Admin Modal */}
+      <AdminModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        adminData={selectedAdmin}
+      />
+    </>
+  );
 }

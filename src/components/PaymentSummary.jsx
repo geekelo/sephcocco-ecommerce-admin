@@ -10,60 +10,64 @@ const PaymentSummary = ({
   onViewOrder,
   onVerify,
   onDiscard,
+  isVerifying = false, // Specific loading state for verify action
   onEdit,
   onDelete,
   onView,
-  onSendEmail // Added email handler prop
+  onSendEmail
 }) => {
   // For payment page, 'order' is actually a payment object with additional order info
   const {
-    id: paymentId,
+    transactionId: paymentId,
     amount,
-    method,
+    paymentMethod,
     status: paymentStatus,
-    date: paymentDate,
+    paymentDate,
     customerName,
-    customerEmail, // Added customer email
+    customerEmail,
     orderId,
     phoneNumber,
     orderDate,
     orderStatus,
-    paymentMethod,
     notes,
     products
   } = order;
 
-  // Convert products to the format expected by ProductCard
-  const formattedProducts = products?.map(product => ({
-    name: product.name,
-    image: product.image,
-    price: product.price,
-    rating: product.quantity,
-    stockCount: product.stockCount,
-    stockStatus: "In stock"
-  })) || [];
+  // Convert single product object to array format expected by ProductCard
+  // Since products is a single object, we need to wrap it in an array
+  const formattedProducts = products ? [{
+    name: products.name,
+    image: products.main_image_url || '/default-product-image.jpg', // Use main_image_url from your data
+    price: products.price,
+    rating: 5, // You can set a default or get from somewhere else
+    stockCount: products.amount_in_stock,
+    stockStatus: products.out_of_stock_status ? "Out of stock" : "In stock",
+    description: products.short_description,
+    categories: products.categories?.map(cat => cat.name).join(', ') || 'No category'
+  }] : [];
 
   const leftCardItems = [
     { label: "Payment ID:", value: paymentId },
-    { label: "Payment Method:", value: method || paymentMethod },
-    { label: "Payment Date:", value: paymentDate },
-    { label: "Total Amount:", value: amount }
+    { label: "Payment Method:", value: paymentMethod || "Not specified" },
+    { label: "Payment Date:", value: new Date(paymentDate).toLocaleDateString() },
+    { label: "Total Amount:", value: `₦${amount}` }
   ];
 
   const rightCardItems = [
     { label: "Customer Name:", value: customerName },
-    { 
-      label: "Customer Email:", 
+    {
+      label: "Customer Email:",
       value: customerEmail || "Not provided",
-      isEmail: true 
+      isEmail: true
     },
-    { 
-      label: "Phone Number:", 
+    {
+      label: "Phone Number:",
       value: phoneNumber || "Not provided",
-      isPhone: true 
+      isPhone: true
     },
     { label: "Order ID:", value: orderId },
-    { label: "Payment Status:", value: paymentStatus }
+    { label: "Payment Status:", value: paymentStatus },
+    { label: "Order Status:", value: orderStatus }
   ];
 
   return (
@@ -73,8 +77,8 @@ const PaymentSummary = ({
           <h2>Payment Summary ({paymentId})</h2>
           <div className="header-actions">
             {/* Email button */}
-            <button 
-              className="email-button" 
+            <button
+              className="email-button"
               onClick={onSendEmail}
               disabled={!customerEmail}
               title={!customerEmail ? "Customer email not available" : "Send email to customer"}
@@ -88,13 +92,21 @@ const PaymentSummary = ({
             </button>
           </div>
         </div>
-                
+                        
         <div className='verify'>
-          <button className="update-button add-button" onClick={onVerify}>
-            Verify Payment
+          <button 
+            className="update-button add-button" 
+            onClick={onVerify}
+            disabled={isVerifying}
+            style={{ 
+              opacity: isVerifying ? 0.6 : 1,
+              cursor: isVerifying ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {isVerifying ? 'Verifying...' : 'Verify Payment'}  
           </button>
         </div>
-                
+                        
         <div className="order-details">
           <div className="order-info-row">
             <InfoCard items={leftCardItems} />
@@ -103,7 +115,7 @@ const PaymentSummary = ({
 
           {formattedProducts.length > 0 && (
             <div className="ordered-products-section">
-              <h3>Ordered Products</h3>
+              <h3>Ordered Product</h3>
               <div className="products-grid">
                 {formattedProducts.map((product, index) => (
                   <ProductCard
@@ -122,7 +134,11 @@ const PaymentSummary = ({
             <button className="update-button add-button" onClick={onViewOrder}>
              View Order
             </button>
-            <button className="discard-button cancel-button" onClick={onDiscard}>
+            <button 
+              className="discard-button cancel-button" 
+              onClick={onDiscard}
+              disabled={isVerifying}
+            >
               Discard Payment
             </button>
           </div>

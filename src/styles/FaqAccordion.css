@@ -1,0 +1,49 @@
+.accordion-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .faq-card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 1rem;
+    background-color: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    color: #111;
+  }
+  
+  .faq-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    color: #111;
+  }
+  
+  .faq-question {
+    flex: 1;
+    margin: 0;
+    font-size: 1rem;
+    color: #111;
+  }
+  
+  .faq-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+  }
+  
+  .faq-answer {
+    margin-top: 0.75rem;
+    color: #444;
+    line-height: 1.5;
+  }
+  

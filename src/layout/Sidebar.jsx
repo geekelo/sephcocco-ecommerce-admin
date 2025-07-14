@@ -9,7 +9,9 @@ import {
   BarChart, 
   Settings,
   LogOut,
-  Users 
+
+  Users, 
+  TableOfContents
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import '../styles/Sidebar.css';
@@ -24,6 +26,7 @@ const Sidebar = ({ isOpen }) => {
     { name: 'Orders', icon: <ShoppingBag size={20} />, path: '/orders' },
     { name: 'Products', icon: <ShoppingBag size={20} />, path: '/products' },
     { name: 'Product Categories', icon: <ShoppingBag size={20} />, path: '/products-categories' },
+    { name: 'Manage FAQ', icon: <TableOfContents  size={20} />, path: '/faq' },
     { name: 'Payments', icon: <CreditCard size={20} />, path: '/payments' },
     { name: 'Messages', icon: <MessageSquare size={20} />, path: '/messages' },
     { name: 'Activities', icon: <Activity size={20} />, path: '/activities' },

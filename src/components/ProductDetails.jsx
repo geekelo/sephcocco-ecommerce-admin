@@ -9,7 +9,7 @@ import { X } from 'lucide-react';
 
 
 const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
-  console.log(product);
+  console.log('oklkl',product);
   
   const [selectedImage, setSelectedImage] = useState(product?.main_image_url);
   // const [otherImages, setOtherImages] = useState([]);
@@ -28,8 +28,8 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
 
   console.log('testing',product);
   
-  const shortDescription = product?.short_description || "No description available";
-  const longDescription = product?.long_description || null;
+  const shortDescription = product?.short_description
+  const longDescription = product?.long_description 
 
   if (!product) {
     return <div className="product-loading">Loading product details...</div>;

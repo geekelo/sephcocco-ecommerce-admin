@@ -35,7 +35,10 @@
   background: #d1fae5;
   color: #065f46;
 }
-
+.status-delivering,.status-active {
+  background: #dbeafe;
+  color: #1e40af;
+}
 .status-cancelled,
 .status-inactive,
 .status-suspended {

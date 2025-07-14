@@ -28,7 +28,7 @@ const OrderPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const activeOutlet = getActiveOutlet();
 
-  const { data, isLoading } = useGetOrder(activeOutlet, filters, 
+  const { data, isLoading,refetch } = useGetOrder(activeOutlet, filters, 
   currentPage,
      itemsPerPage,
   );
@@ -162,10 +162,13 @@ const OrderPage = () => {
       {isUpdateStatusModal && (
         <UpdateOrderStatusModal
           isOpen={isUpdateStatusModal}
+          orderId={selectedOrder?.id}
           onClose={() => setIsUpdateStatusModal(false)}
           onConfirm={(newStatus) => {
             console.log("Updating order status to:", newStatus);
             setIsUpdateStatusModal(false);
+            setShowOrderSummary(false)
+            refetch()
           }}
           currentStatus={selectedOrder?.status}
         />
