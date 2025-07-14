@@ -10,6 +10,7 @@ const PaymentSummary = ({
   onViewOrder,
   onVerify,
   onDiscard,
+  isVerifying = false, // Specific loading state for verify action
   onEdit,
   onDelete,
   onView,
@@ -93,8 +94,16 @@ const PaymentSummary = ({
         </div>
                         
         <div className='verify'>
-          <button className="update-button add-button" onClick={onVerify}>
-            Verify Payment
+          <button 
+            className="update-button add-button" 
+            onClick={onVerify}
+            disabled={isVerifying}
+            style={{ 
+              opacity: isVerifying ? 0.6 : 1,
+              cursor: isVerifying ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {isVerifying ? 'Verifying...' : 'Verify Payment'}  
           </button>
         </div>
                         
@@ -125,7 +134,11 @@ const PaymentSummary = ({
             <button className="update-button add-button" onClick={onViewOrder}>
              View Order
             </button>
-            <button className="discard-button cancel-button" onClick={onDiscard}>
+            <button 
+              className="discard-button cancel-button" 
+              onClick={onDiscard}
+              disabled={isVerifying}
+            >
               Discard Payment
             </button>
           </div>

@@ -18,6 +18,8 @@ import { useViewPayment } from "../hooks/usePayment";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import Pagination from "../components/Pagination";
+import { useUpdatePaymentStatus } from "../hooks/useUpdatePaymentStatus";
+
 const itemsPerPage = 10;
 
 const PaymentPage = () => {
@@ -28,15 +30,20 @@ const PaymentPage = () => {
     end_date: "",
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const activeOutlet = getActiveOutlet()
-  const { data: payment, isLoading } = useViewPayment(activeOutlet, filters, 
+  const activeOutlet = getActiveOutlet();
+  
+  const { data: payment, isLoading, refetch } = useViewPayment(
+    activeOutlet, 
+    filters, 
     currentPage,
-       itemsPerPage,
-    );
+    itemsPerPage,
+  );
+  
+  const { mutateAsync: updatePaymentStatus, isLoading: isUpdatingStatus } = useUpdatePaymentStatus();
 
-
-console.log('pay',payment);
-const meta = payment?.meta || {};
+  console.log('pay', payment);
+  const meta = payment?.meta || {};
+  
   // Extract payments from orders for the payment table
   const paymentData = payment?.payments?.flatMap(payment =>
     payment.paid_orders?.map(order => ({
@@ -59,8 +66,8 @@ const meta = payment?.meta || {};
       totalPrice: order.total_price
     })) || []
   ) || [];
-  console.log('oddd',paymentData);
   
+  console.log('oddd', paymentData);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditProductModal, setIsEditProductModal] = useState(false);
@@ -72,6 +79,7 @@ const meta = payment?.meta || {};
   const [isUpdatePaymentStatusModal, setIsUpdatePaymentStatusModal] = useState(false);
   const [isDiscardPaymentModal, setIsDiscardPaymentModal] = useState(false);
   const [isEmailModal, setIsEmailModal] = useState(false); // Added email modal state
+  const [isVerifying, setIsVerifying] = useState(false); // Track verify action specifically
   
   const [selectedPayment, setSelectedPayment] = useState(null);
 
@@ -100,15 +108,35 @@ const meta = payment?.meta || {};
     setIsDeleteProductModal(true);
   };
 
-  const handleDiscardPayment = () => {
-    setIsDiscardPaymentModal(true);
+  const handleDiscardPayment = async () => {
+    try {
+      const payload = {
+        [`sephcocco_${activeOutlet}_payment`]: {
+          status: "Declined"
+        }
+      };
+
+      await updatePaymentStatus({
+        active_outlet: activeOutlet,
+        paymentId: selectedPayment?.id,
+        payload
+      });
+
+      console.log("Payment discarded successfully");
+      setIsPaymentSummaryModal(false);
+      setIsDiscardPaymentModal(false);
+      setSelectedPayment(null);
+      
+      // Refetch data to update the UI
+      refetch();
+    } catch (error) {
+      console.error("Error discarding payment:", error);
+      // You might want to show an error toast here
+    }
   };
 
   const handleConfirmDiscardPayment = () => {
-    console.log("Discarding payment for:", selectedPayment?.id);
-    setIsPaymentSummaryModal(false);
-    setIsDiscardPaymentModal(false);
-    setSelectedPayment(null);
+    setIsDiscardPaymentModal(true);
   };
 
   const handleVerifyPayment = () => {
@@ -127,16 +155,40 @@ const meta = payment?.meta || {};
     setIsDeleteProductModal(false);
   };
 
-  const handleVerifyConfirm = () => {
-    console.log("Payment verified successfully");
-    setIsVerifyPaymentModal(false);
-    setIsSuccessModal(true);
+  const handleVerifyConfirm = async () => {
+    try {
+      setIsVerifying(true); // Set verifying state
+      
+      const payload = {
+        [`sephcocco_${activeOutlet}_payment`]: {
+          status: "Confirmed"
+        }
+      };
+
+      await updatePaymentStatus({
+        active_outlet: activeOutlet,
+        paymentId: selectedPayment?.id,
+        payload
+      });
+
+      console.log("Payment verified successfully");
+      setIsVerifyPaymentModal(false);
+      setIsSuccessModal(true);
+      
+      // Refetch data to update the UI
+      refetch();
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      // You might want to show an error toast here
+    } finally {
+      setIsVerifying(false); // Reset verifying state
+    }
   };
 
   const handleViewOrder = () => {
     console.log("Viewing order for payment:", selectedPayment?.id);
     // You can implement navigation to order details here
-    setIsPaymentSummaryModal(false)
+    setIsPaymentSummaryModal(false);
   };
 
   // Handler for viewing a payment (clicking View button in table)
@@ -150,12 +202,33 @@ const meta = payment?.meta || {};
     setIsUpdatePaymentStatusModal(true);
   };
 
-  const handleConfirmStatusUpdate = (newStatus) => {
-    console.log("Updating payment status to:", newStatus, "for payment:", selectedPayment.id);
-    // Update the payment status in your state/backend here
-    setIsUpdatePaymentStatusModal(false);
+  const handleConfirmStatusUpdate = async (newStatus) => {
+    try {
+      const payload = {
+        [`sephcocco_${activeOutlet}_payment`]: {
+          status: newStatus
+        }
+      };
+
+      await updatePaymentStatus({
+        active_outlet: activeOutlet,
+        paymentId: selectedPayment?.id,
+        payload
+      });
+
+      console.log("Payment status updated successfully to:", newStatus);
+      setIsUpdatePaymentStatusModal(false);
+      
+      // Refetch data to update the UI
+      refetch();
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      // You might want to show an error toast here
+    }
   };
-const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
+
+  const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment));
+
   // Handler for sending email
   const handleSendEmail = () => {
     if (selectedPayment?.customerEmail) {
@@ -164,10 +237,12 @@ const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
       alert('Customer email is not available for this payment.');
     }
   };
+
   const handleApplyFilters = ({ status, search_terms, start_date, end_date }) => {
     setFilters({ status, search_terms, start_date, end_date });
     setCurrentPage(1);
   };
+
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
@@ -175,56 +250,42 @@ const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
   return (
     <div className="order-page">
       <SearchBar
-           onApply={handleApplyFilters}
-           filterOptions={["All Status", "Pending", "Paid", "Confirmed", "Cancelled","Declined"]}
-           placeholder="Search..."
-           filterLabel="Filter by"
+        onApply={handleApplyFilters}
+        filterOptions={["All Status", "Pending", "Paid", "Confirmed", "Cancelled", "Declined"]}
+        placeholder="Search..."
+        filterLabel="Filter by"
       />
       <div className="order-table-container">
-      {isLoading ? (
-              <LoadingSkeleton itemsPerPage={itemsPerPage} />
-            ) : paymentData?.length > 0 ? (
-              <>
-                       <FlexibleTable
-  data={paymentData}
-  columns={paymentColumns}
-  actions={paymentActions}
-  keyField="id"
-  onRowClick={handleViewPayment}
-
-  className="orders-table"
-
-  emptyState={
-    <EmptyState 
-      title="No payments records found" 
-   
-     
-      searchTerm={searchTerm} 
-    />
-  }
-/>
-
-                <Pagination
-                  currentPage={meta.current_page || 1}
-                  totalPages={meta.total_pages || 1}
-                  onPageChange={handlePageChange}
-                  totalItems={meta.total_count || 0}
-                  
-                  showInfo={true}
+        {isLoading ? (
+          <LoadingSkeleton itemsPerPage={itemsPerPage} />
+        ) : paymentData?.length > 0 ? (
+          <>
+            <FlexibleTable
+              data={paymentData}
+              columns={paymentColumns}
+              actions={paymentActions}
+              keyField="id"
+              onRowClick={handleViewPayment}
+              className="orders-table"
+              emptyState={
+                <EmptyState 
+                  title="No payments records found" 
+                  searchTerm={searchTerm} 
                 />
-              </>
-            ) : (
-              <EmptyState title="No orders found" searchTerm={filters.search_terms} />
-            )}
-        
+              }
+            />
 
-    
-        {/* <OrderTable
-          orders={paymentData}
-          columns={paymentColumns}
-          keyField="id"
-          onViewOrder={handleViewPayment}
-        /> */}
+            <Pagination
+              currentPage={meta.current_page || 1}
+              totalPages={meta.total_pages || 1}
+              onPageChange={handlePageChange}
+              totalItems={meta.total_count || 0}
+              showInfo={true}
+            />
+          </>
+        ) : (
+          <EmptyState title="No orders found" searchTerm={filters.search_terms} />
+        )}
       </div>
 
       {/* Payment Summary Modal - Enhanced with Email Button */}
@@ -234,11 +295,12 @@ const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
           onBack={handlePaymentSummaryBack}
           onViewOrder={handleViewOrder}
           onVerify={handleVerifyPayment}
-          onDiscard={handleDiscardPayment}
+          onDiscard={handleConfirmDiscardPayment}
           onEdit={handleEditProduct}
           onDelete={handleDeleteProduct}
           onView={handleViewProduct}
           onSendEmail={handleSendEmail} // Pass email handler
+          isVerifying={isVerifying} // Pass verify loading state specifically
         />
       )}
 
@@ -257,7 +319,7 @@ const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
         <EditProductModal
           isOpen={isEditProductModal}
           onClose={() => setIsEditProductModal(false)}
-          product={mockProduct}
+          product={selectedPayment.products}
           categories={mockCategories}
         />
       )}
@@ -269,6 +331,7 @@ const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
           onClose={() => setIsUpdatePaymentStatusModal(false)}
           onConfirm={handleConfirmStatusUpdate}
           currentStatus={selectedPayment?.status}
+          isLoading={isUpdatingStatus}
         />
       )}
 
@@ -304,7 +367,7 @@ const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
         <ConfirmActionModal
           isOpen={isDiscardPaymentModal}
           onClose={() => setIsDiscardPaymentModal(false)}
-          onConfirm={handleConfirmDiscardPayment}
+          onConfirm={handleDiscardPayment}
           type="discardPayment"
           title="Confirm Discard Payment"
           message={
@@ -313,6 +376,7 @@ const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
               <strong>{selectedPayment?.id}</strong>? This action cannot be undone.
             </>
           }
+          isLoading={isUpdatingStatus}
         />
       )}
 
@@ -331,6 +395,7 @@ const paymentColumns = useMemo(() => createPaymentColumns(handleViewPayment))
               <strong>"{selectedPayment?.id}"</strong>?
             </>
           }
+          isLoading={isUpdatingStatus}
         />
       )}
 
