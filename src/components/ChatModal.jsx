@@ -1,40 +1,35 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
+
 import "../styles/ChatModal.css";
 import Image from '../assets/profile.png'
+import { useMessaging } from "../hooks/useMessaging";
+import { getActiveOutlet } from "../utils/getActiveOutlets";
+
 const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
   const [newMessage, setNewMessage] = useState("");
-  const navigate = useNavigate()
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: "customer",
-      text: "Hi, I have a question about my recent order",
-      timestamp: new Date(Date.now() - 120000),
-      senderName: "John Doe"
-    },
-    {
-      id: 2,
-      sender: "admin",
-      text: "Hello! I'd be happy to help you with your order. What seems to be the issue?",
-      timestamp: new Date(Date.now() - 90000),
-      senderName: "Support Team"
-    },
-    {
-      id: 3,
-      sender: "customer",
-      text: "I ordered a product 3 days ago but haven't received any shipping confirmation yet. Order #12345",
-      timestamp: new Date(Date.now() - 60000),
-      senderName: "John Doe"
-    },
-    {
-      id: 4,
-      sender: "admin",
-      text: "Let me check on that for you right away. I can see your order and will provide an update shortly.",
-      timestamp: new Date(Date.now() - 30000),
-      senderName: "Support Team"
-    }
-  ]);
+  const navigate = useNavigate();
+  
+  // Get auth token from your auth context/localStorage/props
+  // You'll need to replace this with your actual auth token source
+  const authToken = localStorage.getItem('token') 
+  const activeOutlet = getActiveOutlet();
+  // Use the messaging hook
+  const { messages: realtimeMessages, isConnected, connectionError, sendMessage } = useMessaging(authToken, activeOutlet);
+
+
+  // Combine static messages with real-time messages
+  // You might want to modify this logic based on your data structure
+  const allMessages = [
+ 
+    ...realtimeMessages.map((msg, index) => ({
+      id: staticMessages.length + index + 1,
+      sender: msg.sender || "admin", // Adjust based on your message structure
+      text: msg.content || msg.message || msg.text,
+      timestamp: new Date(msg.created_at || msg.timestamp || Date.now()),
+      senderName: msg.sender_name || "Support Team"
+    }))
+  ];
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -45,21 +40,20 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [allMessages]);
 
   const handleSendMessage = () => {
     if (newMessage.trim() === "") return;
 
-    const message = {
-      id: messages.length + 1,
-      sender: "admin",
-      text: newMessage,
-      timestamp: new Date(),
-      senderName: "Support Team"
-    };
-
-    setMessages([...messages, message]);
-    setNewMessage("");
+    // Send message via ActionCable
+    if (isConnected) {
+      sendMessage(newMessage, 'text');
+      setNewMessage("");
+    } else {
+      console.error('Cannot send message: not connected to ActionCable');
+      // Optionally show an error message to the user
+      alert('Connection lost. Please try again.');
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -93,17 +87,32 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
             </svg>
             Go Back
           </button>
+          
+          {/* Connection status indicator */}
+          <div className="connection-status">
+            {isConnected ? (
+              <span className="status-connected">🟢 Connected</span>
+            ) : (
+              <span className="status-disconnected">🔴 Disconnected</span>
+            )}
+          </div>
          
           <div className="chat-actions">
-         
             <button className="view-product-btn" onClick={handleProductClick}>View Product</button>
           </div>
         </div>
 
+        {/* Connection Error Display */}
+        {connectionError && (
+          <div className="connection-error">
+            <p>⚠️ {connectionError}</p>
+          </div>
+        )}
+
         {/* Messages Container */}
         <div className="chat-content">
           <div className="chat-messages">
-            {messages.map((message) => (
+            {allMessages.map((message) => (
               <div key={message.id} className={`message ${message.sender}`}>
                 <div className="message-avatar">
                   {message.sender === "customer" ? (
@@ -131,14 +140,15 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                placeholder={isConnected ? "Type your message..." : "Connecting..."}
                 className="message-input"
                 rows="1"
+                disabled={!isConnected}
               />
               <button 
                 className="send-btn" 
                 onClick={handleSendMessage}
-                disabled={newMessage.trim() === ""}
+                disabled={newMessage.trim() === "" || !isConnected}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>

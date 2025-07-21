@@ -61,7 +61,7 @@ const ManageAccounts = () => {
       name: user.name || 'Unknown User',
       email: user.email || '',
       role: user.role || 'user',
-      status: user.suspended ? 'suspended' : (user.last_login_at ? 'active' : 'inactive'),
+      status: user.suspended ? 'suspended' : 'unsuspended',
       phone_number: user.phone_number || '',
       whatsapp_number: user.whatsapp_number || '',
       address: user.address || '',
@@ -171,18 +171,18 @@ const ManageAccounts = () => {
       type: 'status',
       statusConfig: {
         classMap: {
-          'active': 'status-active',
+          'unsuspended': 'status-active',
           'inactive': 'status-inactive',
           'suspended': 'status-suspended'
         },
         textMap: {
-          'active': 'Active',
+          'unsuspended': 'Unsuspended',
           'inactive': 'Inactive',
           'suspended': 'Suspended'
         },
         showIcon: true,
         iconMap: {
-          'active': '🟢',
+          'unsuspended': '🟢',
           'inactive': '⭕',
           'suspended': '🚫'
         }
@@ -272,18 +272,18 @@ const ManageAccounts = () => {
       type: 'status',
       statusConfig: {
         classMap: {
-          'active': 'status-active',
+          'unsuspended': 'status-active',
           'inactive': 'status-inactive',
           'suspended': 'status-suspended'
         },
         textMap: {
-          'active': 'Active',
+          'unsuspended': 'Unsuspended',
           'inactive': 'Inactive',
           'suspended': 'Suspended'
         },
         showIcon: true,
         iconMap: {
-          'active': '🟢',
+          'unsuspended': '🟢',
           'inactive': '⭕',
           'suspended': '🚫'
         }
@@ -382,6 +382,7 @@ const ManageAccounts = () => {
       role: account.role || '',
       phone_number: account.phone_number || '',
       whatsapp_number: account.whatsapp_number || '',
+   
       address: account.address || '',
       outlets: account.outlets || [],
     });
@@ -628,16 +629,16 @@ const ManageAccounts = () => {
         total: 0,
         active: 0,
         inactive: 0,
-        suspended: 0
+     
       };
     }
 
     if (activeTab === 'users') {
       return {
-        total: usersResponse.summary.total_users || 0,
+        total: usersResponse.summary.total_customers || 0,
         active: usersResponse.summary.total_active_accounts || 0,
         inactive: usersResponse.summary.total_inactive_accounts || 0,
-        suspended: usersResponse.summary.total_suspended || 0
+      
       };
     } else {
       // For admins tab
@@ -645,7 +646,7 @@ const ManageAccounts = () => {
         total: usersResponse.summary.total_admins || 0,
         active: usersResponse.summary.total_active_accounts || 0,
         inactive: usersResponse.summary.total_inactive_accounts || 0,
-        suspended: usersResponse.summary.total_suspended || 0
+       
       };
     }
   };
@@ -745,15 +746,7 @@ const ManageAccounts = () => {
           </div>
         </div>
         
-        <div className="stat-card">
-          <div className="stat-icon suspended">
-            <Ban size={20} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-number">{stats.suspended}</span>
-            <span className="stat-label">Suspended</span>
-          </div>
-        </div>
+
       </div>
 
       <div className="manage-accounts-header">
