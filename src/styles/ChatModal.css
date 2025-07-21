@@ -399,6 +399,11 @@
   font-weight: 500;
 }
 
+.status-connecting {
+  color: #ff9800;
+  font-weight: 500;
+}
+
 /* Connection error display */
 .connection-error {
   background-color: #fef2f2;

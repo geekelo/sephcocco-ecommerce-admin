@@ -17,15 +17,15 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
   
   const activeOutlet = getActiveOutlet();
   // Use the messaging hook
-  const { messages: realtimeMessages, isConnected, connectionError, sendMessage } = useMessaging(authToken, activeOutlet);
+  const { messages: realtimeMessages, isConnected, isConnecting, connectionError, sendMessage } = useMessaging(authToken, activeOutlet);
 
 
   // Combine static messages with real-time messages
   // You might want to modify this logic based on your data structure
-  const allMessages = [
- 
+    const allMessages = [
+    // Add any static messages here if needed
     ...realtimeMessages.map((msg, index) => ({
-      id: staticMessages.length + index + 1,
+      id: index + 1,
       sender: msg.sender || "admin", // Adjust based on your message structure
       text: msg.content || msg.message || msg.text,
       timestamp: new Date(msg.created_at || msg.timestamp || Date.now()),
@@ -92,7 +92,9 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
           
           {/* Connection status indicator */}
           <div className="connection-status">
-            {isConnected ? (
+            {isConnecting ? (
+              <span className="status-connecting">🟡 Connecting...</span>
+            ) : isConnected ? (
               <span className="status-connected">🟢 Connected</span>
             ) : (
               <span className="status-disconnected">🔴 Disconnected</span>
@@ -142,7 +144,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={isConnected ? "Type your message..." : "Connecting..."}
+                placeholder={isConnecting ? "Connecting..." : isConnected ? "Type your message..." : "Disconnected"}
                 className="message-input"
                 rows="1"
                 disabled={!isConnected}
