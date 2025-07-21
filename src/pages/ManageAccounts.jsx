@@ -1,45 +1,93 @@
 import React, { useState, useMemo } from 'react';
 import '../styles/ManageAccounts.css';
-import { Users, Shield, UserPlus, Edit3, Trash2, Eye, MoreVertical, Ban, CheckCircle, Mail, Calendar } from 'lucide-react';
+import { Users, Shield, UserPlus, Edit3, Trash2, Eye, MoreVertical, Ban, CheckCircle, Mail, Calendar, Phone, MapPin } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import FlexibleTable from '../components/FlexibleTable';
 import UserAdminFormModal from '../components/UserAdminFormModal';
 import UserViewModal from '../components/UserViewModal';
 import ConfirmActionModal from '../components/ConfirmActionModal';
-import { mockAdmins, mockUsers } from '../constants/data';
+import { useGetAllUsers } from '../hooks/useGetAllUser';
+import { useUpdateUsers } from '../hooks/useUpdateUsers';
+import { useSwitchRole } from '../hooks/useSwitchUser';
+import { useSuspendUser } from '../hooks/useSuspendUser';
+import { useUnsuspendUser } from '../hooks/useUnsuspendUser';
+
+const itemsPerPage = 10;
 
 const ManageAccounts = () => {
+  const { data: usersResponse, isLoading, error, refetch } = useGetAllUsers();
+  
+  // Extract users array from API response
+  const apiUsers = usersResponse?.users;
+  console.log('API Users:', usersResponse);
+  
   const [activeTab, setActiveTab] = useState('users');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
-  
+  const { mutateAsync: updateUser } = useUpdateUsers();
+  const { mutateAsync: switchRole } = useSwitchRole();
+  const { mutateAsync: suspendUser } = useSuspendUser();
+  const { mutateAsync: unSuspendUser } = useUnsuspendUser();
+
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showSwitchRoleModal, setShowSwitchRoleModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
+  const [actionType, setActionType] = useState(''); // 'suspend', 'unsuspend', 'switch-role'
   
   // Form state for add/edit
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
-    role: activeTab === 'users' ? 'Customer' : 'Manager',
+    role: activeTab === 'users' ? 'user' : 'admin',
+    phone_number: '',
+    whatsapp_number: '',
+    address: '',
+    outlets: [],
   });
 
   const [formErrors, setFormErrors] = useState({});
 
+  // Transform API users to match component expectations
+  const transformedUsers = useMemo(() => {
+    if (!Array.isArray(apiUsers)) return [];
+    
+    return apiUsers.map(user => ({
+      id: user.id,
+      name: user.name || 'Unknown User',
+      email: user.email || '',
+      role: user.role || 'user',
+      status: user.suspended ? 'suspended' : (user.last_login_at ? 'active' : 'inactive'),
+      phone_number: user.phone_number || '',
+      whatsapp_number: user.whatsapp_number || '',
+      address: user.address || '',
+      payment_ref: user.payment_ref || '',
+      outlets: user.outlets || [],
+      joinDate: user.created_at,
+      lastLogin: user.last_login_at || new Date().toISOString(),
+      orders: user.total_orders,
+    }));
+  }, [apiUsers]);
+
+  // Separate users and admins
+  const users = transformedUsers.filter(user => user.role === 'user');
+  const admins = transformedUsers.filter(user => user.role === 'admin');
+
   // Filter data based on search and status
   const filteredUsers = useMemo(() => {
-    let filtered = mockUsers;
+    let filtered = users;
 
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.id.toLowerCase().includes(searchTerm.toLowerCase())
+        user.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.phone_number.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -49,10 +97,10 @@ const ManageAccounts = () => {
     }
 
     return filtered;
-  }, [searchTerm, filterStatus]);
+  }, [users, searchTerm, filterStatus]);
 
   const filteredAdmins = useMemo(() => {
-    let filtered = mockAdmins;
+    let filtered = admins;
 
     // Filter by search term
     if (searchTerm) {
@@ -70,7 +118,7 @@ const ManageAccounts = () => {
     }
 
     return filtered;
-  }, [searchTerm, filterStatus]);
+  }, [admins, searchTerm, filterStatus]);
 
   // Column definitions for users table
   const userColumns = [
@@ -79,25 +127,39 @@ const ManageAccounts = () => {
       label: 'User',
       flex: 2,
       minWidth: '200px',
-      type: 'avatar',
-      avatarConfig: {
-        nameField: 'name',
-        subField: 'id',
-        size: 'medium',
-        showDetails: true,
-        defaultAvatar: '/default-avatar.png'
-      },
-      accessor: 'avatar'
+      format: (value, data) => (
+        <div className="avatar-cell">
+          <div className="avatar-placeholder">
+            <Users size={16} />
+          </div>
+          <div className="avatar-details">
+            <span className="avatar-name">{data.name}</span>
+            <span className="avatar-sub">{data.email}</span>
+          </div>
+        </div>
+      )
     },
     {
-      key: 'email',
-      label: 'Email',
-      flex: 2,
-      minWidth: '200px',
+      key: 'phone_number',
+      label: 'Phone',
+      flex: 1.5,
+      minWidth: '150px',
       format: (value, data) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Mail size={14} style={{ color: '#6b7280', flexShrink: 0 }} />
-          <span>{value}</span>
+          <Phone size={14} style={{ color: '#6b7280', flexShrink: 0 }} />
+          <span>{value || 'N/A'}</span>
+        </div>
+      )
+    },
+    {
+      key: 'address',
+      label: 'Address',
+      flex: 2,
+      minWidth: '150px',
+      format: (value, data) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <MapPin size={14} style={{ color: '#6b7280', flexShrink: 0 }} />
+          <span>{value || 'N/A'}</span>
         </div>
       )
     },
@@ -127,13 +189,6 @@ const ManageAccounts = () => {
       }
     },
     {
-      key: 'orders',
-      label: 'Orders',
-      flex: 1,
-      minWidth: '100px',
-      format: (value) => `${value} orders`
-    },
-    {
       key: 'joinDate',
       label: 'Join Date',
       flex: 1,
@@ -152,18 +207,18 @@ const ManageAccounts = () => {
       minWidth: '120px',
       format: (value) => (
         <div style={{ color: '#6b7280' }}>
-          <span>{new Date(value).toLocaleDateString()}</span>
+          <span>{value ? new Date(value).toLocaleDateString() : 'Never'}</span>
         </div>
       )
     },
-     {
-    key: 'actions',
-    label: 'Actions',
-    flex: 0,
-    minWidth: '60px',
-    type: 'actions',
-    className: 'actions-column'
-  }
+    {
+      key: 'actions',
+      label: 'Actions',
+      flex: 0,
+      minWidth: '60px',
+      type: 'actions',
+      className: 'actions-column'
+    }
   ];
 
   // Column definitions for admins table
@@ -173,25 +228,27 @@ const ManageAccounts = () => {
       label: 'Admin',
       flex: 2,
       minWidth: '200px',
-      type: 'avatar',
-      avatarConfig: {
-        nameField: 'name',
-        subField: 'id',
-        size: 'medium',
-        showDetails: true,
-        defaultAvatar: '/default-avatar.png'
-      },
-      accessor: 'avatar'
+      format: (value, data) => (
+        <div className="avatar-cell">
+          <div className="avatar-placeholder">
+            <Shield size={16} />
+          </div>
+          <div className="avatar-details">
+            <span className="avatar-name">{data.name}</span>
+            <span className="avatar-sub">{data.email}</span>
+          </div>
+        </div>
+      )
     },
     {
-      key: 'email',
-      label: 'Email',
-      flex: 2,
-      minWidth: '200px',
+      key: 'phone_number',
+      label: 'Phone',
+      flex: 1.5,
+      minWidth: '150px',
       format: (value, data) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Mail size={14} style={{ color: '#6b7280', flexShrink: 0 }} />
-          <span>{value}</span>
+          <Phone size={14} style={{ color: '#6b7280', flexShrink: 0 }} />
+          <span>{value || 'N/A'}</span>
         </div>
       )
     },
@@ -203,7 +260,7 @@ const ManageAccounts = () => {
       format: (value) => (
         <span className={`badge role-${value.toLowerCase().replace(' ', '-')}`}>
           <Shield size={12} style={{ marginRight: '4px' }} />
-          {value}
+          {value.charAt(0).toUpperCase() + value.slice(1)}
         </span>
       )
     },
@@ -233,10 +290,11 @@ const ManageAccounts = () => {
       }
     },
     {
-      key: 'permissions',
-      label: 'Permissions',
-      flex: 2,
-      minWidth: '150px'
+      key: 'payment_ref',
+      label: 'Payment Ref',
+      flex: 1,
+      minWidth: '120px',
+      format: (value) => value || 'N/A'
     },
     {
       key: 'lastLogin',
@@ -245,18 +303,18 @@ const ManageAccounts = () => {
       minWidth: '120px',
       format: (value) => (
         <div style={{ color: '#6b7280' }}>
-          <span>{new Date(value).toLocaleDateString()}</span>
+          <span>{value ? new Date(value).toLocaleDateString() : 'Never'}</span>
         </div>
       )
     },
     {
-    key: 'actions',
-    label: 'Actions',
-    flex: 0,
-    minWidth: '60px',
-    type: 'actions',
-    className: 'actions-column'
-  }
+      key: 'actions',
+      label: 'Actions',
+      flex: 0,
+      minWidth: '60px',
+      type: 'actions',
+      className: 'actions-column'
+    }
   ];
 
   // Actions configuration
@@ -264,33 +322,33 @@ const ManageAccounts = () => {
     {
       key: 'view',
       label: 'View Details',
-      icon: '👁️',
+      icon: <Eye size={14} />,
       className: 'view'
     },
     {
       key: 'edit',
       label: 'Edit Account',
-      icon: '✏️',
+      icon: <Edit3 size={14} />,
       className: 'edit'
     },
     {
       key: 'suspend',
       label: 'Suspend Account',
-      icon: '🚫',
+      icon: <Ban size={14} />,
       className: 'suspend',
       disabled: (data) => data.status === 'suspended'
     },
     {
-      key: 'activate',
-      label: 'Activate Account',
-      icon: '✅',
+      key: 'unsuspend',
+      label: 'Unsuspend Account',
+      icon: <CheckCircle size={14} />,
       className: 'activate',
-      disabled: (data) => data.status === 'active'
+      disabled: (data) => data.status !== 'suspended'
     },
     {
-      key: 'delete',
-      label: 'Delete Account',
-      icon: '🗑️',
+      key: 'switch-role',
+      label: 'Switch Role',
+      icon: <Trash2 size={14} />,
       className: 'delete'
     }
   ];
@@ -310,24 +368,154 @@ const ManageAccounts = () => {
     setSelectedAccount(account);
     setShowViewModal(true);
   };
-
+  
   // Handle edit account
   const handleEditAccount = (account) => {
     setSelectedAccount(account);
+    console.log('Editing account:', account);
+    
     const [firstName, ...lastNameParts] = (account.name || '').split(' ');
     setFormData({
       firstName: firstName || '',
       lastName: lastNameParts.join(' ') || '',
       email: account.email || '',
       role: account.role || '',
+      phone_number: account.phone_number || '',
+      whatsapp_number: account.whatsapp_number || '',
+      address: account.address || '',
+      outlets: account.outlets || [],
     });
     setShowEditModal(true);
   };
 
-  // Handle delete account
-  const handleDeleteAccount = (account) => {
-    setSelectedAccount(account);
-    setShowDeleteModal(true);
+  // Handle form submit for edit
+  const handleFormSubmit = async (submissionData) => {
+    try {
+      if (!selectedAccount?.id) {
+        console.error('No selected account ID');
+        return;
+      }
+
+      const fullName = `${submissionData.firstName || ''} ${submissionData.lastName || ''}`.trim();
+      
+      // Update user details payload
+      const userDetailsPayload = {
+        user: {
+          email: submissionData.email,
+          name: fullName,
+          address: submissionData.address,
+          phone_number: submissionData.phone_number,
+          whatsapp_number: submissionData.whatsapp_number
+        }
+      };
+
+      // Add password fields if they exist (for new users or password changes)
+      if (submissionData.password) {
+        userDetailsPayload.user.password = submissionData.password;
+        userDetailsPayload.user.password_confirmation = submissionData.password_confirmation;
+      }
+
+      console.log('Updating user details:', userDetailsPayload);
+      
+      // Update user details
+      await updateUser({userId: selectedAccount.id, payload: userDetailsPayload});
+
+      // If outlets are provided and different, update outlets separately
+      if (submissionData.outlets && submissionData.outlets.length > 0) {
+        const outletsPayload = {
+          user: {
+            outlets: submissionData.outlets
+          }
+        };
+        
+        console.log('Updating user outlets:', outletsPayload);
+        await updateUser(selectedAccount.id, outletsPayload);
+      }
+
+      // Refetch data to update the UI
+      refetch();
+      closeAllModals();
+      
+    } catch (error) {
+      console.error('Update failed:', error);
+      // Handle error appropriately - you might want to show an error message to the user
+    }
+  };
+
+  // Handle suspend user - STANDALONE FUNCTION
+  const handleSuspendUser = async () => {
+    console.log('Suspending user:', selectedAccount);
+    
+    try {
+      if (!selectedAccount?.id) {
+        console.error('No selected account ID');
+        return;
+      }
+
+      console.log('Suspending user with ID:', selectedAccount.id);
+      await suspendUser({userId: selectedAccount.id});
+      console.log('User suspended successfully');
+
+      // Refetch data to update the UI
+      refetch();
+      closeAllModals();
+      
+    } catch (error) {
+      console.error('Suspend failed:', error);
+      // Handle error appropriately - you might want to show an error message to the user
+    }
+  };
+
+  // Handle unsuspend user - STANDALONE FUNCTION
+  const handleUnsuspendUser = async () => {
+    console.log('Unsuspending user:', selectedAccount);
+    
+    try {
+      if (!selectedAccount?.id) {
+        console.error('No selected account ID');
+        return;
+      }
+
+      console.log('Unsuspending user with ID:', selectedAccount.id);
+      await unSuspendUser({userId: selectedAccount.id});
+      console.log('User unsuspended successfully');
+
+      // Refetch data to update the UI
+      refetch();
+      closeAllModals();
+      
+    } catch (error) {
+      console.error('Unsuspend failed:', error);
+      // Handle error appropriately - you might want to show an error message to the user
+    }
+  };
+
+  // Handle switch role
+  const handleSwitchRole = async () => {
+    try {
+      if (!selectedAccount?.id) {
+        console.error('No selected account ID');
+        return;
+      }
+
+      const newRole = selectedAccount.role === 'user' ? 'admin' : 'user';
+      const switchRolePayload = {
+        user: {
+          role: newRole
+        }
+      };
+
+      console.log('Switching role:', switchRolePayload);
+      await switchRole({userId: selectedAccount.id, payload: switchRolePayload});
+
+      // Refetch data to update the UI
+      refetch();
+      closeAllModals();
+      
+    } catch (error) {
+      console.error('Role switch failed:', error);
+      // Handle error appropriately
+    }
   };
 
   // Handle add account
@@ -336,7 +524,11 @@ const ManageAccounts = () => {
       firstName: '',
       lastName: '',
       email: '',
-      role: activeTab === 'users' ? 'Customer' : 'Manager'
+      role: activeTab === 'users' ? 'user' : 'admin',
+      phone_number: '',
+      whatsapp_number: '',
+      address: '',
+      outlets: [],
     });
     setFormErrors({});
     setShowAddModal(true);
@@ -368,17 +560,12 @@ const ManageAccounts = () => {
     return Object.keys(errors).length === 0;
   };
 
-  // Handle form submit
-  const handleFormSubmit = (submissionData) => {
-    if (validateForm()) {
-      console.log('Form submitted:', submissionData);
-      // Add your API call here
-      closeAllModals();
-    }
-  };
-
   // Handle account actions from dropdown
   const handleAccountAction = (actionKey, account) => {
+    console.log('Action clicked:', actionKey, account);
+    setSelectedAccount(account);
+    setActionType(actionKey);
+
     switch (actionKey) {
       case 'view':
         handleViewAccount(account);
@@ -386,14 +573,16 @@ const ManageAccounts = () => {
       case 'edit':
         handleEditAccount(account);
         break;
-      case 'delete':
-        handleDeleteAccount(account);
-        break;
       case 'suspend':
-        console.log('Suspend account:', account.id);
+        // Show confirmation modal for suspend
+        setShowDeleteModal(true);
         break;
-      case 'activate':
-        console.log('Activate account:', account.id);
+      case 'unsuspend':
+        // Show confirmation modal for unsuspend
+        setShowDeleteModal(true);
+        break;
+      case 'switch-role':
+        setShowSwitchRoleModal(true);
         break;
       default:
         break;
@@ -406,12 +595,18 @@ const ManageAccounts = () => {
     setShowEditModal(false);
     setShowAddModal(false);
     setShowDeleteModal(false);
+    setShowSwitchRoleModal(false);
     setSelectedAccount(null);
+    setActionType('');
     setFormData({ 
       firstName: '', 
       lastName: '', 
       email: '', 
-      role: activeTab === 'users' ? 'Customer' : 'Manager' 
+      role: activeTab === 'users' ? 'user' : 'admin',
+      phone_number: '',
+      whatsapp_number: '',
+      address: '',
+      outlets: [],
     });
     setFormErrors({});
   };
@@ -426,22 +621,95 @@ const ManageAccounts = () => {
     return activeTab === 'users' ? userColumns : adminColumns;
   };
 
-  // Get stats for the current tab
+  // Get stats using API response summary
   const getStats = () => {
-    const data = activeTab === 'users' ? mockUsers : mockAdmins;
-    const activeCount = data.filter(item => item.status === 'active').length;
-    const inactiveCount = data.filter(item => item.status === 'inactive').length;
-    const suspendedCount = data.filter(item => item.status === 'suspended').length;
+    if (!usersResponse) {
+      return {
+        total: 0,
+        active: 0,
+        inactive: 0,
+        suspended: 0
+      };
+    }
 
-    return {
-      total: data.length,
-      active: activeCount,
-      inactive: inactiveCount,
-      suspended: suspendedCount
-    };
+    if (activeTab === 'users') {
+      return {
+        total: usersResponse.summary.total_users || 0,
+        active: usersResponse.summary.total_active_accounts || 0,
+        inactive: usersResponse.summary.total_inactive_accounts || 0,
+        suspended: usersResponse.summary.total_suspended || 0
+      };
+    } else {
+      // For admins tab
+      return {
+        total: usersResponse.summary.total_admins || 0,
+        active: usersResponse.summary.total_active_accounts || 0,
+        inactive: usersResponse.summary.total_inactive_accounts || 0,
+        suspended: usersResponse.summary.total_suspended || 0
+      };
+    }
   };
 
   const stats = getStats();
+
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="manage-accounts">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading accounts...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="manage-accounts">
+        <div className="error-container">
+          <h3>Error loading accounts</h3>
+          <p>{error.message || 'Something went wrong'}</p>
+          <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Get confirmation modal content based on action type
+  const getConfirmationModalContent = () => {
+    if (!selectedAccount) return {};
+
+    switch (actionType) {
+      case 'suspend':
+        return {
+          title: 'Suspend Account',
+          message: `Are you sure you want to suspend ${selectedAccount.name}'s account? They will no longer be able to access the system.`,
+          confirmButtonText: 'Suspend Account',
+          type: 'suspend',
+          onConfirm: handleSuspendUser // Now uses the standalone function
+        };
+      case 'unsuspend':
+        return {
+          title: 'Unsuspend Account',
+          message: `Are you sure you want to unsuspend ${selectedAccount.name}'s account? They will regain access to the system.`,
+          confirmButtonText: 'Unsuspend Account',
+          type: 'activate',
+          onConfirm: handleUnsuspendUser // Now uses the standalone function
+        };
+      default:
+        return {
+          title: 'Confirm Action',
+          message: 'Are you sure you want to perform this action?',
+          confirmButtonText: 'Confirm',
+          type: 'delete',
+          onConfirm: () => closeAllModals()
+        };
+    }
+  };
+
+  const confirmationContent = getConfirmationModalContent();
 
   return (
     <div className="manage-accounts">
@@ -504,7 +772,7 @@ const ManageAccounts = () => {
           >
             <Users size={16} />
             <span>Users</span>
-            <span className="tab-count">{mockUsers.length}</span>
+            <span className="tab-count">{users.length}</span>
           </button>
           
           <button
@@ -513,7 +781,7 @@ const ManageAccounts = () => {
           >
             <Shield size={16} />
             <span>Admins</span>
-            <span className="tab-count">{mockAdmins.length}</span>
+            <span className="tab-count">{admins.length}</span>
           </button>
         </div>
       </div>
@@ -540,9 +808,9 @@ const ManageAccounts = () => {
           onActionClick={handleAccountAction}
           actions={accountActions}
           clickableRows={true}
+          isLoading={isLoading}
           emptyState={
             <div className="empty-state">
-         
               <h3>No {activeTab} found</h3>
               <p>
                 {searchTerm || filterStatus 
@@ -582,19 +850,29 @@ const ManageAccounts = () => {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Suspend/Unsuspend Confirmation Modal */}
       {showDeleteModal && selectedAccount && (
         <ConfirmActionModal
           isOpen={showDeleteModal}
-          confirmButtonText='Delete Account'
+          confirmButtonText={confirmationContent.confirmButtonText}
           onClose={closeAllModals}
-          onConfirm={() => {
-            console.log('Delete account:', selectedAccount.id);
-            closeAllModals();
-          }}
-          title="Delete Account"
-          message={`Are you sure you want to delete ${selectedAccount.name}'s account? This action cannot be undone.`}
-          type="delete"
+          onConfirm={confirmationContent.onConfirm}
+          title={confirmationContent.title}
+          message={confirmationContent.message}
+          type={confirmationContent.type}
+        />
+      )}
+
+      {/* Switch Role Confirmation Modal */}
+      {showSwitchRoleModal && selectedAccount && (
+        <ConfirmActionModal
+          isOpen={showSwitchRoleModal}
+          confirmButtonText="Switch Role"
+          onClose={closeAllModals}
+          onConfirm={handleSwitchRole}
+          title="Switch User Role"
+          message={`Are you sure you want to switch ${selectedAccount.name}'s role from ${selectedAccount.role} to ${selectedAccount.role === 'user' ? 'admin' : 'user'}? This will change their access permissions.`}
+          type="switch"
         />
       )}
     </div>

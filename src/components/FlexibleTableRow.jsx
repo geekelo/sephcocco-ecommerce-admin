@@ -13,7 +13,6 @@ const FlexibleTableRow = ({
   clickableRow = true
 }) => {
   const [showActions, setShowActions] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const actionsRef = useRef(null);
   const triggerRef = useRef(null);
 
@@ -31,23 +30,52 @@ const FlexibleTableRow = ({
     }
   }, [showActions]);
 
-  // Calculate dropdown position when showing
+  // Calculate dropdown position to handle screen edges and prevent overflow
   useEffect(() => {
-    if (showActions && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    if (showActions && triggerRef.current && actionsRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const dropdown = actionsRef.current.querySelector('.actions-menu-table');
       
-      const top = rect.bottom + scrollTop + 4;
-      const left = rect.right + scrollLeft - 160;
-      
-      const adjustedLeft = Math.max(16, Math.min(left, window.innerWidth - 176));
-      const adjustedTop = rect.bottom + 160 > window.innerHeight ? rect.top + scrollTop - 160 - 4 : top;
-      
-      setDropdownPosition({
-        top: adjustedTop,
-        left: adjustedLeft
-      });
+      if (dropdown) {
+        // Reset classes and inline styles
+        dropdown.classList.remove('align-left', 'align-up');
+        dropdown.style.position = 'fixed';
+        
+        const dropdownWidth = 160;
+        const dropdownHeight = 200; // Approximate dropdown height
+        
+        // Calculate initial position (below and right-aligned)
+        let top = triggerRect.bottom + 4;
+        let left = triggerRect.right - dropdownWidth;
+        
+        // Check if dropdown would go off bottom of screen
+        const spaceBelow = window.innerHeight - triggerRect.bottom;
+        const spaceAbove = triggerRect.top;
+        
+        if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+          // Position above the button
+          top = triggerRect.top - dropdownHeight - 4;
+          dropdown.classList.add('align-up');
+        }
+        
+        // Check if dropdown would go off left side of screen
+        if (left < 16) {
+          // Align to left side of button instead
+          left = triggerRect.left;
+          dropdown.classList.add('align-left');
+        }
+        
+        // Check if dropdown would go off right side of screen
+        if (left + dropdownWidth > window.innerWidth - 16) {
+          left = window.innerWidth - dropdownWidth - 16;
+        }
+        
+        // Apply calculated positions
+        dropdown.style.top = `${top}px`;
+        dropdown.style.left = `${left}px`;
+        dropdown.style.right = 'auto';
+        dropdown.style.bottom = 'auto';
+      }
     }
   }, [showActions]);
 
@@ -60,7 +88,6 @@ const FlexibleTableRow = ({
     }).format(value);
   };
   
-
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -177,7 +204,6 @@ const FlexibleTableRow = ({
     if (columnKey.includes('price') || columnKey.includes('cost') || columnKey.includes('amount')) {
       return (
         <div className="currency-cell">
-  
           <span className="currency-value">{formatCurrency(value)}</span>
         </div>
       );
@@ -384,13 +410,13 @@ const FlexibleTableRow = ({
     return (
       <div className="actions-cell-rows">
         <div 
-          className={`actions-dropdown ${showActions ? 'show-menu' : ''}`}
+          className={`actions-dropdown-table ${showActions ? 'show-menu-table' : ''}`}
           ref={actionsRef}
           onClick={(e) => e.stopPropagation()}
         >
           <button
             ref={triggerRef}
-            className="actions-trigger"
+            className="actions-trigger-table"
             onClick={() => setShowActions(!showActions)}
             aria-label="More actions"
             aria-expanded={showActions}
@@ -399,19 +425,11 @@ const FlexibleTableRow = ({
           </button>
           
           {showActions && (
-            <div 
-              className="actions-menu"
-              style={{
-                position: 'fixed',
-                top: `${dropdownPosition.top}px`,
-                left: `${dropdownPosition.left}px`,
-                zIndex: 10001
-              }}
-            >
+            <div className="actions-menu-table">
               {actions.map((action) => (
                 <button
                   key={action.key}
-                  className={`action-item ${action.className || ''}`}
+                  className={`action-item-table ${action.className || ''}`}
                   onClick={() => {
                     onActionClick && onActionClick(action.key, data);
                     setShowActions(false);
@@ -431,7 +449,7 @@ const FlexibleTableRow = ({
 
   const handleRowClick = (e) => {
     // Don't trigger row click if clicking on actions or buttons
-    if (!e.target.closest('.actions-dropdown') && 
+    if (!e.target.closest('.actions-dropdown-table') && 
         !e.target.closest('.cell-button') && 
         !e.target.closest('.action-button') &&
         clickableRow) {
