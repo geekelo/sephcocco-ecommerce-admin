@@ -13,6 +13,8 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
   // Get auth token from your auth context/localStorage/props
   // You'll need to replace this with your actual auth token source
   const authToken = localStorage.getItem('token') 
+
+  
   const activeOutlet = getActiveOutlet();
   // Use the messaging hook
   const { messages: realtimeMessages, isConnected, connectionError, sendMessage } = useMessaging(authToken, activeOutlet);

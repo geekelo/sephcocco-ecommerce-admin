@@ -15,7 +15,7 @@ export const useMessaging = (authToken, outletType = '') => {
     }
 
     // Create Action Cable consumer
-    const consumer = createConsumer('ws://https://sephcocco-lounge-api.onrender.com/cable');
+    const consumer = createConsumer('wss://sephcocco-lounge-api.onrender.com/cable');
 
     // Subscribe to messaging channel
     subscriptionRef.current = consumer.subscriptions.create(
