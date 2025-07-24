@@ -1,37 +1,46 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
+import { MessageCircle, Send, ArrowLeft, Eye, Wifi, WifiOff, AlertCircle } from 'lucide-react';
 
 import "../styles/ChatModal.css";
-import Image from '../assets/profile.png'
 import { useMessaging } from "../hooks/useMessaging";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 
 const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
   const [newMessage, setNewMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
   const navigate = useNavigate();
   
-  // Get auth token from your auth context/localStorage/props
-  // You'll need to replace this with your actual auth token source
-  const authToken = localStorage.getItem('token') 
-
-  
+  // Get auth token from localStorage
+  const authToken = localStorage.getItem('token');
   const activeOutlet = getActiveOutlet();
-  // Use the messaging hook
-  const { messages: realtimeMessages, isConnected, isConnecting, connectionError, sendMessage } = useMessaging(authToken, activeOutlet);
+  
+  // Use the messaging hook with refresh functionality
+  const { 
+    messages: realtimeMessages, 
+    isConnected, 
+    isConnecting, 
+    connectionError, 
+    sendMessage,
+    refreshMessages 
+  } = useMessaging(authToken, activeOutlet);
 
+  // Extract chats from messages (same approach as Desktop/Mobile)
+  const allChats = realtimeMessages.flatMap(msg => 
+    msg.chats ? msg.chats.map(chat => ({...chat, conversation_id: msg.conversation_id || 'default'})) : []
+  );
 
-  // Combine static messages with real-time messages
-  // You might want to modify this logic based on your data structure
-    const allMessages = [
-    // Add any static messages here if needed
-    ...realtimeMessages.map((msg, index) => ({
-      id: index + 1,
-      sender: msg.sender || "admin", // Adjust based on your message structure
-      text: msg.content || msg.message || msg.text,
-      timestamp: new Date(msg.created_at || msg.timestamp || Date.now()),
-      senderName: msg.sender_name || "Support Team"
-    }))
-  ];
+  // Transform chats to display format - FIXED: Keep the original user_role
+  const allMessages = allChats.map((chat, index) => ({
+    id: chat.id || index,
+    sender: chat.user_role === 'user' ? 'customer' : 'admin',
+    text: chat.content || 'No content',
+    timestamp: new Date(chat.timestamp || Date.now()),
+    senderName: chat.user_role === 'user' ? (chat.user_name || 'Customer') : 'Support Team',
+    user_name: chat.user_name,
+    user_role: chat.user_role, // FIXED: Keep original user_role for avatar logic
+    optimistic: chat.optimistic
+  }));
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -44,17 +53,34 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
     scrollToBottom();
   }, [allMessages]);
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() === "") return;
+  // Enhanced message sending with refresh
+  const handleSendMessage = async () => {
+    if (newMessage.trim() === "" || !isConnected || isSending) return;
 
-    // Send message via ActionCable
-    if (isConnected) {
-      sendMessage(newMessage, 'text');
+    setIsSending(true);
+    
+    try {
+      // Send message via ActionCable
+      await sendMessage(newMessage.trim(), 'text', 'default');
       setNewMessage("");
-    } else {
-      console.error('Cannot send message: not connected to ActionCable');
-      // Optionally show an error message to the user
-      alert('Connection lost. Please try again.');
+      
+      // Wait and refresh messages to get server response
+      setTimeout(async () => {
+        try {
+          if (refreshMessages) {
+            await refreshMessages();
+          }
+        } catch (refreshError) {
+          console.error('Failed to refresh messages after send:', refreshError);
+        }
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // Optionally show error message to user
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -66,15 +92,30 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
   };
 
   const formatTime = (timestamp) => {
-    return timestamp.toLocaleTimeString([], { 
+    if (!timestamp) return '';
+    
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '';
+    
+    return date.toLocaleTimeString([], { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
   };
 
+  // Function to get user initials
+  const getUserInitials = (name) => {
+    if (!name) return 'CU'; // Customer default
+    
+    const words = name.trim().split(' ');
+    const initials = words.map(word => word.charAt(0).toUpperCase());
+    
+    return initials.slice(0, 2).join('');
+  };
+
   const handleProductClick = () => {
-    navigate('/products')
-  }
+    navigate('/products');
+  };
 
   if (!isOpen) return null;
 
@@ -84,55 +125,95 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
         {/* Header */}
         <div className="chat-modal-header">
           <button className="back-btn" onClick={onClose}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
+            <ArrowLeft size={20} />
             Go Back
           </button>
           
           {/* Connection status indicator */}
           <div className="connection-status">
             {isConnecting ? (
-              <span className="status-connecting">🟡 Connecting...</span>
+              <div className="status-indicator connecting">
+                <div className="spinner-small"></div>
+                <span>Connecting...</span>
+              </div>
             ) : isConnected ? (
-              <span className="status-connected">🟢 Connected</span>
+              <div className="status-indicator connected">
+                <Wifi size={16} />
+                <span>Connected</span>
+              </div>
             ) : (
-              <span className="status-disconnected">🔴 Disconnected</span>
+              <div className="status-indicator disconnected">
+                <WifiOff size={16} />
+                <span>Disconnected</span>
+              </div>
             )}
           </div>
          
           <div className="chat-actions">
-            <button className="view-product-btn" onClick={handleProductClick}>View Product</button>
+            <button className="view-product-btn" onClick={handleProductClick}>
+              <Eye size={16} />
+              View Product
+            </button>
           </div>
         </div>
 
         {/* Connection Error Display */}
         {connectionError && (
-          <div className="connection-error">
-            <p>⚠️ {connectionError}</p>
+          <div className="connection-error-banner">
+            <AlertCircle size={16} />
+            <span>{connectionError}</span>
           </div>
         )}
 
         {/* Messages Container */}
         <div className="chat-content">
           <div className="chat-messages">
-            {allMessages.map((message) => (
-              <div key={message.id} className={`message ${message.sender}`}>
-                <div className="message-avatar">
-                  {message.sender === "customer" ? (
-                    <img src={Image} alt="Customer" />
-                  ) : (
-                    <div className="admin-avatar">S</div>
-                  )}
-                </div>
-                <div className="message-content">
-                  <div className="message-bubble">
-                    <p>{message.text}</p>
-                  </div>
-                  <div className="message-time">{formatTime(message.timestamp)}</div>
-                </div>
+            {allMessages.length === 0 ? (
+              <div className="no-messages-admin">
+                <MessageCircle size={48} className="empty-icon" />
+                <h3>No messages yet</h3>
+                <p>Start the conversation with the customer</p>
               </div>
-            ))}
+            ) : (
+              allMessages.map((message) => {
+                // Debug log to check message data
+                console.log('Message data:', {
+                  sender: message.sender,
+                  user_role: message.user_role,
+                  text: message.text
+                });
+                
+                return (
+                  <div 
+                    key={message.id} 
+                    className={`message ${message.sender} ${message.optimistic ? 'sending' : ''}`}
+                  >
+                    <div className="message-avatar">
+                      {message.sender === "customer" ? (
+                        <div className="customer-avatar">
+                          <span className="avatar-initials">
+                            {getUserInitials(message.user_name)}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="admin-avatar">
+                          <MessageCircle size={16} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="message-content">
+                      <div className="message-bubble">
+                        <p>{message.text}</p>
+                      </div>
+                      <div className="message-time">
+                        {formatTime(message.timestamp)}
+                        {message.optimistic && <span className="sending-indicator">Sending...</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
             <div ref={messagesEndRef} />
           </div>
 
@@ -144,23 +225,52 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={isConnecting ? "Connecting..." : isConnected ? "Type your message..." : "Disconnected"}
+                placeholder={
+                  isConnecting 
+                    ? "Connecting..." 
+                    : isConnected 
+                      ? "Type your message..." 
+                      : "Disconnected - Cannot send messages"
+                }
                 className="message-input"
                 rows="1"
-                disabled={!isConnected}
+                disabled={!isConnected || isSending}
+                maxLength={1000}
               />
               <button 
-                className="send-btn" 
+                className={`send-btn ${(!isConnected || newMessage.trim() === "" || isSending) ? 'disabled' : ''}`}
                 onClick={handleSendMessage}
-                disabled={newMessage.trim() === "" || !isConnected}
+                disabled={!isConnected || newMessage.trim() === "" || isSending}
+                title={!isConnected ? 'Not connected' : 'Send message'}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                </svg>
+                {isSending ? (
+                  <div className="spinner-small"></div>
+                ) : (
+                  <Send size={20} />
+                )}
               </button>
             </div>
+            
+            {/* Character count for long messages */}
+            {newMessage.length > 800 && (
+              <div className="character-count">
+                {newMessage.length}/1000
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Typing indicator */}
+        {isSending && (
+          <div className="typing-indicator-admin">
+            <div className="typing-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <span>Sending message...</span>
+          </div>
+        )}
       </div>
     </div>
   );
