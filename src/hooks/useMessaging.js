@@ -1,240 +1,296 @@
-import { createConsumer } from '@rails/actioncable';
-import { useGetMessages } from './useGetMessages';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
-export const useMessaging = (authToken, outletType = '', options = {}) => {
-  const {
-    autoLoadHistory = true,
-    messageId = null,
-    productId = null,
-    initialStatus = 'open'
-  } = options;
+const API_BASE_URL = 'https://sephcocco-lounge-api.onrender.com/api/v1';
 
-  // WebSocket state
+export const useMessaging = ({
+  authToken,
+  outletType,
+  onNewMessage,
+  onChatThreadUpdate,
+  onConnectionChange
+}) => {
+  // Refs for stable references
+  const authTokenRef = useRef(authToken);
+  const outletTypeRef = useRef(outletType);
+  const wsRef = useRef(null);
+  const userChatThreadsRef = useRef(new Map());
+
+  // Connection states
   const [isConnected, setIsConnected] = useState(false);
-  const [connectionError, setConnectionError] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const subscriptionRef = useRef(null);
-  const consumerRef = useRef(null);
-  const connectionAttemptedRef = useRef(false);
+  const [connectionError, setConnectionError] = useState(null);
 
-  // Get messages hook for REST API
-  const {
-    messages: apiMessages,
-    loading: apiLoading,
-    error: apiError,
-    meta,
-    getMessages,
-    getMessageHistory,
-    getProductMessages,
-    getAllMessages,
-    loadMoreMessages,
-    setMessages: setApiMessages
-  } = useGetMessages(authToken, outletType);
+  // Message and user states
+  const [newMessages, setNewMessages] = useState([]);
+  const [activeUsers, setActiveUsers] = useState(new Set());
+  
+  // Chat thread management - use ref to avoid dependency issues
+  const [userChatThreads, setUserChatThreads] = useState(new Map());
+  const [selectedUserThread, setSelectedUserThread] = useState(null);
 
-  // Combined messages state (API + WebSocket)
-  const [realTimeMessages, setRealTimeMessages] = useState([]);
-  const [allMessages, setAllMessages] = useState([]);
-
-  // Load initial message history
+  // Update refs when props change
   useEffect(() => {
-    if (autoLoadHistory && authToken && outletType) {
-      if (messageId) {
-        getMessageHistory(messageId);
-      } else if (productId) {
-        getProductMessages(productId);
-      } else {
-        getAllMessages(initialStatus);
-      }
-    }
-  }, [authToken, outletType, messageId, productId, autoLoadHistory, initialStatus]);
+    authTokenRef.current = authToken;
+    outletTypeRef.current = outletType;
+  }, [authToken, outletType]);
 
-  // Combine API messages with real-time messages
+  // Update ref when state changes
   useEffect(() => {
-    const combined = [...apiMessages, ...realTimeMessages];
-    setAllMessages(combined);
-  }, [apiMessages, realTimeMessages]);
+    userChatThreadsRef.current = userChatThreads;
+  }, [userChatThreads]);
 
-  // WebSocket connection
+  // Calculate total unread threads
+  const totalUnreadThreads = useMemo(() => {
+    let count = 0;
+    userChatThreads.forEach(thread => {
+      if (thread.unread_count > 0) count++;
+    });
+    return count;
+  }, [userChatThreads]);
+
+  // WebSocket connection management - only run once
   useEffect(() => {
-    if (!authToken) {
-      setConnectionError('No authentication token provided');
+    if (!authTokenRef.current || !outletTypeRef.current) {
       return;
     }
 
-    // Prevent multiple connection attempts
-    if (connectionAttemptedRef.current || isConnecting || isConnected) {
-      return;
-    }
+    const connectWebSocket = () => {
+      setIsConnecting(true);
+      setConnectionError(null);
 
-    connectionAttemptedRef.current = true;
-    setIsConnecting(true);
-    setConnectionError(null);
+      try {
+        const wsUrl = `wss://sephcocco-lounge-api.onrender.com/cable?token=${authTokenRef.current}`;
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
 
-    console.log('🔐 Attempting to connect to WebSocket...');
-    console.log('📝 Token (first 20 chars):', authToken.substring(0, 20) + '...');
-    console.log('🏪 Outlet type:', outletType);
-    console.log('🔗 WebSocket URL:', `wss://sephcocco-lounge-api.onrender.com/cable?token=${authToken.substring(0, 20)}...`);
-
-    // Create Action Cable consumer with token as query parameter
-    consumerRef.current = createConsumer(`wss://sephcocco-lounge-api.onrender.com/cable?token=${encodeURIComponent(authToken)}`);
-
-    console.log('✅ Consumer created, attempting to subscribe...');
-
-    // Subscribe to messaging channel
-    subscriptionRef.current = consumerRef.current.subscriptions.create(
-      {
-        channel: "MessagingChannel",
-        outlet_type: outletType
-      },
-      {
-        connected() {
+        ws.onopen = () => {
+          console.log('Admin WebSocket connected');
           setIsConnected(true);
           setIsConnecting(false);
-          setConnectionError(null);
-          console.log('🎉 Successfully connected to messaging channel');
-        },
+          onConnectionChange?.(true);
 
-        disconnected() {
+          // Subscribe to admin channel
+          const subscribeMessage = {
+            command: 'subscribe',
+            identifier: JSON.stringify({
+              channel: 'MessagingChannel',
+              outlet_type: outletTypeRef.current
+            })
+          };
+          ws.send(JSON.stringify(subscribeMessage));
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'ping') {
+              ws.send(JSON.stringify({ type: 'pong' }));
+              return;
+            }
+
+            if (data.message) {
+              const message = data.message;
+              
+              // Add to new messages (check for duplicates)
+              setNewMessages(prev => {
+                const messageExists = prev.some(msg => msg.id === message.id);
+                return messageExists ? prev : [...prev, message];
+              });
+              
+              // Update active users
+              setActiveUsers(prev => new Set([...prev, message.user_id]));
+              
+              // Update user chat threads (check for duplicates)
+              setUserChatThreads(prev => {
+                const newMap = new Map(prev);
+                const userId = message.user_id;
+                const existingThread = newMap.get(userId) || {
+                  user_id: userId,
+                  user_name: message.user_name || message.user?.name,
+                  user_email: message.user_email || message.user?.email,
+                  messages: [],
+                  unread_count: 0,
+                  last_activity: new Date().toISOString(),
+                  status: 'open'
+                };
+
+                // Check if message already exists
+                const messageExists = existingThread.messages.some(msg => msg.id === message.id);
+                if (messageExists) {
+                  return prev;
+                }
+
+                const updatedThread = {
+                  ...existingThread,
+                  messages: [...existingThread.messages, message],
+                  last_activity: message.created_at,
+                  unread_count: existingThread.unread_count + 1
+                };
+
+                newMap.set(userId, updatedThread);
+                return newMap;
+              });
+
+              onNewMessage?.(message);
+              onChatThreadUpdate?.(message.user_id);
+            }
+          } catch (error) {
+            console.error('Error parsing WebSocket message:', error);
+          }
+        };
+
+        ws.onclose = () => {
+          console.log('Admin WebSocket disconnected');
           setIsConnected(false);
           setIsConnecting(false);
-          connectionAttemptedRef.current = false;
-          console.log('💔 Disconnected from messaging channel');
-        },
+          onConnectionChange?.(false);
+          
+          // Reconnect after 5 seconds
+          setTimeout(() => {
+            if (authTokenRef.current && outletTypeRef.current) {
+              connectWebSocket();
+            }
+          }, 5000);
+        };
 
-        rejected() {
-          setIsConnected(false);
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          setConnectionError('WebSocket connection failed');
           setIsConnecting(false);
-          connectionAttemptedRef.current = false;
-          setConnectionError('Failed to connect to messaging channel - authentication may have failed');
-          console.log('❌ Failed to connect to messaging channel - subscription rejected');
-        },
+          onConnectionChange?.(false);
+        };
 
-        received(data) {
-          console.log('📨 Received real-time message:', data);
-          setRealTimeMessages(prev => [...prev, data]);
-        }
+      } catch (error) {
+        console.error('Error creating WebSocket:', error);
+        setConnectionError(error.message);
+        setIsConnecting(false);
+        onConnectionChange?.(false);
       }
-    );
-
-    // Cleanup on unmount
-    return () => {
-      console.log('🧹 Cleaning up WebSocket subscription...');
-      if (subscriptionRef.current) {
-        subscriptionRef.current.unsubscribe();
-        subscriptionRef.current = null;
-      }
-      if (consumerRef.current) {
-        consumerRef.current.disconnect();
-        consumerRef.current = null;
-      }
-      setIsConnected(false);
-      setIsConnecting(false);
-      connectionAttemptedRef.current = false;
     };
-  }, []); // Empty dependency array to prevent re-connection attempts
 
-  // Function to send messages
-  const sendMessage = useCallback((content, messageType = 'text', productId = null) => {
-    if (subscriptionRef.current && isConnected) {
-      // Create optimistic message to show immediately
-      const optimisticMessage = {
-        id: `temp-${Date.now()}`,
-        content: content,
-        sender: 'user', // Mark as user message
-        user_id: 'current_user', // Indicate this is from current user
-        message_type: messageType,
-        created_at: new Date().toISOString(),
-        timestamp: new Date().toISOString(),
-        optimistic: true, // Flag for styling
-        conversation_id: productId || 'default'
-      };
+    connectWebSocket();
 
-      // Add optimistic message immediately
-      setRealTimeMessages(prev => [...prev, optimisticMessage]);
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
+  }, []); // Empty dependency array - refs handle updates
 
-      const messageData = {
-        message: {
-          content: content,
-          outlet_type: outletType,
-          message_type: messageType
-        },
-        outlet_type: outletType
-      };
+  // Load chat history for a specific user
+  const loadUserChatThread = useCallback(async (userId) => {
+    if (!authTokenRef.current || !outletTypeRef.current) {
+      throw new Error('Missing auth token or outlet type');
+    }
 
-      // Add product_id if provided
-      if (productId) {
-        messageData.product_id = productId;
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/${outletTypeRef.current}/sephcocco_${outletTypeRef.current}_messages?user_id=${userId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authTokenRef.current}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // Send message via WebSocket
-      subscriptionRef.current.perform('receive', messageData);
+      const data = await response.json();
+      
+      setUserChatThreads(prev => {
+        const newMap = new Map(prev);
+        const userThread = {
+          user_id: userId,
+          user_name: data.user?.name || 'Unknown User',
+          user_email: data.user?.email || '',
+          messages: data.messages || [],
+          unread_count: 0,
+          last_activity: data.messages?.[0]?.created_at || new Date().toISOString(),
+          status: 'open'
+        };
+        
+        newMap.set(userId, userThread);
+        return newMap;
+      });
 
-      // Note: Keeping optimistic messages - they will stay unless manually cleared
-      // The real message from server will be added alongside the optimistic one
-
-    } else {
-      console.error('Cannot send message: not connected');
+      return data;
+    } catch (error) {
+      console.error('Error loading user chat thread:', error);
+      throw error;
     }
-  }, [isConnected, outletType]);
-
-  // Function to refresh messages
-  const refreshMessages = useCallback(async () => {
-    if (messageId) {
-      return await getMessageHistory(messageId);
-    } else if (productId) {
-      return await getProductMessages(productId);
-    } else {
-      return await getAllMessages(initialStatus);
-    }
-  }, [messageId, productId, initialStatus, getMessageHistory, getProductMessages, getAllMessages]);
-
-  // Function to clear real-time messages
-  const clearRealTimeMessages = useCallback(() => {
-    setRealTimeMessages([]);
   }, []);
 
-  // Function to clear all messages
-  const clearAllMessages = useCallback(() => {
-    setRealTimeMessages([]);
-    setApiMessages([]);
-  }, [setApiMessages]);
+  // Select and load a user thread
+  const selectUserThread = useCallback(async (userId) => {
+    await loadUserChatThread(userId);
+    setSelectedUserThread(userChatThreadsRef.current.get(userId) || null);
+  }, [loadUserChatThread]);
+
+  // Send message to a specific user
+  const sendMessageToUser = useCallback(async (userId, content, messageType = 'text') => {
+    if (!wsRef.current || !isConnected) {
+      throw new Error('WebSocket not connected');
+    }
+
+    const message = {
+      command: 'message',
+      identifier: JSON.stringify({
+        channel: 'MessagingChannel',
+        outlet_type: outletTypeRef.current
+      }),
+      data: JSON.stringify({
+        message: {
+          content,
+          message_type: messageType
+        },
+        outlet_type: outletTypeRef.current,
+        user_id: userId,
+        action: 'receive'
+      })
+    };
+
+    wsRef.current.send(JSON.stringify(message));
+  }, [isConnected]);
+
+  // Clear new messages array
+  const clearNewMessages = useCallback(() => {
+    setNewMessages([]);
+  }, []);
+
+  // Mark a message as read
+  const markMessageAsRead = useCallback((userId) => {
+    setUserChatThreads(prev => {
+      const newMap = new Map(prev);
+      const thread = newMap.get(userId);
+      if (thread) {
+        newMap.set(userId, {
+          ...thread,
+          unread_count: 0
+        });
+      }
+      return newMap;
+    });
+  }, []);
 
   return {
-    // Combined state
-    messages: allMessages,
-    loading: apiLoading,
-    error: apiError || connectionError,
-    
-    // WebSocket state
     isConnected,
     isConnecting,
     connectionError,
-    
-    // API state
-    apiMessages,
-    apiLoading,
-    apiError,
-    meta,
-    
-    // Real-time state
-    realTimeMessages,
-    
-    // Functions
-    sendMessage,
-    refreshMessages,
-    loadMoreMessages,
-    clearRealTimeMessages,
-    clearAllMessages,
-    
-    // API functions
-    getMessages,
-    getMessageHistory,
-    getProductMessages,
-    getAllMessages,
-    
-    // Setters
-    setMessages: setApiMessages,
-    setError: setConnectionError
+    newMessages,
+    activeUsers,
+    userChatThreads,
+    selectedUserThread,
+    totalUnreadThreads,
+    loadUserChatThread,
+    selectUserThread,
+    sendMessageToUser,
+    clearNewMessages,
+    markMessageAsRead
   };
-};
+}; 

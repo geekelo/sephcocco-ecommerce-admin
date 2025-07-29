@@ -1,20 +1,14 @@
   // Create columns configuration for messages
 export const createMessageColumns = (handleViewMessage) => [
     { 
-      key: "id", 
-      label: "Message ID", 
-      flex: 1,
-      minWidth: "100px"
-    },
-    { 
-      key: "product", 
-      label: "Product", 
+      key: "user_name", 
+      label: "Customer", 
       flex: 2,
       minWidth: "150px"
     },
-    { 
-      key: "customer", 
-      label: "Customer", 
+      { 
+      key: "user_email", 
+      label: "Customer Email", 
       flex: 2,
       minWidth: "150px"
     },
@@ -71,7 +65,7 @@ export const createMessageColumns = (handleViewMessage) => [
       }
     },
     { 
-      key: "preview", 
+      key: "content", 
       label: "Preview", 
       flex: 3,
       minWidth: "200px",

@@ -1,17 +1,17 @@
-import { useState } from "react";
+import { useState, useCallback } from 'react';
+
+const API_BASE_URL = 'https://sephcocco-lounge-api.onrender.com/api/v1';
 
 export const useGetMessages = (authToken, outletType = '') => {
-  const [messages, setMessages] = useState([]);
+  const [userThreads, setUserThreads] = useState([]);
+  const [userMessages, setUserMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [meta, setMeta] = useState(null);
 
-  const API_BASE_URL = 'https://sephcocco-lounge-api.onrender.com/api/v1';
-
-  const getMessages = async (options = {}) => {
+  // Get all user threads (for admin dashboard)
+  const getUserThreads = useCallback(async (options = {}) => {
     const {
-      messageId = null,
-      productId = null,
       status = null,
       page = 1,
       perPage = 20
@@ -26,28 +26,14 @@ export const useGetMessages = (authToken, outletType = '') => {
     setError(null);
 
     try {
-      let url;
-      let params = new URLSearchParams();
-
-      if (messageId) {
-        // Get specific message thread
-        url = `${API_BASE_URL}/${outletType}/sephcocco_${outletType}_messages/get_messages`;
-        params.append('message_id', messageId);
-      } else if (productId) {
-        // Get messages for specific product
-        url = `${API_BASE_URL}/${outletType}/sephcocco_${outletType}_messages/get_messages`;
-        params.append('product_id', productId);
-      } else {
-        // Get all messages (index)
-        url = `${API_BASE_URL}/${outletType}/sephcocco_${outletType}_messages`;
-        if (status) params.append('status', status);
-      }
-
-      // Add pagination params
+      const params = new URLSearchParams();
+      if (status) params.append('status', status);
       params.append('page', page);
       params.append('per_page', perPage);
 
-      const response = await fetch(`${url}?${params.toString()}`, {
+      const url = `${API_BASE_URL}/${outletType}/sephcocco_${outletType}_messages/user_threads?${params.toString()}`;
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -61,61 +47,192 @@ export const useGetMessages = (authToken, outletType = '') => {
 
       const data = await response.json();
       
-      if (messageId) {
-        // Single message response
-        setMessages([data.message]);
-        setMeta(null);
-      } else {
-        // Multiple messages response
-        setMessages(data.messages || []);
-        setMeta(data.meta || null);
-      }
+      setUserThreads(data.user_threads || []);
+      setMeta(data.meta || null);
 
       return data;
     } catch (err) {
-      console.error('Error fetching messages:', err);
+      console.error('Error fetching user threads:', err);
       setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  };
+  }, [authToken, outletType]);
 
-  const getMessageHistory = async (messageId) => {
-    return getMessages({ messageId });
-  };
+  // Get messages for a specific user (when admin clicks on user)
+  const getUserMessages = useCallback(async (userId, options = {}) => {
+    const {
+      status = null,
+      page = 1,
+      perPage = 20
+    } = options;
 
-  const getProductMessages = async (productId, page = 1) => {
-    return getMessages({ productId, page });
-  };
+    if (!authToken) {
+      setError('No authentication token provided');
+      return;
+    }
 
-  const getAllMessages = async (status = 'open', page = 1) => {
-    return getMessages({ status, page });
-  };
+    if (!userId) {
+      setError('User ID is required');
+      return;
+    }
 
-  const loadMoreMessages = async (page) => {
-    const currentMessages = messages;
-    const newData = await getMessages({ page });
+    setLoading(true);
+    setError(null);
+
+    try {
+      const params = new URLSearchParams();
+      params.append('user_id', userId);
+      if (status) params.append('status', status);
+      params.append('page', page);
+      params.append('per_page', perPage);
+
+      const url = `${API_BASE_URL}/${outletType}/sephcocco_${outletType}_messages?${params.toString()}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      setUserMessages(data.messages || []);
+      setMeta(data.meta || null);
+
+      return data;
+    } catch (err) {
+      console.error('Error fetching user messages:', err);
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [authToken, outletType]);
+
+  // Get all messages (admin can see all messages)
+  const getAllMessages = useCallback(async (options = {}) => {
+    const {
+      status = null,
+      userId = null,
+      productId = null,
+      page = 1,
+      perPage = 20
+    } = options;
+
+    if (!authToken) {
+      setError('No authentication token provided');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const params = new URLSearchParams();
+      if (status) params.append('status', status);
+      if (userId) params.append('user_id', userId);
+      if (productId) params.append('product_id', productId);
+      params.append('page', page);
+      params.append('per_page', perPage);
+
+      const url = `${API_BASE_URL}/${outletType}/sephcocco_${outletType}_messages?${params.toString()}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      setUserMessages(data.messages || []);
+      setMeta(data.meta || null);
+
+      return data;
+    } catch (err) {
+      console.error('Error fetching all messages:', err);
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [authToken, outletType]);
+
+  // Load more user threads (pagination) - use functional updates
+  const loadMoreUserThreads = useCallback(async (page) => {
+    const newData = await getUserThreads({ page });
     
-    if (newData.messages) {
-      setMessages([...currentMessages, ...newData.messages]);
+    if (newData.user_threads) {
+      setUserThreads(prev => [...prev, ...newData.user_threads]);
       setMeta(newData.meta);
     }
     
     return newData;
-  };
+  }, [getUserThreads]);
+
+  // Load more user messages (pagination) - use functional updates
+  const loadMoreUserMessages = useCallback(async (page) => {
+    const newData = await getUserMessages({ page });
+    
+    if (newData.messages) {
+      setUserMessages(prev => [...prev, ...newData.messages]);
+      setMeta(newData.meta);
+    }
+    
+    return newData;
+  }, [getUserMessages]);
+
+  // Refresh functions
+  const refreshUserThreads = useCallback(async (options = {}) => {
+    return getUserThreads(options);
+  }, [getUserThreads]);
+
+  const refreshUserMessages = useCallback(async (userId, options = {}) => {
+    return getUserMessages(userId, options);
+  }, [getUserMessages]);
+
+  // Clear data
+  const clearUserThreads = useCallback(() => {
+    setUserThreads([]);
+    setMeta(null);
+  }, []);
+
+  const clearUserMessages = useCallback(() => {
+    setUserMessages([]);
+    setMeta(null);
+  }, []);
 
   return {
-    messages,
+    userThreads,
+    userMessages,
     loading,
     error,
     meta,
-    getMessages,
-    getMessageHistory,
-    getProductMessages,
+    getUserThreads,
+    loadMoreUserThreads,
+    refreshUserThreads,
+    clearUserThreads,
+    getUserMessages,
+    loadMoreUserMessages,
+    refreshUserMessages,
+    clearUserMessages,
     getAllMessages,
-    loadMoreMessages,
-    setMessages,
+    setUserThreads,
+    setUserMessages,
     setError
   };
 }; 

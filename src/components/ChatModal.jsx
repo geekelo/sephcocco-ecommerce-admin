@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, Send, ArrowLeft, Eye, Wifi, WifiOff, AlertCircle } from 'lucide-react';
+import { MessageCircle, Send, ArrowLeft, Eye, Wifi, WifiOff, AlertCircle, Check, Clock } from 'lucide-react';
 
 import "../styles/ChatModal.css";
 import { useMessaging } from "../hooks/useMessaging";
@@ -9,6 +9,8 @@ import { getActiveOutlet } from "../utils/getActiveOutlets";
 const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [sendingMessages, setSendingMessages] = useState(new Set()); // Track sending messages
   const navigate = useNavigate();
   
   // Get auth token from localStorage
@@ -25,58 +27,111 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
     refreshMessages 
   } = useMessaging(authToken, activeOutlet);
 
-  // Extract chats from messages (same approach as Desktop/Mobile)
-  const allChats = realtimeMessages.flatMap(msg => 
+  // Extract chats from messages (same approach as DesktopChat)
+  const allChats = realtimeMessages?.flatMap(msg => 
     msg.chats ? msg.chats.map(chat => ({...chat, conversation_id: msg.conversation_id || 'default'})) : []
   );
 
-  // Transform chats to display format - FIXED: Keep the original user_role
-  const allMessages = allChats.map((chat, index) => ({
+  // Transform chats to display format - Keep the original user_role
+  const allMessages = allChats?.map((chat, index) => ({
     id: chat.id || index,
     sender: chat.user_role === 'user' ? 'customer' : 'admin',
     text: chat.content || 'No content',
     timestamp: new Date(chat.timestamp || Date.now()),
     senderName: chat.user_role === 'user' ? (chat.user_name || 'Customer') : 'Support Team',
     user_name: chat.user_name,
-    user_role: chat.user_role, // FIXED: Keep original user_role for avatar logic
-    optimistic: chat.optimistic
+    user_role: chat.user_role,
+    optimistic: chat.optimistic,
+    conversation_id: chat.conversation_id
   }));
 
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const textareaRef = useRef(null);
+  const lastMessageCountRef = useRef(0);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Smart auto-scroll logic - only scroll when new messages arrive
+  useEffect(() => {
+    const currentMessageCount = allMessages?.length;
+    const hasNewMessage = currentMessageCount > lastMessageCountRef?.current;
+    
+    if (hasNewMessage && shouldAutoScroll && messagesEndRef?.current) {
+      messagesEndRef?.current.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    lastMessageCountRef.current = currentMessageCount;
+  }, [allMessages?.length, shouldAutoScroll]);
+
+  // Check if user is near bottom to determine auto-scroll behavior
+  const handleScroll = () => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100;
+      setShouldAutoScroll(isNearBottom);
+    }
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [allMessages]);
+  // Function to get user display status
+  const getUserMessageStatus = (message) => {
+    if (message.optimistic && sendingMessages.has(message.id)) {
+      return 'sending';
+    } else if (message.optimistic) {
+      return 'sent';
+    } else if (message.error) {
+      return 'error';
+    }
+    return 'sent';
+  };
 
-  // Enhanced message sending with refresh
+  // Enhanced message sending with refresh (same as DesktopChat)
   const handleSendMessage = async () => {
     if (newMessage.trim() === "" || !isConnected || isSending) return;
 
+    const messageContent = newMessage.trim();
+    const tempMessageId = `temp-${Date.now()}`;
+    
     setIsSending(true);
+    setShouldAutoScroll(true);
+    setSendingMessages(prev => new Set([...prev, tempMessageId]));
     
     try {
       // Send message via ActionCable
-      await sendMessage(newMessage.trim(), 'text', 'default');
+      await sendMessage(messageContent, 'text', 'default');
       setNewMessage("");
       
-      // Wait and refresh messages to get server response
+      // Wait a brief moment for the message to be processed on the server
       setTimeout(async () => {
         try {
+          // Refresh message history to get the real message from server
           if (refreshMessages) {
             await refreshMessages();
           }
+          
+          // Remove from sending messages after successful send and refresh
+          setSendingMessages(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(tempMessageId);
+            return newSet;
+          });
         } catch (refreshError) {
           console.error('Failed to refresh messages after send:', refreshError);
+          // Still remove from sending messages even if refresh fails
+          setSendingMessages(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(tempMessageId);
+            return newSet;
+          });
         }
-      }, 1000);
+      }, 1000); // Wait 1 second before refreshing
       
     } catch (error) {
       console.error('Failed to send message:', error);
+      // Remove from sending messages on error
+      setSendingMessages(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(tempMessageId);
+        return newSet;
+      });
       // Optionally show error message to user
       alert('Failed to send message. Please try again.');
     } finally {
@@ -115,6 +170,24 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
 
   const handleProductClick = () => {
     navigate('/products');
+  };
+
+  // Render status icon for admin messages
+  const renderMessageStatus = (message) => {
+    if (message.sender === 'admin') {
+      const status = getUserMessageStatus(message);
+      switch (status) {
+        case 'sending':
+          return <Clock size={12} className="status-icon sending" />;
+        case 'sent':
+          return <Check size={12} className="status-icon sent" />;
+        case 'error':
+          return <AlertCircle size={12} className="status-icon error" />;
+        default:
+          return <Check size={12} className="status-icon sent" />;
+      }
+    }
+    return null;
   };
 
   if (!isOpen) return null;
@@ -167,22 +240,19 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
 
         {/* Messages Container */}
         <div className="chat-content">
-          <div className="chat-messages">
-            {allMessages.length === 0 ? (
+          <div 
+            className="chat-messages"
+            ref={messagesContainerRef}
+            onScroll={handleScroll}
+          >
+            {allMessages?.length === 0 ? (
               <div className="no-messages-admin">
                 <MessageCircle size={48} className="empty-icon" />
                 <h3>No messages yet</h3>
                 <p>Start the conversation with the customer</p>
               </div>
             ) : (
-              allMessages.map((message) => {
-                // Debug log to check message data
-                console.log('Message data:', {
-                  sender: message.sender,
-                  user_role: message.user_role,
-                  text: message.text
-                });
-                
+              allMessages?.map((message) => {
                 return (
                   <div 
                     key={message.id} 
@@ -208,6 +278,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
                       <div className="message-time">
                         {formatTime(message.timestamp)}
                         {message.optimistic && <span className="sending-indicator">Sending...</span>}
+                        {!message.optimistic && renderMessageStatus(message)}
                       </div>
                     </div>
                   </div>
