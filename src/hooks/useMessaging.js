@@ -1,32 +1,25 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createConsumer } from '@rails/actioncable';
 
 const API_BASE_URL = 'https://sephcocco-lounge-api.onrender.com/api/v1';
 
-export const useMessaging = ({
-  authToken,
-  outletType,
-  onNewMessage,
-  onChatThreadUpdate,
-  onConnectionChange
-}) => {
+export const useMessaging = (authToken, outletType = '') => {
   // Refs for stable references
   const authTokenRef = useRef(authToken);
   const outletTypeRef = useRef(outletType);
-  const wsRef = useRef(null);
-  const userChatThreadsRef = useRef(new Map());
+  const subscriptionRef = useRef(null);
+  const consumerRef = useRef(null);
+  const connectionAttemptedRef = useRef(false);
 
   // Connection states
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
 
-  // Message and user states
-  const [newMessages, setNewMessages] = useState([]);
-  const [activeUsers, setActiveUsers] = useState(new Set());
-  
-  // Chat thread management - use ref to avoid dependency issues
-  const [userChatThreads, setUserChatThreads] = useState(new Map());
-  const [selectedUserThread, setSelectedUserThread] = useState(null);
+  // Message and conversation states
+  const [conversations, setConversations] = useState([]); // List of all conversations
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [currentChatMessages, setCurrentChatMessages] = useState([]); // Messages for selected conversation
 
   // Update refs when props change
   useEffect(() => {
@@ -34,160 +27,15 @@ export const useMessaging = ({
     outletTypeRef.current = outletType;
   }, [authToken, outletType]);
 
-  // Update ref when state changes
-  useEffect(() => {
-    userChatThreadsRef.current = userChatThreads;
-  }, [userChatThreads]);
-
-  // Calculate total unread threads
-  const totalUnreadThreads = useMemo(() => {
-    let count = 0;
-    userChatThreads.forEach(thread => {
-      if (thread.unread_count > 0) count++;
-    });
-    return count;
-  }, [userChatThreads]);
-
-  // WebSocket connection management - only run once
-  useEffect(() => {
+  // Load all conversations
+  const loadConversations = useCallback(async () => {
     if (!authTokenRef.current || !outletTypeRef.current) {
       return;
     }
 
-    const connectWebSocket = () => {
-      setIsConnecting(true);
-      setConnectionError(null);
-
-      try {
-        const wsUrl = `wss://sephcocco-lounge-api.onrender.com/cable?token=${authTokenRef.current}`;
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
-
-        ws.onopen = () => {
-          console.log('Admin WebSocket connected');
-          setIsConnected(true);
-          setIsConnecting(false);
-          onConnectionChange?.(true);
-
-          // Subscribe to admin channel
-          const subscribeMessage = {
-            command: 'subscribe',
-            identifier: JSON.stringify({
-              channel: 'MessagingChannel',
-              outlet_type: outletTypeRef.current
-            })
-          };
-          ws.send(JSON.stringify(subscribeMessage));
-        };
-
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            
-            if (data.type === 'ping') {
-              ws.send(JSON.stringify({ type: 'pong' }));
-              return;
-            }
-
-            if (data.message) {
-              const message = data.message;
-              
-              // Add to new messages (check for duplicates)
-              setNewMessages(prev => {
-                const messageExists = prev.some(msg => msg.id === message.id);
-                return messageExists ? prev : [...prev, message];
-              });
-              
-              // Update active users
-              setActiveUsers(prev => new Set([...prev, message.user_id]));
-              
-              // Update user chat threads (check for duplicates)
-              setUserChatThreads(prev => {
-                const newMap = new Map(prev);
-                const userId = message.user_id;
-                const existingThread = newMap.get(userId) || {
-                  user_id: userId,
-                  user_name: message.user_name || message.user?.name,
-                  user_email: message.user_email || message.user?.email,
-                  messages: [],
-                  unread_count: 0,
-                  last_activity: new Date().toISOString(),
-                  status: 'open'
-                };
-
-                // Check if message already exists
-                const messageExists = existingThread.messages.some(msg => msg.id === message.id);
-                if (messageExists) {
-                  return prev;
-                }
-
-                const updatedThread = {
-                  ...existingThread,
-                  messages: [...existingThread.messages, message],
-                  last_activity: message.created_at,
-                  unread_count: existingThread.unread_count + 1
-                };
-
-                newMap.set(userId, updatedThread);
-                return newMap;
-              });
-
-              onNewMessage?.(message);
-              onChatThreadUpdate?.(message.user_id);
-            }
-          } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
-          }
-        };
-
-        ws.onclose = () => {
-          console.log('Admin WebSocket disconnected');
-          setIsConnected(false);
-          setIsConnecting(false);
-          onConnectionChange?.(false);
-          
-          // Reconnect after 5 seconds
-          setTimeout(() => {
-            if (authTokenRef.current && outletTypeRef.current) {
-              connectWebSocket();
-            }
-          }, 5000);
-        };
-
-        ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          setConnectionError('WebSocket connection failed');
-          setIsConnecting(false);
-          onConnectionChange?.(false);
-        };
-
-      } catch (error) {
-        console.error('Error creating WebSocket:', error);
-        setConnectionError(error.message);
-        setIsConnecting(false);
-        onConnectionChange?.(false);
-      }
-    };
-
-    connectWebSocket();
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-    };
-  }, []); // Empty dependency array - refs handle updates
-
-  // Load chat history for a specific user
-  const loadUserChatThread = useCallback(async (userId) => {
-    if (!authTokenRef.current || !outletTypeRef.current) {
-      throw new Error('Missing auth token or outlet type');
-    }
-
     try {
       const response = await fetch(
-        `${API_BASE_URL}/${outletTypeRef.current}/sephcocco_${outletTypeRef.current}_messages?user_id=${userId}`,
+        `${API_BASE_URL}/${outletTypeRef.current}/sephcocco_${outletTypeRef.current}_conversations`,
         {
           method: 'GET',
           headers: {
@@ -202,95 +50,195 @@ export const useMessaging = ({
       }
 
       const data = await response.json();
-      
-      setUserChatThreads(prev => {
-        const newMap = new Map(prev);
-        const userThread = {
-          user_id: userId,
-          user_name: data.user?.name || 'Unknown User',
-          user_email: data.user?.email || '',
-          messages: data.messages || [],
-          unread_count: 0,
-          last_activity: data.messages?.[0]?.created_at || new Date().toISOString(),
-          status: 'open'
-        };
-        
-        newMap.set(userId, userThread);
-        return newMap;
-      });
-
-      return data;
+      setConversations(data.conversations || []);
     } catch (error) {
-      console.error('Error loading user chat thread:', error);
-      throw error;
+      console.error('Error loading conversations:', error);
     }
   }, []);
 
-  // Select and load a user thread
-  const selectUserThread = useCallback(async (userId) => {
-    await loadUserChatThread(userId);
-    setSelectedUserThread(userChatThreadsRef.current.get(userId) || null);
-  }, [loadUserChatThread]);
-
-  // Send message to a specific user
-  const sendMessageToUser = useCallback(async (userId, content, messageType = 'text') => {
-    if (!wsRef.current || !isConnected) {
-      throw new Error('WebSocket not connected');
+  // Load chat messages for a specific conversation
+  const loadChatMessages = useCallback(async (conversationId) => {
+    if (!authTokenRef.current || !outletTypeRef.current || !conversationId) {
+      return;
     }
 
-    const message = {
-      command: 'message',
-      identifier: JSON.stringify({
-        channel: 'MessagingChannel',
-        outlet_type: outletTypeRef.current
-      }),
-      data: JSON.stringify({
-        message: {
-          content,
-          message_type: messageType
-        },
-        outlet_type: outletTypeRef.current,
-        user_id: userId,
-        action: 'receive'
-      })
-    };
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/${outletTypeRef.current}/sephcocco_${outletTypeRef.current}_conversations/${conversationId}/messages`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authTokenRef.current}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-    wsRef.current.send(JSON.stringify(message));
-  }, [isConnected]);
-
-  // Clear new messages array
-  const clearNewMessages = useCallback(() => {
-    setNewMessages([]);
-  }, []);
-
-  // Mark a message as read
-  const markMessageAsRead = useCallback((userId) => {
-    setUserChatThreads(prev => {
-      const newMap = new Map(prev);
-      const thread = newMap.get(userId);
-      if (thread) {
-        newMap.set(userId, {
-          ...thread,
-          unread_count: 0
-        });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return newMap;
-    });
+
+      const data = await response.json();
+      setCurrentChatMessages(data.messages || []);
+    } catch (error) {
+      console.error('Error loading chat messages:', error);
+    }
   }, []);
+
+  // Select a conversation and load its messages
+  const selectConversation = useCallback(async (conversation) => {
+    setSelectedConversation(conversation);
+    await loadChatMessages(conversation.id);
+  }, [loadChatMessages]);
+
+  // WebSocket connection management - only run once
+  useEffect(() => {
+    if (!authTokenRef.current || !outletTypeRef.current) {
+      return;
+    }
+
+    // Prevent multiple connection attempts
+    if (connectionAttemptedRef.current || isConnecting || isConnected) {
+      return;
+    }
+
+    connectionAttemptedRef.current = true;
+    setIsConnecting(true);
+    setConnectionError(null);
+
+    console.log('🔐 Attempting to connect to WebSocket...');
+    console.log('📝 Token (first 20 chars):', authTokenRef.current.substring(0, 20) + '...');
+    console.log('🏪 Outlet type:', outletTypeRef.current);
+
+    // Create Action Cable consumer with token as query parameter
+    consumerRef.current = createConsumer(`wss://sephcocco-lounge-api.onrender.com/cable?token=${encodeURIComponent(authTokenRef.current)}`);
+
+    console.log('✅ Consumer created, attempting to subscribe...');
+
+    // Subscribe to messaging channel
+    subscriptionRef.current = consumerRef.current.subscriptions.create(
+      {
+        channel: "MessagingChannel",
+        outlet_type: outletTypeRef.current
+      },
+      {
+        connected() {
+          setIsConnected(true);
+          setIsConnecting(false);
+          setConnectionError(null);
+          console.log('🎉 Successfully connected to messaging channel');
+          
+          // Load conversations when connected
+          loadConversations();
+        },
+
+        disconnected() {
+          setIsConnected(false);
+          setIsConnecting(false);
+          connectionAttemptedRef.current = false;
+          console.log('💔 Disconnected from messaging channel');
+        },
+
+        rejected() {
+          setIsConnected(false);
+          setIsConnecting(false);
+          connectionAttemptedRef.current = false;
+          setConnectionError('Failed to connect to messaging channel - authentication may have failed');
+          console.log('❌ Failed to connect to messaging channel - subscription rejected');
+        },
+
+        received(data) {
+          console.log('📨 Received message:', data);
+          
+          // Handle new conversation
+          if (data.type === 'new_conversation') {
+            setConversations(prev => {
+              const exists = prev.some(conv => conv.id === data.conversation.id);
+              return exists ? prev : [...prev, data.conversation];
+            });
+          }
+          
+          // Handle new message in current conversation
+          if (data.type === 'new_message' && selectedConversation && data.conversation_id === selectedConversation.id) {
+            setCurrentChatMessages(prev => [...prev, data.message]);
+          }
+          
+          // Update conversation list with latest message
+          if (data.type === 'new_message') {
+            setConversations(prev => 
+              prev.map(conv => 
+                conv.id === data.conversation_id 
+                  ? { ...conv, last_message: data.message, updated_at: data.message.created_at }
+                  : conv
+              )
+            );
+          }
+        }
+      }
+    );
+
+    // Cleanup on unmount
+    return () => {
+      console.log('🧹 Cleaning up WebSocket subscription...');
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
+        subscriptionRef.current = null;
+      }
+      if (consumerRef.current) {
+        consumerRef.current.disconnect();
+        consumerRef.current = null;
+      }
+      setIsConnected(false);
+      setIsConnecting(false);
+      connectionAttemptedRef.current = false;
+    };
+  }, [loadConversations, selectedConversation]); // Include selectedConversation to handle updates
+
+  // Function to send messages
+  const sendMessage = useCallback((content, messageType = 'text') => {
+    if (!subscriptionRef.current || !isConnected || !selectedConversation) {
+      console.error('Cannot send message: not connected or no conversation selected');
+      throw new Error('WebSocket not connected or no conversation selected');
+    }
+
+    subscriptionRef.current.perform('receive', {
+      message: {
+        content: content,
+        outlet_type: outletTypeRef.current,
+        message_type: messageType,
+        conversation_id: selectedConversation.id
+      },
+      outlet_type: outletTypeRef.current
+    });
+  }, [isConnected, selectedConversation]);
+
+  // Function to refresh conversations
+  const refreshConversations = useCallback(async () => {
+    await loadConversations();
+  }, [loadConversations]);
+
+  // Function to refresh current chat
+  const refreshCurrentChat = useCallback(async () => {
+    if (selectedConversation) {
+      await loadChatMessages(selectedConversation.id);
+    }
+  }, [loadChatMessages, selectedConversation]);
 
   return {
+    // Connection states
     isConnected,
     isConnecting,
     connectionError,
-    newMessages,
-    activeUsers,
-    userChatThreads,
-    selectedUserThread,
-    totalUnreadThreads,
-    loadUserChatThread,
-    selectUserThread,
-    sendMessageToUser,
-    clearNewMessages,
-    markMessageAsRead
+    
+    // Data
+    conversations,
+    selectedConversation,
+    currentChatMessages,
+    
+    // Actions
+    selectConversation,
+    sendMessage,
+    refreshConversations,
+    refreshCurrentChat
   };
 }; 

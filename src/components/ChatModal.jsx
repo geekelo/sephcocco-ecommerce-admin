@@ -1,49 +1,55 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, Send, ArrowLeft, Eye, Wifi, WifiOff, AlertCircle, Check, Clock } from 'lucide-react';
+import { MessageCircle, Send, ArrowLeft, Eye, Wifi, WifiOff, AlertCircle, Check, Clock, Users } from 'lucide-react';
 
 import "../styles/ChatModal.css";
 import { useMessaging } from "../hooks/useMessaging";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
+import ConversationList from "./ConversationList";
 
 const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
-  const [sendingMessages, setSendingMessages] = useState(new Set()); // Track sending messages
+  const [sendingMessages, setSendingMessages] = useState(new Set());
   const navigate = useNavigate();
   
   // Get auth token from localStorage
   const authToken = localStorage.getItem('token');
   const activeOutlet = getActiveOutlet();
   
-  // Use the messaging hook with refresh functionality
+  // Use the messaging hook with conversation support
   const { 
-    messages: realtimeMessages, 
+    conversations,
+    selectedConversation,
+    currentChatMessages,
     isConnected, 
     isConnecting, 
     connectionError, 
     sendMessage,
-    refreshMessages 
+    selectConversation,
+    refreshConversations,
+    refreshCurrentChat
   } = useMessaging(authToken, activeOutlet);
 
-  // Extract chats from messages (same approach as DesktopChat)
-  const allChats = realtimeMessages?.flatMap(msg => 
-    msg.chats ? msg.chats.map(chat => ({...chat, conversation_id: msg.conversation_id || 'default'})) : []
-  );
-
-  // Transform chats to display format - Keep the original user_role
-  const allMessages = allChats?.map((chat, index) => ({
-    id: chat.id || index,
-    sender: chat.user_role === 'user' ? 'customer' : 'admin',
-    text: chat.content || 'No content',
-    timestamp: new Date(chat.timestamp || Date.now()),
-    senderName: chat.user_role === 'user' ? (chat.user_name || 'Customer') : 'Support Team',
-    user_name: chat.user_name,
-    user_role: chat.user_role,
-    optimistic: chat.optimistic,
-    conversation_id: chat.conversation_id
-  }));
+  // Transform chat messages to display format
+  const allMessages = currentChatMessages?.map((message, index) => {
+    // Determine sender based on message structure
+    const isFromCustomer = message.user_role === 'user' || message.sender === 'customer';
+    const sender = isFromCustomer ? 'customer' : 'admin';
+    
+    return {
+      id: message.id || index,
+      sender: sender,
+      text: message.content || message.message || 'No content',
+      timestamp: new Date(message.created_at || message.timestamp || Date.now()),
+      senderName: message.sender_name || (sender === 'admin' ? 'Support Team' : 'Customer'),
+      user_name: message.user_name,
+      user_role: message.user_role,
+      optimistic: message.optimistic,
+      conversation_id: message.conversation_id
+    };
+  }) || [];
 
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -83,9 +89,9 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
     return 'sent';
   };
 
-  // Enhanced message sending with refresh (same as DesktopChat)
+  // Enhanced message sending
   const handleSendMessage = async () => {
-    if (newMessage.trim() === "" || !isConnected || isSending) return;
+    if (newMessage.trim() === "" || !isConnected || isSending || !selectedConversation) return;
 
     const messageContent = newMessage.trim();
     const tempMessageId = `temp-${Date.now()}`;
@@ -96,16 +102,14 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
     
     try {
       // Send message via ActionCable
-      await sendMessage(messageContent, 'text', 'default');
+      sendMessage(messageContent, 'text');
       setNewMessage("");
       
       // Wait a brief moment for the message to be processed on the server
       setTimeout(async () => {
         try {
-          // Refresh message history to get the real message from server
-          if (refreshMessages) {
-            await refreshMessages();
-          }
+          // Refresh current chat to get the real message from server
+          await refreshCurrentChat();
           
           // Remove from sending messages after successful send and refresh
           setSendingMessages(prev => {
@@ -202,7 +206,6 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
             Go Back
           </button>
           
-          {/* Connection status indicator */}
           <div className="connection-status">
             {isConnecting ? (
               <div className="status-indicator connecting">
@@ -221,7 +224,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
               </div>
             )}
           </div>
-         
+          
           <div className="chat-actions">
             <button className="view-product-btn" onClick={handleProductClick}>
               <Eye size={16} />
@@ -238,94 +241,142 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
           </div>
         )}
 
-        {/* Messages Container */}
-        <div className="chat-content">
-          <div 
-            className="chat-messages"
-            ref={messagesContainerRef}
-            onScroll={handleScroll}
-          >
-            {allMessages?.length === 0 ? (
-              <div className="no-messages-admin">
-                <MessageCircle size={48} className="empty-icon" />
-                <h3>No messages yet</h3>
-                <p>Start the conversation with the customer</p>
-              </div>
-            ) : (
-              allMessages?.map((message) => {
-                return (
-                  <div 
-                    key={message.id} 
-                    className={`message ${message.sender} ${message.optimistic ? 'sending' : ''}`}
-                  >
-                    <div className="message-avatar">
-                      {message.sender === "customer" ? (
-                        <div className="customer-avatar">
-                          <span className="avatar-initials">
-                            {getUserInitials(message.user_name)}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="admin-avatar">
-                          <MessageCircle size={16} />
-                        </div>
-                      )}
-                    </div>
-                    <div className="message-content">
-                      <div className="message-bubble">
-                        <p>{message.text}</p>
-                      </div>
-                      <div className="message-time">
-                        {formatTime(message.timestamp)}
-                        {message.optimistic && <span className="sending-indicator">Sending...</span>}
-                        {!message.optimistic && renderMessageStatus(message)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-            <div ref={messagesEndRef} />
+        {/* Main Content */}
+        <div className="chat-main-content">
+          {/* Conversation List */}
+          <div className="conversation-list-container">
+            <ConversationList
+              conversations={conversations}
+              selectedConversation={selectedConversation}
+              onSelectConversation={selectConversation}
+              isLoading={isConnecting}
+            />
           </div>
 
-          {/* Input Area */}
-          <div className="chat-input-area">
-            <div className="chat-input-container">
-              <textarea
-                ref={textareaRef}
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={
-                  isConnecting 
-                    ? "Connecting..." 
-                    : isConnected 
-                      ? "Type your message..." 
-                      : "Disconnected - Cannot send messages"
-                }
-                className="message-input"
-                rows="1"
-                disabled={!isConnected || isSending}
-                maxLength={1000}
-              />
-              <button 
-                className={`send-btn ${(!isConnected || newMessage.trim() === "" || isSending) ? 'disabled' : ''}`}
-                onClick={handleSendMessage}
-                disabled={!isConnected || newMessage.trim() === "" || isSending}
-                title={!isConnected ? 'Not connected' : 'Send message'}
-              >
-                {isSending ? (
-                  <div className="spinner-small"></div>
-                ) : (
-                  <Send size={20} />
-                )}
-              </button>
-            </div>
-            
-            {/* Character count for long messages */}
-            {newMessage.length > 800 && (
-              <div className="character-count">
-                {newMessage.length}/1000
+          {/* Chat Area */}
+          <div className="chat-area">
+            {selectedConversation ? (
+              <>
+                {/* Chat Header */}
+                <div className="chat-header">
+                  <div className="chat-customer-info">
+                    <div className="customer-avatar">
+                      <span className="avatar-initials">
+                        {getUserInitials(selectedConversation.customer_name)}
+                      </span>
+                    </div>
+                    <div className="customer-details">
+                      <h3>{selectedConversation.customer_name || 'Unknown Customer'}</h3>
+                      <p className="product-info">
+                        {selectedConversation.product_name || 'General Inquiry'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="chat-status">
+                    <span className={`status-badge ${selectedConversation.status || 'active'}`}>
+                      {selectedConversation.status || 'active'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Messages Container */}
+                <div className="chat-content">
+                  <div 
+                    className="chat-messages"
+                    ref={messagesContainerRef}
+                    onScroll={handleScroll}
+                  >
+                    {allMessages?.length === 0 ? (
+                      <div className="no-messages-admin">
+                        <MessageCircle size={48} className="empty-icon" />
+                        <h3>No messages yet</h3>
+                        <p>Start the conversation with the customer</p>
+                      </div>
+                    ) : (
+                      allMessages?.map((message) => {
+                        return (
+                          <div 
+                            key={message.id} 
+                            className={`message ${message.sender} ${message.optimistic ? 'sending' : ''}`}
+                          >
+                            <div className="message-avatar">
+                              {message.sender === "customer" ? (
+                                <div className="customer-avatar">
+                                  <span className="avatar-initials">
+                                    {getUserInitials(message.user_name)}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="admin-avatar">
+                                  <MessageCircle size={16} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="message-content">
+                              <div className="message-bubble">
+                                <p>{message.text}</p>
+                              </div>
+                              <div className="message-time">
+                                {formatTime(message.timestamp)}
+                                {message.optimistic && <span className="sending-indicator">Sending...</span>}
+                                {!message.optimistic && renderMessageStatus(message)}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* Input Area */}
+                  <div className="chat-input-area">
+                    <div className="chat-input-container">
+                      <textarea
+                        ref={textareaRef}
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder={
+                          isConnecting 
+                            ? "Connecting..." 
+                            : isConnected 
+                              ? "Type your message..." 
+                              : "Disconnected - Cannot send messages"
+                        }
+                        className="message-input"
+                        rows="1"
+                        disabled={!isConnected || isSending}
+                        maxLength={1000}
+                      />
+                      <button 
+                        className={`send-btn ${(!isConnected || newMessage.trim() === "" || isSending) ? 'disabled' : ''}`}
+                        onClick={handleSendMessage}
+                        disabled={!isConnected || newMessage.trim() === "" || isSending}
+                        title={!isConnected ? 'Not connected' : 'Send message'}
+                      >
+                        {isSending ? (
+                          <div className="spinner-small"></div>
+                        ) : (
+                          <Send size={20} />
+                        )}
+                      </button>
+                    </div>
+                    
+                    {/* Character count for long messages */}
+                    {newMessage.length > 800 && (
+                      <div className="character-count">
+                        {newMessage.length}/1000
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="no-conversation-selected">
+                <Users size={48} className="empty-icon" />
+                <h3>Select a conversation</h3>
+                <p>Choose a conversation from the list to start chatting</p>
               </div>
             )}
           </div>
