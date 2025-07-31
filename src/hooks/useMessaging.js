@@ -15,6 +15,7 @@ export const useMessaging = (authToken, outletType = '') => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // Add proper loading state
 
   // User threads and chat states
   const [userThreads, setUserThreads] = useState([]); // List of unique users with their threads
@@ -31,6 +32,7 @@ export const useMessaging = (authToken, outletType = '') => {
   const loadUserThreads = useCallback(async () => {
     if (!authTokenRef.current || !outletTypeRef.current) {
       console.log('❌ Cannot load user threads: missing authToken or outletType');
+      setIsLoading(false);
       return;
     }
 
@@ -39,6 +41,7 @@ export const useMessaging = (authToken, outletType = '') => {
     console.log('🔗 API URL:', `${API_BASE_URL}/${outletTypeRef.current}/sephcocco_${outletTypeRef.current}_messages/user_threads`);
 
     try {
+      setIsLoading(true);
       // Test the API endpoint first
       const testUrl = `${API_BASE_URL}/${outletTypeRef.current}/sephcocco_${outletTypeRef.current}_messages/user_threads`;
       console.log('🧪 Testing API endpoint:', testUrl);
@@ -73,6 +76,8 @@ export const useMessaging = (authToken, outletType = '') => {
     } catch (error) {
       console.error('❌ Error loading user threads:', error);
       setUserThreads([]); // Set empty array on error
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -211,6 +216,10 @@ export const useMessaging = (authToken, outletType = '') => {
 
         received(data) {
           console.log('📨 Received message:', data);
+          console.log('📨 Data type:', data.type);
+          console.log('📨 Data structure:', JSON.stringify(data, null, 2));
+          console.log('📨 Has message property:', !!data.message);
+          console.log('📨 Message content:', data.message?.content);
           
           // Handle new user thread
           if (data.type === 'new_user_thread') {
@@ -222,7 +231,9 @@ export const useMessaging = (authToken, outletType = '') => {
           
           // Handle new message for current user
           if (data.type === 'new_message' && selectedUser && data.user_id === selectedUser.user_id) {
-            setCurrentUserMessages(prev => [...prev, data.message]);
+            if (data.message) {
+              setCurrentUserMessages(prev => [...prev, data.message]);
+            }
           }
           
           // Update user threads with latest message
@@ -232,9 +243,9 @@ export const useMessaging = (authToken, outletType = '') => {
                 thread.user_id === data.user_id 
                   ? { 
                       ...thread, 
-                      last_message: data.message.content,
-                      last_activity: data.message.created_at,
-                      message_count: thread.message_count + 1
+                      last_message: data.message?.content || 'New message',
+                      last_activity: data.message?.created_at || new Date().toISOString(),
+                      message_count: (thread.message_count || 0) + 1
                     }
                   : thread
               )
@@ -319,6 +330,9 @@ export const useMessaging = (authToken, outletType = '') => {
     isConnected,
     isConnecting,
     connectionError,
+    
+    // Loading state
+    isLoading,
     
     // Data
     userThreads,
