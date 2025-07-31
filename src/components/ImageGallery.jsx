@@ -15,7 +15,7 @@ const ImageGallery = ({ selectedImage, images = [], onSelect }) => {
 
   // Ensure images is an array of strings
   const imageUrls = Array.isArray(images) ? images.filter(url => typeof url === 'string') : [];
-
+  
   return (
     <div className="image-gallery">
       <div className="main-image-container">
@@ -37,13 +37,13 @@ const ImageGallery = ({ selectedImage, images = [], onSelect }) => {
       </div>
       
       {imageUrls.length > 0 && (
-        <div className="thumbnail-list">
+      <div className="thumbnail-list">
           {imageUrls.map((imageUrl, index) => (
-            <div
-              key={index}
+  <div
+    key={index}
               className={`thumbnail ${imageUrl === mainImageUrl ? 'active' : ''}`}
               onClick={() => onSelect(imageUrl)}
-            >
+  >
               <img
                 src={imageUrl}
                 alt={`Product view ${index + 1}`}
@@ -55,9 +55,9 @@ const ImageGallery = ({ selectedImage, images = [], onSelect }) => {
               {imageUrl === mainImageUrl && (
                 <div className="check-icon">✓</div>
               )}
-            </div>
-          ))}
-        </div>
+  </div>
+))}
+      </div>
       )}
     </div>
   );

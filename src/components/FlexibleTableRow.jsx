@@ -12,6 +12,10 @@ const FlexibleTableRow = ({
   className = '',
   clickableRow = true
 }) => {
+  // Safety check for data
+  if (!data) {
+    return null;
+  }
   const [showActions, setShowActions] = useState(false);
   const actionsRef = useRef(null);
   const triggerRef = useRef(null);
@@ -464,9 +468,13 @@ const FlexibleTableRow = ({
       style={{ cursor: clickableRow ? 'pointer' : 'default' }}
     >
       {columns.map((column) => {
+        if (!column || !column.key) {
+          return null;
+        }
+        
         const value = column.accessor 
           ? column.accessor.split('.').reduce((obj, key) => obj?.[key], data)
-          : data[column.key] || (column.key.includes('.') ? column.key.split('.').reduce((obj, key) => obj?.[key], data) : data[column.key]);
+          : data[column.key] || (column.key && column.key.includes('.') ? column.key.split('.').reduce((obj, key) => obj?.[key], data) : data[column.key]);
 
         return (
           <div

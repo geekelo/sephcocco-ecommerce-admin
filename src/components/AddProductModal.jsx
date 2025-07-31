@@ -222,37 +222,37 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
   // Create FormData including image URLs
   const createFormData = (imageUrls) => {
-    const formDataToSend = new FormData();
-    
-    // Add product fields using bracket notation for nested object structure
-    formDataToSend.append('product[name]', formData.name.trim());
-    formDataToSend.append('product[short_description]', formData.short_description.trim());
-    formDataToSend.append('product[long_description]', formData.long_description.trim());
-    formDataToSend.append('product[amount_in_stock]', formData.quantity.toString());
-    formDataToSend.append('product[price]', formData.price.toString());
-    formDataToSend.append('product[visible]', formData.visible.toString());
-    
-    // Add discount_price only if it exists and is greater than 0
-    if (formData.discountPrice && formData.discountPrice > 0) {
-      formDataToSend.append('product[discount_price]', formData.discountPrice.toString());
-    }
-    
-    // Add category IDs as array elements within product
-    formData.category_ids.forEach((categoryId) => {
-      formDataToSend.append('product[category_ids][]', categoryId);
-    });
-    
+  const formDataToSend = new FormData();
+  
+  // Add product fields using bracket notation for nested object structure
+  formDataToSend.append('product[name]', formData.name.trim());
+  formDataToSend.append('product[short_description]', formData.short_description.trim());
+  formDataToSend.append('product[long_description]', formData.long_description.trim());
+  formDataToSend.append('product[amount_in_stock]', formData.quantity.toString());
+  formDataToSend.append('product[price]', formData.price.toString());
+  formDataToSend.append('product[visible]', formData.visible.toString());
+  
+  // Add discount_price only if it exists and is greater than 0
+  if (formData.discountPrice && formData.discountPrice > 0) {
+    formDataToSend.append('product[discount_price]', formData.discountPrice.toString());
+  }
+  
+  // Add category IDs as array elements within product
+  formData.category_ids.forEach((categoryId) => {
+    formDataToSend.append('product[category_ids][]', categoryId);
+  });
+  
     // Add image URLs
     if (imageUrls.mainImageUrl) {
       formDataToSend.append('product[main_image_url]', imageUrls.mainImageUrl);
-    }
-    
+  }
+  
     imageUrls.otherImageUrls.forEach((url, index) => {
       formDataToSend.append(`product[other_image_urls][]`, url);
     });
-    
-    return formDataToSend;
-  };
+  
+  return formDataToSend;
+};
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -301,7 +301,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
     try {
       setIsSubmitting(true);
-      
+
       // Step 1: Upload images first
       const uploadedImages = await uploadImages();
 
@@ -315,10 +315,10 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
       console.log("Product created successfully:", productResponse);
       setUploadProgress("Product added successfully!");
-      
+
       // Success - close modal after a brief delay
       setTimeout(() => {
-        onClose();
+      onClose();
       }, 1000);
 
     } catch (error) {
@@ -416,15 +416,15 @@ const AddProductModal = ({ isOpen, onClose }) => {
   };
 
   // Remove additional image
-  const removeImage = (index) => {
-    const newImages = [...formData.other_images];
-    newImages.splice(index, 1);
-    setFormData({ ...formData, other_images: newImages }); 
-    
-    if (errors.other_images) { 
-      setErrors({ ...errors, other_images: "" });
-    }
-  };
+const removeImage = (index) => {
+  const newImages = [...formData.other_images];
+  newImages.splice(index, 1);
+  setFormData({ ...formData, other_images: newImages }); 
+  
+  if (errors.other_images) { 
+    setErrors({ ...errors, other_images: "" });
+  }
+};
 
   // Handle close button click
   const handleCloseClick = () => {

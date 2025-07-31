@@ -7,7 +7,7 @@ import { useMessaging } from "../hooks/useMessaging";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import ConversationList from "./ConversationList";
 
-const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
+const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
@@ -18,37 +18,53 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
   const authToken = localStorage.getItem('token');
   const activeOutlet = getActiveOutlet();
   
-  // Use the messaging hook with conversation support
+  // Use the messaging hook with user thread support
   const { 
-    conversations,
-    selectedConversation,
-    currentChatMessages,
+    userThreads,
+    selectedUser: currentSelectedUser,
+    currentUserMessages,
     isConnected, 
     isConnecting, 
     connectionError, 
     sendMessage,
-    selectConversation,
-    refreshConversations,
-    refreshCurrentChat
+    selectUser,
+    refreshUserThreads,
+    refreshCurrentUserMessages
   } = useMessaging(authToken, activeOutlet);
 
-  // Transform chat messages to display format
-  const allMessages = currentChatMessages?.map((message, index) => {
-    // Determine sender based on message structure
-    const isFromCustomer = message.user_role === 'user' || message.sender === 'customer';
-    const sender = isFromCustomer ? 'customer' : 'admin';
+  // Auto-select the user when modal opens with selectedUser prop
+  useEffect(() => {
+    if (isOpen && selectedUser && !currentSelectedUser) {
+      selectUser(selectedUser);
+    }
+  }, [isOpen, selectedUser, currentSelectedUser, selectUser]);
+
+  // Transform user messages to display format, handling JSONB chats
+  const allMessages = currentUserMessages?.flatMap((message) => {
+    if (!message) return [];
     
-    return {
-      id: message.id || index,
-      sender: sender,
-      text: message.content || message.message || 'No content',
-      timestamp: new Date(message.created_at || message.timestamp || Date.now()),
-      senderName: message.sender_name || (sender === 'admin' ? 'Support Team' : 'Customer'),
-      user_name: message.user_name,
-      user_role: message.user_role,
-      optimistic: message.optimistic,
-      conversation_id: message.conversation_id
-    };
+    // Handle JSONB chats array
+    const chats = message.chats || [];
+    
+    return chats.map((chat, index) => {
+      if (!chat) return null;
+      
+      // Determine sender based on chat structure
+      const isFromCustomer = chat.user_role === 'user' || chat.sender === 'customer';
+      const sender = isFromCustomer ? 'customer' : 'admin';
+      
+      return {
+        id: chat.id || `${message.id}-${index}`,
+        sender: sender,
+        text: chat.content || chat.message || 'No content',
+        timestamp: new Date(chat.created_at || chat.timestamp || Date.now()),
+        senderName: chat.user_name || (sender === 'admin' ? 'Support Team' : 'Customer'),
+        user_name: chat.user_name,
+        user_role: chat.user_role,
+        optimistic: chat.optimistic,
+        message_id: message.id
+      };
+    }).filter(Boolean); // Remove null values
   }) || [];
 
   const messagesEndRef = useRef(null);
@@ -91,7 +107,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
 
   // Enhanced message sending
   const handleSendMessage = async () => {
-    if (newMessage.trim() === "" || !isConnected || isSending || !selectedConversation) return;
+    if (newMessage.trim() === "" || !isConnected || isSending || !currentSelectedUser) return;
 
     const messageContent = newMessage.trim();
     const tempMessageId = `temp-${Date.now()}`;
@@ -109,7 +125,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
       setTimeout(async () => {
         try {
           // Refresh current chat to get the real message from server
-          await refreshCurrentChat();
+          await refreshCurrentUserMessages();
           
           // Remove from sending messages after successful send and refresh
           setSendingMessages(prev => {
@@ -246,36 +262,36 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
           {/* Conversation List */}
           <div className="conversation-list-container">
             <ConversationList
-              conversations={conversations}
-              selectedConversation={selectedConversation}
-              onSelectConversation={selectConversation}
+              userThreads={userThreads}
+              selectedUser={currentSelectedUser}
+              onSelectUser={selectUser}
               isLoading={isConnecting}
             />
           </div>
 
           {/* Chat Area */}
           <div className="chat-area">
-            {selectedConversation ? (
+            {currentSelectedUser ? (
               <>
                 {/* Chat Header */}
                 <div className="chat-header">
                   <div className="chat-customer-info">
-                    <div className="customer-avatar">
-                      <span className="avatar-initials">
-                        {getUserInitials(selectedConversation.customer_name)}
+                                          <div className="customer-avatar">
+                                                <span className="avatar-initials">
+                          {getUserInitials(currentSelectedUser.user_name)}
+                        </span>
+                      </div>
+                      <div className="customer-details">
+                        <h3>{currentSelectedUser.user_name || 'Unknown Customer'}</h3>
+                        <p className="product-info">
+                          {currentSelectedUser.user_email || 'No email'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="chat-status">
+                      <span className={`status-badge ${currentSelectedUser.status || 'active'}`}>
+                        {currentSelectedUser.status || 'active'}
                       </span>
-                    </div>
-                    <div className="customer-details">
-                      <h3>{selectedConversation.customer_name || 'Unknown Customer'}</h3>
-                      <p className="product-info">
-                        {selectedConversation.product_name || 'General Inquiry'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="chat-status">
-                    <span className={`status-badge ${selectedConversation.status || 'active'}`}>
-                      {selectedConversation.status || 'active'}
-                    </span>
                   </div>
                 </div>
 
@@ -375,8 +391,8 @@ const ChatModal = ({ isOpen, onClose, selectedMessage }) => {
             ) : (
               <div className="no-conversation-selected">
                 <Users size={48} className="empty-icon" />
-                <h3>Select a conversation</h3>
-                <p>Choose a conversation from the list to start chatting</p>
+                <h3>Select a user</h3>
+                <p>Choose a user from the list to view their messages</p>
               </div>
             )}
           </div>

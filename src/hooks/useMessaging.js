@@ -16,10 +16,10 @@ export const useMessaging = (authToken, outletType = '') => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
 
-  // Message and conversation states
-  const [conversations, setConversations] = useState([]); // List of all conversations
-  const [selectedConversation, setSelectedConversation] = useState(null);
-  const [currentChatMessages, setCurrentChatMessages] = useState([]); // Messages for selected conversation
+  // User threads and chat states
+  const [userThreads, setUserThreads] = useState([]); // List of unique users with their threads
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [currentUserMessages, setCurrentUserMessages] = useState([]); // Messages for selected user
 
   // Update refs when props change
   useEffect(() => {
@@ -27,15 +27,78 @@ export const useMessaging = (authToken, outletType = '') => {
     outletTypeRef.current = outletType;
   }, [authToken, outletType]);
 
-  // Load all conversations
-  const loadConversations = useCallback(async () => {
+  // Load all user threads (unique users) - Define this first
+  const loadUserThreads = useCallback(async () => {
     if (!authTokenRef.current || !outletTypeRef.current) {
+      console.log('❌ Cannot load user threads: missing authToken or outletType');
+      return;
+    }
+
+    console.log('🔄 Loading user threads...');
+    console.log('🏪 Outlet type:', outletTypeRef.current);
+    console.log('🔗 API URL:', `${API_BASE_URL}/${outletTypeRef.current}/sephcocco_${outletTypeRef.current}_messages/user_threads`);
+
+    try {
+      // Test the API endpoint first
+      const testUrl = `${API_BASE_URL}/${outletTypeRef.current}/sephcocco_${outletTypeRef.current}_messages/user_threads`;
+      console.log('🧪 Testing API endpoint:', testUrl);
+      
+      const response = await fetch(testUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authTokenRef.current}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Response error text:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('📦 Received data:', data);
+      console.log('📦 Data type:', typeof data);
+      console.log('📦 Data keys:', Object.keys(data));
+      console.log('📦 user_threads:', data.user_threads);
+      console.log('📦 user_threads type:', typeof data.user_threads);
+      console.log('📦 user_threads length:', data.user_threads?.length);
+      
+      setUserThreads(data.user_threads || []);
+      console.log('✅ User threads loaded:', data.user_threads?.length || 0);
+    } catch (error) {
+      console.error('❌ Error loading user threads:', error);
+      setUserThreads([]); // Set empty array on error
+    }
+  }, []);
+
+  // Load user threads immediately when authToken and outletType are available
+  useEffect(() => {
+    if (authToken && outletType) {
+      console.log('🚀 Initializing user threads load...');
+      console.log('🔑 Auth token present:', !!authToken);
+      console.log('🏪 Outlet type:', outletType);
+      loadUserThreads();
+    } else {
+      console.log('❌ Missing required data:');
+      console.log('   - authToken:', !!authToken);
+      console.log('   - outletType:', outletType);
+    }
+  }, [authToken, outletType]);
+
+  // Load messages for a specific user
+  const loadUserMessages = useCallback(async (userId) => {
+    if (!authTokenRef.current || !outletTypeRef.current || !userId) {
       return;
     }
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/${outletTypeRef.current}/sephcocco_${outletTypeRef.current}_conversations`,
+        `${API_BASE_URL}/${outletTypeRef.current}/sephcocco_${outletTypeRef.current}_messages?user_id=${userId}`,
         {
           method: 'GET',
           headers: {
@@ -50,46 +113,18 @@ export const useMessaging = (authToken, outletType = '') => {
       }
 
       const data = await response.json();
-      setConversations(data.conversations || []);
+      setCurrentUserMessages(data.messages || []);
     } catch (error) {
-      console.error('Error loading conversations:', error);
+      console.error('Error loading user messages:', error);
+      setCurrentUserMessages([]); // Set empty array on error
     }
   }, []);
 
-  // Load chat messages for a specific conversation
-  const loadChatMessages = useCallback(async (conversationId) => {
-    if (!authTokenRef.current || !outletTypeRef.current || !conversationId) {
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/${outletTypeRef.current}/sephcocco_${outletTypeRef.current}_conversations/${conversationId}/messages`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${authTokenRef.current}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setCurrentChatMessages(data.messages || []);
-    } catch (error) {
-      console.error('Error loading chat messages:', error);
-    }
-  }, []);
-
-  // Select a conversation and load its messages
-  const selectConversation = useCallback(async (conversation) => {
-    setSelectedConversation(conversation);
-    await loadChatMessages(conversation.id);
-  }, [loadChatMessages]);
+  // Select a user and load their messages
+  const selectUser = useCallback(async (userThread) => {
+    setSelectedUser(userThread);
+    await loadUserMessages(userThread.sephcocco_user_id);
+  }, [loadUserMessages]);
 
   // WebSocket connection management - only run once
   useEffect(() => {
@@ -128,8 +163,8 @@ export const useMessaging = (authToken, outletType = '') => {
           setConnectionError(null);
           console.log('🎉 Successfully connected to messaging channel');
           
-          // Load conversations when connected
-          loadConversations();
+          // Load user threads when connected
+          loadUserThreads();
         },
 
         disconnected() {
@@ -150,26 +185,31 @@ export const useMessaging = (authToken, outletType = '') => {
         received(data) {
           console.log('📨 Received message:', data);
           
-          // Handle new conversation
-          if (data.type === 'new_conversation') {
-            setConversations(prev => {
-              const exists = prev.some(conv => conv.id === data.conversation.id);
-              return exists ? prev : [...prev, data.conversation];
+          // Handle new user thread
+          if (data.type === 'new_user_thread') {
+            setUserThreads(prev => {
+              const exists = prev.some(thread => thread.sephcocco_user_id === data.user_thread.sephcocco_user_id);
+              return exists ? prev : [...prev, data.user_thread];
             });
           }
           
-          // Handle new message in current conversation
-          if (data.type === 'new_message' && selectedConversation && data.conversation_id === selectedConversation.id) {
-            setCurrentChatMessages(prev => [...prev, data.message]);
+          // Handle new message for current user
+          if (data.type === 'new_message' && selectedUser && data.user_id === selectedUser.sephcocco_user_id) {
+            setCurrentUserMessages(prev => [...prev, data.message]);
           }
           
-          // Update conversation list with latest message
+          // Update user threads with latest message
           if (data.type === 'new_message') {
-            setConversations(prev => 
-              prev.map(conv => 
-                conv.id === data.conversation_id 
-                  ? { ...conv, last_message: data.message, updated_at: data.message.created_at }
-                  : conv
+            setUserThreads(prev => 
+              prev.map(thread => 
+                thread.sephcocco_user_id === data.user_id 
+                  ? { 
+                      ...thread, 
+                      last_message_content: data.message.content,
+                      updated_at: data.message.created_at,
+                      message_count: thread.message_count + 1
+                    }
+                  : thread
               )
             );
           }
@@ -192,13 +232,13 @@ export const useMessaging = (authToken, outletType = '') => {
       setIsConnecting(false);
       connectionAttemptedRef.current = false;
     };
-  }, [loadConversations, selectedConversation]); // Include selectedConversation to handle updates
+  }, [loadUserThreads, selectedUser]); // Include selectedUser to handle updates
 
   // Function to send messages
   const sendMessage = useCallback((content, messageType = 'text') => {
-    if (!subscriptionRef.current || !isConnected || !selectedConversation) {
-      console.error('Cannot send message: not connected or no conversation selected');
-      throw new Error('WebSocket not connected or no conversation selected');
+    if (!subscriptionRef.current || !isConnected || !selectedUser) {
+      console.error('Cannot send message: not connected or no user selected');
+      throw new Error('WebSocket not connected or no user selected');
     }
 
     subscriptionRef.current.perform('receive', {
@@ -206,23 +246,23 @@ export const useMessaging = (authToken, outletType = '') => {
         content: content,
         outlet_type: outletTypeRef.current,
         message_type: messageType,
-        conversation_id: selectedConversation.id
+        user_id: selectedUser.sephcocco_user_id
       },
       outlet_type: outletTypeRef.current
     });
-  }, [isConnected, selectedConversation]);
+  }, [isConnected, selectedUser]);
 
-  // Function to refresh conversations
-  const refreshConversations = useCallback(async () => {
-    await loadConversations();
-  }, [loadConversations]);
+  // Function to refresh user threads
+  const refreshUserThreads = useCallback(async () => {
+    await loadUserThreads();
+  }, [loadUserThreads]);
 
-  // Function to refresh current chat
-  const refreshCurrentChat = useCallback(async () => {
-    if (selectedConversation) {
-      await loadChatMessages(selectedConversation.id);
+  // Function to refresh current user messages
+  const refreshCurrentUserMessages = useCallback(async () => {
+    if (selectedUser) {
+      await loadUserMessages(selectedUser.sephcocco_user_id);
     }
-  }, [loadChatMessages, selectedConversation]);
+  }, [loadUserMessages, selectedUser]);
 
   return {
     // Connection states
@@ -231,14 +271,14 @@ export const useMessaging = (authToken, outletType = '') => {
     connectionError,
     
     // Data
-    conversations,
-    selectedConversation,
-    currentChatMessages,
+    userThreads,
+    selectedUser,
+    currentUserMessages,
     
     // Actions
-    selectConversation,
+    selectUser,
     sendMessage,
-    refreshConversations,
-    refreshCurrentChat
+    refreshUserThreads,
+    refreshCurrentUserMessages
   };
 }; 
