@@ -22,18 +22,7 @@ const MessagesPage = () => {
     refreshUserThreads
   } = useMessaging(authToken, activeOutlet);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('📊 Messages.jsx - userThreads:', userThreads);
-    console.log('📊 Messages.jsx - isLoading:', isLoading);
-    console.log('📊 Messages.jsx - activeOutlet:', activeOutlet);
-    console.log('📊 Messages.jsx - authToken:', authToken ? 'present' : 'missing');
-    
-    // Check if data is being transformed correctly
-    const tableData = transformUserThreadsToTableData();
-    console.log('📊 Messages.jsx - transformed table data:', tableData);
-    console.log('📊 Messages.jsx - filtered data:', filteredData);
-  }, [userThreads, isLoading, activeOutlet, authToken]);
+
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -65,33 +54,33 @@ const MessagesPage = () => {
   };
 
   // Transform user threads to table format
-  const transformUserThreadsToTableData = () => {
-    console.log('🔄 Transforming user threads to table data...');
-    console.log('📦 Input userThreads:', userThreads);
-    
-    if (!userThreads || !Array.isArray(userThreads)) {
-      console.log('❌ userThreads is not an array:', userThreads);
-      return [];
-    }
-    
-    const transformedData = userThreads.map((userThread, index) => ({
-      id: userThread.sephcocco_user_id || `user-${index}-${Date.now()}`,
-      customer: userThread.user_name || 'Unknown Customer',
-      customer_email: userThread.user_email || '',
-      status: userThread.status || 'OPEN',
-      preview: userThread.last_message_content || 'No messages yet',
-      message_count: userThread.message_count || 0,
-      updated_at: userThread.updated_at || userThread.created_at,
-      // Add the full user thread object for the view action
-      userThread: userThread
-    }));
-    
-    console.log('✅ Transformed data:', transformedData);
-    return transformedData;
-  };
-
+// Transform user threads to table format
+const transformUserThreadsToTableData = () => {
+  console.log('🔄 Transforming user threads to table data...');
+  console.log('📦 Input userThreads:', userThreads);
+  
+  if (!userThreads) {
+    console.log('❌ userThreads.user_threads is not an array:', userThreads);
+    return [];
+  }
+  
+  const transformedData = userThreads?.map((userThread, index) => ({
+    id: userThread.user_id || `user-${index}-${Date.now()}`,
+    customer: userThread.user_name || 'Unknown Customer',
+    customer_email: userThread.user_email || '',
+    status: userThread.status || 'OPEN',
+    preview: userThread.last_message || 'No messages yet', // Note: changed from last_message_content to last_message
+    message_count: userThread.message_count || 0,
+    updated_at: userThread.last_activity, // Note: changed from updated_at to last_activity
+    // Add the full user thread object for the view action
+    userThread: userThread
+  }));
+  
+  console.log('✅ Transformed data:', transformedData);
+  return transformedData;
+};
   // Filter data based on search term
-  const filteredData = transformUserThreadsToTableData().filter(item => {
+  const filteredData = transformUserThreadsToTableData()?.filter(item => {
     if (!searchTerm) return true;
     
     const searchLower = searchTerm.toLowerCase();
@@ -160,6 +149,7 @@ const MessagesPage = () => {
       ),
     },
   ];
+console.log('testing',filteredData);
 
   return (
     <div className="messages-page">

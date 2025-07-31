@@ -20,6 +20,10 @@ const FlexibleTable = ({
   loadingState = null,
   skeletonRows = 5 // Number of skeleton rows to show
 }) => {
+  console.log('FlexibleTable received data:', data);
+  console.log('Data type:', typeof data);
+  console.log('Is array:', Array.isArray(data));
+  
   // Default empty state
   const defaultEmptyState = (
     <div className="table-empty-state">
@@ -101,23 +105,31 @@ const FlexibleTable = ({
     </div>
   );
 
-  // Get the orders data - handle both direct array and nested object structure
-  const getOrdersData = () => {
+  // Get the table data - now works for any type of data
+  const getTableData = () => {
     if (!data) return [];
     
     // If data is already an array, return it
     if (Array.isArray(data)) return data;
     
-    // If data has orders property, return that
+    // If data has orders property, return that (for backwards compatibility)
     if (data.orders && Array.isArray(data.orders)) return data.orders;
     
-    // If data has data property with orders, return that
+    // If data has data property with orders, return that (for backwards compatibility)
     if (data.data && data.data.orders && Array.isArray(data.data.orders)) return data.data.orders;
+    
+    // If data has any array property, try to find it
+    const arrayProps = Object.keys(data).filter(key => Array.isArray(data[key]));
+    if (arrayProps.length > 0) {
+      return data[arrayProps[0]];
+    }
     
     return [];
   };
 
-  const ordersData = getOrdersData();
+  const tableData = getTableData();
+  console.log('Final table data:', tableData);
+  console.log('Table data length:', tableData.length);
 
   return (
     <div className={`flexible-table ${isLoading ? 'loading' : ''} ${className}`}>
@@ -125,7 +137,7 @@ const FlexibleTable = ({
       <div className={`table-header ${headerClassName}`}>
         {columns.map((column) => (
           <div
-            key={column.key}
+            key={column.key || column.header || column.accessorKey}
             className={`table-header-cell ${column.className || ''}`}
             style={{
               flex: column.flex || 1,
@@ -135,7 +147,9 @@ const FlexibleTable = ({
               ...column.headerStyle
             }}
           >
-            <span className="header-content">{column.label}</span>
+            <span className="header-content">
+              {column.label || column.header || column.accessorKey}
+            </span>
           </div>
         ))}
       </div>
@@ -145,20 +159,23 @@ const FlexibleTable = ({
         loadingState || defaultLoadingState
       ) : (
         <div className={`table-body ${bodyClassName}`}>
-          {ordersData.length > 0 ? (
-            ordersData.map((item, index) => (
-              <FlexibleTableRow
-                key={item[keyField] || index}
-                data={item}
-                columns={columns}
-                actions={actions}
-                onRowClick={onRowClick}
-                onActionClick={onActionClick}
-                renderCell={renderCell}
-                className={rowClassName}
-                clickableRow={clickableRows}
-              />
-            ))
+          {tableData.length > 0 ? (
+            tableData.map((item, index) => {
+              console.log(`Rendering row ${index}:`, item);
+              return (
+                <FlexibleTableRow
+                  key={item[keyField] || index}
+                  data={item}
+                  columns={columns}
+                  actions={actions}
+                  onRowClick={onRowClick}
+                  onActionClick={onActionClick}
+                  renderCell={renderCell}
+                  className={rowClassName}
+                  clickableRow={clickableRows}
+                />
+              );
+            })
           ) : (
             emptyState || defaultEmptyState
           )}

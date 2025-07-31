@@ -12,6 +12,9 @@ const FlexibleTableRow = ({
   className = '',
   clickableRow = true
 }) => {
+  console.log('FlexibleTableRow received data:', data);
+  console.log('FlexibleTableRow received columns:', columns);
+  
   // Safety check for data
   if (!data) {
     return null;
@@ -111,6 +114,7 @@ const FlexibleTableRow = ({
       case 'active':
       case 'completed':
       case 'delivered':
+      case 'open':
         return 'status-completed status-active';
       case 'pending':
       case 'delivering':
@@ -119,6 +123,7 @@ const FlexibleTableRow = ({
       case 'cancelled':
       case 'inactive':
       case 'rejected':
+      case 'closed':
         return 'status-cancelled';
       default:
         return 'status-pending';
@@ -159,8 +164,37 @@ const FlexibleTableRow = ({
     );
   };
 
+  // Enhanced cell value getter that handles different column structures
+  const getCellValue = (column, data) => {
+    // Handle column.cell function (from react-table style)
+    if (column.cell && typeof column.cell === 'function') {
+      return column.cell({ row: { original: data } });
+    }
+
+    // Handle accessorKey (from react-table style)
+    if (column.accessorKey) {
+      return column.accessorKey.split('.').reduce((obj, key) => obj?.[key], data);
+    }
+
+    // Handle key or accessor (from custom style)
+    const key = column.key || column.accessor;
+    if (key) {
+      if (key.includes('.')) {
+        return key.split('.').reduce((obj, k) => obj?.[k], data);
+      }
+      return data[key];
+    }
+
+    return null;
+  };
+
   // Default cell renderer with enhanced type handling
   const defaultCellRenderer = (column, data, value) => {
+    // If the column already has a cell renderer, it was handled in getCellValue
+    if (column.cell && typeof column.cell === 'function') {
+      return value; // This is already the rendered content
+    }
+
     // Handle different cell types based on column configuration
     if (column.type === 'custom' && column.render) {
       return column.render(value, data, column);
@@ -202,7 +236,7 @@ const FlexibleTableRow = ({
     }
 
     // Enhanced auto-detection based on column key
-    const columnKey = column.key?.toLowerCase() || '';
+    const columnKey = (column.key || column.accessorKey || '')?.toLowerCase() || '';
     
     // Currency fields
     if (columnKey.includes('price') || columnKey.includes('cost') || columnKey.includes('amount')) {
@@ -467,18 +501,19 @@ const FlexibleTableRow = ({
       onClick={handleRowClick}
       style={{ cursor: clickableRow ? 'pointer' : 'default' }}
     >
-      {columns.map((column) => {
-        if (!column || !column.key) {
+      {columns.map((column, columnIndex) => {
+        if (!column) {
           return null;
         }
         
-        const value = column.accessor 
-          ? column.accessor.split('.').reduce((obj, key) => obj?.[key], data)
-          : data[column.key] || (column.key && column.key.includes('.') ? column.key.split('.').reduce((obj, key) => obj?.[key], data) : data[column.key]);
+        const value = getCellValue(column, data);
+        const columnKey = column.key || column.accessorKey || column.header || `column-${columnIndex}`;
+
+        console.log(`Column: ${columnKey}, Value:`, value);
 
         return (
           <div
-            key={column.key}
+            key={columnKey}
             className={`table-cell ${column.className || ''}`}
             style={{
               flex: column.flex || 1,
@@ -487,7 +522,7 @@ const FlexibleTableRow = ({
               textAlign: column.align || 'left',
               ...column.style
             }}
-            data-label={column.label}
+            data-label={column.label || column.header}
           >
             {renderCell 
               ? renderCell(column, data, value)
