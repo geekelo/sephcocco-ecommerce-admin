@@ -93,8 +93,15 @@ export const useMessaging = (authToken, outletType = '') => {
   // Load messages for a specific user
   const loadUserMessages = useCallback(async (userId) => {
     if (!authTokenRef.current || !outletTypeRef.current || !userId) {
+      console.log('❌ Cannot load user messages: missing data');
+      console.log('   - authToken:', !!authTokenRef.current);
+      console.log('   - outletType:', outletTypeRef.current);
+      console.log('   - userId:', userId);
       return;
     }
+
+    console.log('🔄 Loading messages for user:', userId);
+    console.log('🔗 API URL:', `${API_BASE_URL}/${outletTypeRef.current}/sephcocco_${outletTypeRef.current}_messages?user_id=${userId}`);
 
     try {
       const response = await fetch(
@@ -108,22 +115,37 @@ export const useMessaging = (authToken, outletType = '') => {
         }
       );
 
+      console.log('📡 User messages response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ User messages response error:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('📦 User messages data:', data);
+      console.log('📦 Messages count:', data.messages?.length || 0);
       setCurrentUserMessages(data.messages || []);
     } catch (error) {
-      console.error('Error loading user messages:', error);
+      console.error('❌ Error loading user messages:', error);
       setCurrentUserMessages([]); // Set empty array on error
     }
   }, []);
 
   // Select a user and load their messages
   const selectUser = useCallback(async (userThread) => {
+    console.log('👤 Selecting user:', userThread);
+    console.log('👤 User ID field:', userThread.user_id);
+    console.log('👤 User name:', userThread.user_name);
+    
     setSelectedUser(userThread);
-    await loadUserMessages(userThread.sephcocco_user_id);
+    
+    // Try different possible user ID fields
+    const userId = userThread.user_id || userThread.sephcocco_user_id || userThread.id;
+    console.log('👤 Using user ID:', userId);
+    
+    await loadUserMessages(userId);
   }, [loadUserMessages]);
 
   // WebSocket connection management - only run once

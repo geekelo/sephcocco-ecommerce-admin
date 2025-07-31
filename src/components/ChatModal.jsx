@@ -41,10 +41,13 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
 
   // Transform user messages to display format, handling JSONB chats
   const allMessages = currentUserMessages?.flatMap((message) => {
+    console.log('📨 Processing message:', message);
+    
     if (!message) return [];
     
     // Handle JSONB chats array
     const chats = message.chats || [];
+    console.log('💬 Chats in message:', chats);
     
     return chats.map((chat, index) => {
       if (!chat) return null;
@@ -66,6 +69,8 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
       };
     }).filter(Boolean); // Remove null values
   }) || [];
+
+  console.log('📨 All messages for display:', allMessages);
 
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
