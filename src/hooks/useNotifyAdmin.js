@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { notifyAdmin } from "../services/Notification";
+import { notifyAdmin } from "../services/notification";
 
 export const useNotifyAdmin = (active_outlet) => {
   return useQuery({
