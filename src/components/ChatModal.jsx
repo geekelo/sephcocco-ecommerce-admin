@@ -112,10 +112,25 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
 
   // Enhanced message sending
   const handleSendMessage = async () => {
-    if (newMessage.trim() === "" || !isConnected || isSending || !currentSelectedUser) return;
+    console.log('🚀 handleSendMessage called');
+    console.log('📝 New message:', newMessage);
+    console.log('🔗 Is connected:', isConnected);
+    console.log('⏳ Is sending:', isSending);
+    console.log('👤 Current selected user:', currentSelectedUser);
+    
+    if (newMessage.trim() === "" || !isConnected || isSending || !currentSelectedUser) {
+      console.log('❌ Cannot send message:');
+      console.log('   - Message empty:', newMessage.trim() === "");
+      console.log('   - Not connected:', !isConnected);
+      console.log('   - Already sending:', isSending);
+      console.log('   - No user selected:', !currentSelectedUser);
+      return;
+    }
 
     const messageContent = newMessage.trim();
     const tempMessageId = `temp-${Date.now()}`;
+    
+    console.log('📤 Sending message content:', messageContent);
     
     setIsSending(true);
     setShouldAutoScroll(true);
@@ -123,7 +138,12 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
     
     try {
       // Send message via ActionCable
+      console.log('📤 Calling sendMessage function...');
+      console.log('📤 sendMessage function:', sendMessage);
+      console.log('📤 sendMessage type:', typeof sendMessage);
+      
       sendMessage(messageContent, 'text');
+      console.log('✅ sendMessage function called successfully');
       setNewMessage("");
       
       // Wait a brief moment for the message to be processed on the server
@@ -150,7 +170,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
       }, 1000); // Wait 1 second before refreshing
       
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('❌ Failed to send message:', error);
       // Remove from sending messages on error
       setSendingMessages(prev => {
         const newSet = new Set(prev);
@@ -370,11 +390,25 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
                         disabled={!isConnected || isSending}
                         maxLength={1000}
                       />
+                      
                       <button 
                         className={`send-btn ${(!isConnected || newMessage.trim() === "" || isSending) ? 'disabled' : ''}`}
-                        onClick={handleSendMessage}
+                        onClick={(e) => {
+                          console.log('🔘 Send button clicked!');
+                          console.log('🔘 Event:', e);
+                          console.log('🔘 Button state:', {
+                            isConnected,
+                            hasMessage: newMessage.trim() !== "",
+                            isSending
+                          });
+                          handleSendMessage();
+                        }}
                         disabled={!isConnected || newMessage.trim() === "" || isSending}
                         title={!isConnected ? 'Not connected' : 'Send message'}
+                        style={{
+                          backgroundColor: (!isConnected || newMessage.trim() === "" || isSending) ? '#ccc' : '#007bff',
+                          cursor: (!isConnected || newMessage.trim() === "" || isSending) ? 'not-allowed' : 'pointer'
+                        }}
                       >
                         {isSending ? (
                           <div className="spinner-small"></div>

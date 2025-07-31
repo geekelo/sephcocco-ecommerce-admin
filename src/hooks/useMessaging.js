@@ -141,9 +141,14 @@ export const useMessaging = (authToken, outletType = '') => {
     
     setSelectedUser(userThread);
     
-    // Try different possible user ID fields
-    const userId = userThread.user_id || userThread.sephcocco_user_id || userThread.id;
+    // Use the user_id field from the userThread object
+    const userId = userThread.user_id;
     console.log('👤 Using user ID:', userId);
+    
+    if (!userId) {
+      console.error('❌ No user_id found in userThread:', userThread);
+      return;
+    }
     
     await loadUserMessages(userId);
   }, [loadUserMessages]);
@@ -210,13 +215,13 @@ export const useMessaging = (authToken, outletType = '') => {
           // Handle new user thread
           if (data.type === 'new_user_thread') {
             setUserThreads(prev => {
-              const exists = prev.some(thread => thread.sephcocco_user_id === data.user_thread.sephcocco_user_id);
+              const exists = prev.some(thread => thread.user_id === data.user_thread.user_id);
               return exists ? prev : [...prev, data.user_thread];
             });
           }
           
           // Handle new message for current user
-          if (data.type === 'new_message' && selectedUser && data.user_id === selectedUser.sephcocco_user_id) {
+          if (data.type === 'new_message' && selectedUser && data.user_id === selectedUser.user_id) {
             setCurrentUserMessages(prev => [...prev, data.message]);
           }
           
@@ -224,11 +229,11 @@ export const useMessaging = (authToken, outletType = '') => {
           if (data.type === 'new_message') {
             setUserThreads(prev => 
               prev.map(thread => 
-                thread.sephcocco_user_id === data.user_id 
+                thread.user_id === data.user_id 
                   ? { 
                       ...thread, 
-                      last_message_content: data.message.content,
-                      updated_at: data.message.created_at,
+                      last_message: data.message.content,
+                      last_activity: data.message.created_at,
                       message_count: thread.message_count + 1
                     }
                   : thread
@@ -258,20 +263,43 @@ export const useMessaging = (authToken, outletType = '') => {
 
   // Function to send messages
   const sendMessage = useCallback((content, messageType = 'text') => {
+    console.log('📤 Attempting to send message...');
+    console.log('📤 Content:', content);
+    console.log('📤 Message type:', messageType);
+    console.log('📤 Selected user:', selectedUser);
+    console.log('📤 Is connected:', isConnected);
+    console.log('📤 Has subscription:', !!subscriptionRef.current);
+    
     if (!subscriptionRef.current || !isConnected || !selectedUser) {
-      console.error('Cannot send message: not connected or no user selected');
+      console.error('❌ Cannot send message: not connected or no user selected');
       throw new Error('WebSocket not connected or no user selected');
     }
 
-    subscriptionRef.current.perform('receive', {
+    // Try different possible user ID fields
+    const userId = selectedUser.user_id;
+    console.log('📤 Using user ID for send:', userId);
+    
+    if (!userId) {
+      console.error('❌ No user_id found in selectedUser:', selectedUser);
+      throw new Error('No user_id found in selectedUser');
+    }
+
+    const messageData = {
       message: {
-        content: content,
+        user_id: userId,        // ✅ user_id inside message object
+        content: content,       // ✅ content inside message object
         outlet_type: outletTypeRef.current,
-        message_type: messageType,
-        user_id: selectedUser.sephcocco_user_id
+        message_type: messageType
       },
+      user_id: userId, 
       outlet_type: outletTypeRef.current
-    });
+    };
+
+    console.log('📤 Sending message data:', messageData);
+    console.log('📤 Message structure:', JSON.stringify(messageData, null, 2));
+    
+    subscriptionRef.current.perform('receive', messageData);
+    console.log('✅ Message sent via WebSocket');
   }, [isConnected, selectedUser]);
 
   // Function to refresh user threads
@@ -281,8 +309,8 @@ export const useMessaging = (authToken, outletType = '') => {
 
   // Function to refresh current user messages
   const refreshCurrentUserMessages = useCallback(async () => {
-    if (selectedUser) {
-      await loadUserMessages(selectedUser.sephcocco_user_id);
+    if (selectedUser && selectedUser.user_id) {
+      await loadUserMessages(selectedUser.user_id);
     }
   }, [loadUserMessages, selectedUser]);
 
