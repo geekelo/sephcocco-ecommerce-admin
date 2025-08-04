@@ -39,35 +39,56 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
     }
   }, [isOpen, selectedUser, currentSelectedUser, selectUser]);
 
-  // Transform user messages to display format, handling JSONB chats
+  // Transform user messages to display format, handling both individual messages and JSONB chats
   const allMessages = currentUserMessages?.flatMap((message) => {
     console.log('📨 Processing message:', message);
     
     if (!message) return [];
     
-    // Handle JSONB chats array
-    const chats = message.chats || [];
-    console.log('💬 Chats in message:', chats);
-    
-    return chats.map((chat, index) => {
-      if (!chat) return null;
+    // Check if this is an individual message (from WebSocket) or has chats array (from API)
+    if (message.content && !message.chats) {
+      // Individual message from WebSocket
+      console.log('💬 Individual message from WebSocket:', message);
       
-      // Determine sender based on chat structure
-      const isFromCustomer = chat.user_role === 'user' || chat.sender === 'customer';
+      const isFromCustomer = message.user_role === 'user';
       const sender = isFromCustomer ? 'customer' : 'admin';
       
-      return {
-        id: chat.id || `${message.id}-${index}`,
+      return [{
+        id: message.id,
         sender: sender,
-        text: chat.content || chat.message || 'No content',
-        timestamp: new Date(chat.created_at || chat.timestamp || Date.now()),
-        senderName: chat.user_name || (sender === 'admin' ? 'Support Team' : 'Customer'),
-        user_name: chat.user_name,
-        user_role: chat.user_role,
-        optimistic: chat.optimistic,
+        text: message.content,
+        timestamp: new Date(message.timestamp || message.created_at || Date.now()),
+        senderName: message.user_name || (sender === 'admin' ? 'Support Team' : 'Customer'),
+        user_name: message.user_name,
+        user_role: message.user_role,
+        optimistic: message.optimistic,
         message_id: message.id
-      };
-    }).filter(Boolean); // Remove null values
+      }];
+    } else {
+      // Message with chats array (from API)
+      const chats = message.chats || [];
+      console.log('💬 Chats in message:', chats);
+      
+      return chats.map((chat, index) => {
+        if (!chat) return null;
+        
+        // Determine sender based on chat structure
+        const isFromCustomer = chat.user_role === 'user' || chat.sender === 'customer';
+        const sender = isFromCustomer ? 'customer' : 'admin';
+        
+        return {
+          id: chat.id || `${message.id}-${index}`,
+          sender: sender,
+          text: chat.content || chat.message || 'No content',
+          timestamp: new Date(chat.created_at || chat.timestamp || Date.now()),
+          senderName: chat.user_name || (sender === 'admin' ? 'Support Team' : 'Customer'),
+          user_name: chat.user_name,
+          user_role: chat.user_role,
+          optimistic: chat.optimistic,
+          message_id: message.id
+        };
+      }).filter(Boolean); // Remove null values
+    }
   }) || [];
 
   console.log('📨 All messages for display:', allMessages);
