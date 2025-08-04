@@ -58,6 +58,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
         sender: sender,
         text: message.content,
         timestamp: new Date(message.timestamp || message.created_at || Date.now()),
+        display_time: message.display_time, // Use the pre-formatted display time
         senderName: message.user_name || (sender === 'admin' ? 'Support Team' : 'Customer'),
         user_name: message.user_name,
         user_role: message.user_role,
@@ -81,6 +82,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
           sender: sender,
           text: chat.content || chat.message || 'No content',
           timestamp: new Date(chat.created_at || chat.timestamp || Date.now()),
+          display_time: chat.display_time, // Use the pre-formatted display time
           senderName: chat.user_name || (sender === 'admin' ? 'Support Team' : 'Customer'),
           user_name: chat.user_name,
           user_role: chat.user_role,
@@ -212,15 +214,24 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
     }
   };
 
-  const formatTime = (timestamp) => {
+  const formatTime = (timestamp, displayTime) => {
+    // If we have a pre-formatted display_time, use it
+    if (displayTime) {
+      return displayTime;
+    }
+    
+    // Fallback to formatting the timestamp
     if (!timestamp) return '';
     
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) return '';
     
-    return date.toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
     });
   };
 
@@ -379,7 +390,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
                                 <p>{message.text}</p>
                               </div>
                               <div className="message-time">
-                                {formatTime(message.timestamp)}
+                                {formatTime(message.timestamp, message.display_time)}
                                 {message.optimistic && <span className="sending-indicator">Sending...</span>}
                                 {!message.optimistic && renderMessageStatus(message)}
                               </div>

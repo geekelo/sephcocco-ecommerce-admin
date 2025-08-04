@@ -8,7 +8,13 @@ const ConversationList = ({
   onSelectUser,
   isLoading = false 
 }) => {
-  const formatTime = (timestamp) => {
+  const formatTime = (timestamp, displayTime) => {
+    // If we have a pre-formatted display_time, use it
+    if (displayTime) {
+      return displayTime;
+    }
+    
+    // Fallback to formatting the timestamp
     if (!timestamp) return '';
     
     const date = new Date(timestamp);
@@ -18,9 +24,12 @@ const ConversationList = ({
     const diffInHours = (now - date) / (1000 * 60 * 60);
     
     if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
       });
     } else {
       return date.toLocaleDateString([], {
@@ -110,7 +119,7 @@ const ConversationList = ({
                     {getCustomerName(userThread)}
                   </h4>
                   <span className="conversation-time">
-                    {formatTime(userThread.updated_at || userThread.created_at)}
+                    {formatTime(userThread.updated_at || userThread.created_at, userThread.updated_at_display || userThread.created_at_display)}
                   </span>
                 </div>
                 

@@ -262,7 +262,8 @@ export const useAdminWebhookRN = (authToken, options) => {
               console.log('💬 Message content:', data.content);
               console.log('💬 Message user_role:', data.user_role);
               
-              // Create standardized message object
+              // Create standardized message object with date and time
+              const currentTimestamp = data.created_at || new Date().toISOString();
               const standardizedMessage = {
                 id: data.id || data.chat_id || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 content: data.content,
@@ -271,8 +272,16 @@ export const useAdminWebhookRN = (authToken, options) => {
                 user_name: data.user?.name || 'Unknown User',
                 user_email: data.user?.email || '',
                 user_role: data.user_role,
-                timestamp: data.created_at || new Date().toISOString(),
-                created_at: data.created_at || new Date().toISOString()
+                timestamp: currentTimestamp,
+                created_at: currentTimestamp,
+                // Formatted time with date for display
+                display_time: new Date(currentTimestamp).toLocaleString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false
+                }) // e.g., "Dec 25, 23:16"
               };
               
               // Add to new messages
@@ -288,10 +297,18 @@ export const useAdminWebhookRN = (authToken, options) => {
                 
                 if (existingThread) {
                   // Update existing thread
+                  const threadUpdateTimestamp = data.created_at || new Date().toISOString();
                   const updatedThread = {
                     ...existingThread,
                     last_message: data.content,
-                    updated_at: data.created_at,
+                    updated_at: threadUpdateTimestamp,
+                    updated_at_display: new Date(threadUpdateTimestamp).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false
+                    }), // e.g., "Dec 25, 23:16"
                     message_count: existingThread.message_count + 1,
                     messages: [...existingThread.messages, standardizedMessage]
                   };
@@ -299,14 +316,29 @@ export const useAdminWebhookRN = (authToken, options) => {
                   onChatThreadUpdate?.(updatedThread);
                 } else {
                   // Create new thread
+                  const threadCreateTimestamp = data.created_at || new Date().toISOString();
                   const newThread = {
                     id: data.user_id,
                     user_id: data.user_id,
                     user_name: data.user?.name || 'Unknown User',
                     user_email: data.user?.email || '',
                     status: 'open',
-                    created_at: data.created_at,
-                    updated_at: data.created_at,
+                    created_at: threadCreateTimestamp,
+                    created_at_display: new Date(threadCreateTimestamp).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false
+                    }), // e.g., "Dec 25, 23:16"
+                    updated_at: threadCreateTimestamp,
+                    updated_at_display: new Date(threadCreateTimestamp).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false
+                    }), // e.g., "Dec 25, 23:16"
                     last_message: data.content,
                     message_count: 1,
                     unread_count: 1,

@@ -331,7 +331,8 @@ export const useMessaging = (authToken, outletType = '') => {
               const messageUserId = data.user_id || data.user?.id;
               const messageUserRole = data.user_role || data.user?.role;
               
-              // Create standardized message object
+              // Create standardized message object with date and time
+              const currentTimestamp = data.created_at || new Date().toISOString();
               const newMessage = {
                 id: data.id || data.chat_id || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 content: data.content,
@@ -340,8 +341,16 @@ export const useMessaging = (authToken, outletType = '') => {
                 user_name: data.user?.name || 'Unknown User',
                 user_email: data.user?.email || '',
                 user_role: messageUserRole,
-                timestamp: data.created_at || new Date().toISOString(),
-                created_at: data.created_at || new Date().toISOString()
+                timestamp: currentTimestamp,
+                created_at: currentTimestamp,
+                // Formatted time with date for display
+                display_time: new Date(currentTimestamp).toLocaleString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false
+                }) // e.g., "Dec 25, 23:16"
               };
               
               // IMMEDIATELY add new messages to current user messages if it's for the selected user
@@ -351,13 +360,21 @@ export const useMessaging = (authToken, outletType = '') => {
               }
               
               // IMMEDIATELY update user threads with latest message
+              const threadUpdateTimestamp = data.created_at || new Date().toISOString();
               setUserThreads(prev => 
                 prev.map(thread => 
                   thread.user_id === messageUserId 
                     ? { 
                         ...thread, 
                         last_message: data.content || 'New message',
-                        last_activity: data.created_at || new Date().toISOString(),
+                        last_activity: threadUpdateTimestamp,
+                        last_activity_display: new Date(threadUpdateTimestamp).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false
+                        }), // e.g., "Dec 25, 23:16"
                         message_count: (thread.message_count || 0) + 1
                       }
                     : thread
