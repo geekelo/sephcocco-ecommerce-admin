@@ -4,6 +4,10 @@ import { createConsumer } from '@rails/actioncable';
 const API_BASE_URL = 'https://sephcocco-lounge-api.onrender.com/api/v1';
 
 export const useMessaging = (authToken, outletType = '') => {
+  console.log('🚀 useMessaging hook called');
+  console.log('🔑 Auth token:', !!authToken);
+  console.log('🏪 Outlet type:', outletType);
+  
   // Refs
   const authTokenRef = useRef(authToken);
   const outletTypeRef = useRef(outletType);
@@ -156,10 +160,22 @@ export const useMessaging = (authToken, outletType = '') => {
             // Load initial user threads when connected
             if (subscriptionRef.current) {
               console.log('📤 Requesting user threads via WebSocket...');
-              subscriptionRef.current.perform('receive', {
+              const requestData = {
                 action: 'request_initial_threads',
                 outlet_type: outletTypeRef.current
-              });
+              };
+              console.log('📤 Request data:', requestData);
+              
+              // Try sending directly to the channel
+              subscriptionRef.current.send(requestData);
+              
+              // Also try using perform as fallback
+              setTimeout(() => {
+                console.log('🔄 Trying perform method as fallback...');
+                subscriptionRef.current.perform('request_initial_threads', {
+                  outlet_type: outletTypeRef.current
+                });
+              }, 1000);
             }
           },
 
@@ -260,6 +276,8 @@ export const useMessaging = (authToken, outletType = '') => {
     console.log('🔑 Auth token present:', !!authToken);
     console.log('🏪 Outlet type:', outletType);
     console.log('🔄 Auto connect attempted:', autoConnectAttemptedRef.current);
+    console.log('🔗 Is connected:', isConnected);
+    console.log('🔄 Is connecting:', isConnecting);
     
     if (authToken && outletType && !autoConnectAttemptedRef.current) {
       console.log('🚀 Auto-connecting to WebSocket...');
@@ -270,7 +288,18 @@ export const useMessaging = (authToken, outletType = '') => {
       console.log('   - authToken:', !!authToken);
       console.log('   - outletType:', outletType);
       console.log('   - autoConnectAttempted:', autoConnectAttemptedRef.current);
+      console.log('   - isConnected:', isConnected);
+      console.log('   - isConnecting:', isConnecting);
     }
+
+    // Test manual connection after 2 seconds
+    setTimeout(() => {
+      console.log('🧪 Testing manual connection...');
+      if (!isConnected && !isConnecting) {
+        console.log('🧪 Manually calling connect...');
+        connect();
+      }
+    }, 2000);
 
     return () => {
       console.log('🧹 Cleaning up WebSocket connection...');

@@ -15,6 +15,9 @@ const MessagesPage = () => {
   const activeOutlet = getActiveOutlet();
   const authToken = localStorage.getItem('token');
   
+  console.log('📊 Messages page - activeOutlet:', activeOutlet);
+  console.log('📊 Messages page - authToken present:', !!authToken);
+  
   // Use the new user thread messaging system
   const {
     userThreads,
