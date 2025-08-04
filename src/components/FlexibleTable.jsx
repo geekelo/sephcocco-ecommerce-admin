@@ -76,10 +76,10 @@ const FlexibleTable = ({
   // Generate skeleton rows
   const renderSkeletonRows = () => {
     return Array.from({ length: skeletonRows }, (_, index) => (
-      <div key={`skeleton-${index}`} className="table-row skeleton-row">
-        {columns.map((column) => (
+      <div key={`skeleton-row-${index}`} className="table-row skeleton-row">
+        {columns.map((column, colIndex) => (
           <div
-            key={`skeleton-${index}-${column.key}`}
+            key={`skeleton-cell-${index}-${colIndex}-${column.key || column.header || column.accessorKey || 'default'}`}
             className="table-cell"
             style={{
               flex: column.flex || 1,

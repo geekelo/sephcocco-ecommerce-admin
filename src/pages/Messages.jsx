@@ -19,6 +19,9 @@ const MessagesPage = () => {
   const {
     userThreads,
     isLoading,
+    isConnected,
+    isConnecting,
+    connectionError,
     refreshUserThreads
   } = useMessaging(authToken, activeOutlet);
 
@@ -54,31 +57,30 @@ const MessagesPage = () => {
   };
 
   // Transform user threads to table format
-// Transform user threads to table format
-const transformUserThreadsToTableData = () => {
-  console.log('🔄 Transforming user threads to table data...');
-  console.log('📦 Input userThreads:', userThreads);
-  
-  if (!userThreads) {
-    console.log('❌ userThreads.user_threads is not an array:', userThreads);
-    return [];
-  }
-  
-  const transformedData = userThreads?.map((userThread, index) => ({
-    id: userThread.user_id || `user-${index}-${Date.now()}`,
-    customer: userThread.user_name || 'Unknown Customer',
-    customer_email: userThread.user_email || '',
-    status: userThread.status || 'OPEN',
-    preview: userThread.last_message || 'No messages yet', // Note: changed from last_message_content to last_message
-    message_count: userThread.message_count || 0,
-    updated_at: userThread.last_activity, // Note: changed from updated_at to last_activity
-    // Add the full user thread object for the view action
-    userThread: userThread
-  }));
-  
-  console.log('✅ Transformed data:', transformedData);
-  return transformedData;
-};
+  const transformUserThreadsToTableData = () => {
+    console.log('🔄 Transforming user threads to table data...');
+    console.log('📦 Input userThreads:', userThreads);
+    
+    if (!userThreads || !Array.isArray(userThreads)) {
+      console.log('❌ userThreads is not an array:', userThreads);
+      return [];
+    }
+    
+    const transformedData = userThreads.map((userThread, index) => ({
+      id: userThread.user_id || `user-${index}-${Date.now()}`,
+      customer: userThread.user_name || 'Unknown Customer',
+      customer_email: userThread.user_email || '',
+      status: userThread.status || 'OPEN',
+      preview: userThread.last_message || 'No messages yet',
+      message_count: userThread.message_count || 0,
+      updated_at: userThread.updated_at || userThread.last_activity,
+      // Add the full user thread object for the view action
+      userThread: userThread
+    }));
+    
+    console.log('✅ Transformed data:', transformedData);
+    return transformedData;
+  };
   // Filter data based on search term
   const filteredData = transformUserThreadsToTableData()?.filter(item => {
     if (!searchTerm) return true;
@@ -155,6 +157,26 @@ console.log('testing',filteredData);
     <div className="messages-page">
       <div className="messages-header">
         <h1>Messages</h1>
+        {/* Connection status indicator */}
+        <div className="connection-status-indicator">
+          {isConnecting ? (
+            <div className="status-connecting">
+              <div className="spinner-small"></div>
+              <span>Connecting...</span>
+            </div>
+          ) : isConnected ? (
+            <div className="status-connected">
+              <div className="status-dot connected"></div>
+              <span>Connected</span>
+            </div>
+          ) : (
+            <div className="status-disconnected">
+              <div className="status-dot disconnected"></div>
+              <span>Disconnected</span>
+              {connectionError && <div className="error-text">{connectionError}</div>}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="messages-content">
