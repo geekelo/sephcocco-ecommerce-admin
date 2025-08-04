@@ -7,6 +7,7 @@ export const useMessaging = (authToken, outletType = '') => {
   console.log('🚀 useMessaging hook called');
   console.log('🔑 Auth token:', !!authToken);
   console.log('🏪 Outlet type:', outletType);
+  console.log('👤 User role from localStorage:', localStorage.getItem('userRole'));
   
   // Refs
   const authTokenRef = useRef(authToken);
@@ -99,6 +100,7 @@ export const useMessaging = (authToken, outletType = '') => {
     const userRole = localStorage.getItem('userRole') || 'user';
 
     const messageData = {
+      action: 'receive', // ← This is crucial!
       message: {
         user_id: userId,
         content: content,
@@ -156,6 +158,11 @@ export const useMessaging = (authToken, outletType = '') => {
             setIsConnecting(false);
             setConnectionError(null);
             console.log('🎉 Successfully connected to messaging channel');
+            console.log('📡 Channel: MessagingChannel');
+            console.log('🏪 Outlet type:', outletTypeRef.current);
+            console.log('📡 Admin channel: messaging_admin_' + outletTypeRef.current);
+            console.log('👤 Current user role from localStorage:', localStorage.getItem('userRole'));
+            console.log('🔐 Auth token (first 20 chars):', authTokenRef.current.substring(0, 20) + '...');
             
             // Load initial user threads when connected
             if (subscriptionRef.current) {
@@ -176,6 +183,27 @@ export const useMessaging = (authToken, outletType = '') => {
                   outlet_type: outletTypeRef.current
                 });
               }, 1000);
+              
+              // Test if we can receive messages by sending a test message
+              setTimeout(() => {
+                console.log('🧪 Sending test message to verify WebSocket is working...');
+                const testMessage = {
+                  action: 'receive',
+                  message: {
+                    content: 'Test message from admin',
+                    message_type: 'text',
+                    user_id: 'test-user-id',
+                    user_role: 'admin'
+                  },
+                  outlet_type: outletTypeRef.current,
+                  user_id: 'test-user-id',
+                  user_role: 'admin'
+                };
+                // Only send test message if we're in development
+                if (process.env.NODE_ENV === 'development') {
+                  subscriptionRef.current.perform('receive', testMessage);
+                }
+              }, 3000);
             }
           },
 
@@ -184,6 +212,7 @@ export const useMessaging = (authToken, outletType = '') => {
             setIsConnecting(false);
             connectionAttemptedRef.current = false;
             console.log('💔 Disconnected from messaging channel');
+            console.log('💔 Connection lost - real-time messaging will not work');
           },
 
           rejected() {
@@ -197,6 +226,19 @@ export const useMessaging = (authToken, outletType = '') => {
           received(data) {
             console.log('📨 Received WebSocket message:', data);
             console.log('📨 Message type:', data.type);
+            console.log('📨 Full message data:', JSON.stringify(data, null, 2));
+            console.log('📨 Data keys:', Object.keys(data));
+            console.log('📨 Timestamp:', new Date().toISOString());
+            console.log('👤 Current user role:', localStorage.getItem('userRole'));
+            console.log('👤 Selected user:', selectedUser?.user_id);
+            
+            // Log every received message for debugging
+            if (data.type === 'new_message') {
+              console.log('🚨 NEW MESSAGE RECEIVED VIA WEBSOCKET!');
+              console.log('🚨 Message content:', data.content);
+              console.log('🚨 Message user_id:', data.user_id);
+              console.log('🚨 Message user_role:', data.user_role);
+            }
             
             // Handle user threads response from WebSocket
             if (data.type === 'user_threads_response') {
@@ -220,16 +262,48 @@ export const useMessaging = (authToken, outletType = '') => {
             }
             
             // Handle new message - add to current user messages if it's for the selected user
-            if (data.type === 'new_message' && selectedUser && data.user_id === selectedUser.user_id) {
-              console.log('💬 Adding new message to current user messages');
-              setCurrentUserMessages(prev => [...prev, data]);
-            }
-            
-            // Update user threads with latest message
             if (data.type === 'new_message') {
+              console.log('💬 New message received:', data);
+              console.log('💬 Message user_id:', data.user_id);
+              console.log('💬 Message content:', data.content);
+              console.log('💬 Message user role:', data.user_role);
+              console.log('💬 Message user object:', data.user);
+              console.log('💬 Selected user user_id:', selectedUser?.user_id);
+              console.log('💬 Message matches selected user:', selectedUser?.user_id === data.user_id);
+              console.log('💬 Is this message from admin?', data.user_role === 'admin');
+              console.log('💬 Is this message from user?', data.user_role === 'user');
+              
+              // Extract user info from nested user object or direct properties
+              const messageUserId = data.user_id || data.user?.id;
+              const messageUserRole = data.user_role || data.user?.role;
+              
+              console.log('💬 Extracted user_id:', messageUserId);
+              console.log('💬 Extracted user_role:', messageUserRole);
+              
+              // If this message is for the currently selected user, add it directly to current messages
+              if (selectedUser && messageUserId === selectedUser.user_id) {
+                console.log('💬 Adding new message to current user messages directly from WebSocket');
+                
+                // Create message object in the format expected by the chat component
+                const newMessage = {
+                  id: data.id || data.chat_id || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                  content: data.content,
+                  message_type: data.message_type || 'text',
+                  user_id: messageUserId,
+                  user_name: data.user?.name || 'Unknown User',
+                  user_email: data.user?.email || '',
+                  user_role: messageUserRole,
+                  timestamp: data.created_at || new Date().toISOString(),
+                  created_at: data.created_at || new Date().toISOString()
+                };
+                
+                setCurrentUserMessages(prev => [...prev, newMessage]);
+              }
+              
+              // Update user threads with latest message (always update thread list)
               setUserThreads(prev => 
                 prev.map(thread => 
-                  thread.user_id === data.user_id 
+                  thread.user_id === messageUserId 
                     ? { 
                         ...thread, 
                         last_message: data.content || 'New message',
@@ -239,6 +313,23 @@ export const useMessaging = (authToken, outletType = '') => {
                     : thread
                 )
               );
+            }
+            
+            // Handle message updates
+            if (data.type === 'message_updated') {
+              console.log('🔄 Message updated:', data);
+              // Handle message updates if needed
+            }
+            
+            // Handle message update confirmations
+            if (data.type === 'message_update_confirmation') {
+              console.log('✅ Message update confirmation:', data);
+              // Handle confirmation if needed
+            }
+            
+            // Log any other message types
+            if (!['user_threads_response', 'new_user_thread', 'new_message', 'message_updated', 'message_update_confirmation'].includes(data.type)) {
+              console.log('❓ Unknown message type received:', data.type);
             }
           }
         }
@@ -252,7 +343,7 @@ export const useMessaging = (authToken, outletType = '') => {
       connectionAttemptedRef.current = false;
       setConnectionError(errorMsg);
     }
-  }, []); // Remove dependencies to prevent looping
+  }, [selectedUser]); // Add selectedUser dependency so received handler can access it
 
   const disconnect = useCallback(() => {
     console.log('🧹 Cleaning up connection...');
