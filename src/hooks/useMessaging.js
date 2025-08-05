@@ -499,7 +499,15 @@ export const useMessaging = (authToken, outletType = '') => {
               console.log('📨 Processed standardized message:', standardizedMessage);
               
               // Add to current user messages if it matches the selected user OR if no user is selected
-              const shouldAddMessage = !selectedUser || String(messageUserId) === String(selectedUser.user_id);
+              // Use thread_owner_id to determine which conversation this message belongs to
+              const threadOwnerId = data.thread_owner_id || data.user_id || messageUserId;
+              const shouldAddMessage = !selectedUser || String(threadOwnerId) === String(selectedUser.user_id);
+              
+              console.log('🔍 Message routing analysis:');
+              console.log('🔍 Message sender ID:', messageUserId);
+              console.log('🔍 Thread owner ID:', threadOwnerId);
+              console.log('🔍 Selected user ID:', selectedUser?.user_id);
+              console.log('🔍 Should add message:', shouldAddMessage);
               
               if (shouldAddMessage) {
                 console.log('🚨 REAL-TIME: Adding message to current user messages immediately!');
@@ -524,7 +532,7 @@ export const useMessaging = (authToken, outletType = '') => {
               const threadUpdateTimestamp = data.created_at || new Date().toISOString();
               setUserThreads(prev => 
                 prev.map(thread => 
-                  String(thread.user_id) === String(messageUserId)
+                  String(thread.user_id) === String(threadOwnerId)
                     ? { 
                         ...thread, 
                         last_message: messageContent,
