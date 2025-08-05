@@ -255,15 +255,18 @@ export const useAdminWebhookRN = (authToken, options) => {
               });
             }
             
-            // Handle new message
-            if (data.type === 'new_message') {
-              console.log('💬 New message received:', data);
+            // Handle new message - BROADCAST TO ALL CONNECTED USERS
+            if (data.type === 'new_message' || data.type === 'broadcast_message') {
+              console.log('🚨 REAL-TIME: New message received via WebSocket!');
+              console.log('💬 Message type:', data.type);
+              console.log('💬 Full message data:', JSON.stringify(data, null, 2));
               console.log('💬 Message user_id:', data.user_id);
               console.log('💬 Message content:', data.content);
               console.log('💬 Message user_role:', data.user_role);
+              console.log('💬 Is broadcast message:', data.broadcast || false);
               
               // Create standardized message object with date and time
-              const currentTimestamp = data.created_at || new Date().toISOString();
+              const currentTimestamp = data.created_at || data.timestamp || new Date().toISOString();
               const standardizedMessage = {
                 id: data.id || data.chat_id || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 content: data.content,

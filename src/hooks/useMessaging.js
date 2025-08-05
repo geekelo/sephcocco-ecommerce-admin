@@ -175,7 +175,7 @@ export const useMessaging = (authToken, outletType = '') => {
 
       console.log('✅ Consumer created, attempting to subscribe...');
 
-      // Subscribe to messaging channel
+      // Subscribe to messaging channel - ADMIN CHANNEL
       subscriptionRef.current = consumerRef.current.subscriptions.create(
         {
           channel: "MessagingChannel",
@@ -192,26 +192,46 @@ export const useMessaging = (authToken, outletType = '') => {
             console.log('📡 Admin channel: messaging_admin_' + outletTypeRef.current);
             console.log('👤 Current user role from localStorage:', localStorage.getItem('userRole'));
             console.log('🔐 Auth token (first 20 chars):', authTokenRef.current.substring(0, 20) + '...');
+            console.log('🔗 WebSocket connection established and ready to receive messages');
+            console.log('🔗 Subscription ID:', subscriptionRef.current?.id);
+            console.log('🔗 Consumer state:', consumerRef.current?.connection?.getState());
             
-            // Load initial user threads when connected
-            if (subscriptionRef.current) {
-              console.log('📤 Requesting user threads via WebSocket...');
-              const requestData = {
-                action: 'request_initial_threads',
-                outlet_type: outletTypeRef.current
-              };
-              console.log('📤 Request data:', requestData);
-              
-              // Try sending directly to the channel
-              subscriptionRef.current.send(requestData);
-              
-              // Also try using perform as fallback
-              setTimeout(() => {
-                console.log('🔄 Trying perform method as fallback...');
-                subscriptionRef.current.perform('request_initial_threads', {
+                          // Load initial user threads when connected
+              if (subscriptionRef.current) {
+                console.log('📤 Requesting user threads via WebSocket...');
+                const requestData = {
+                  action: 'request_initial_threads',
                   outlet_type: outletTypeRef.current
-                });
-              }, 1000);
+                };
+                console.log('📤 Request data:', requestData);
+                
+                // Try sending directly to the channel
+                subscriptionRef.current.send(requestData);
+                
+                // Also try using perform as fallback
+                setTimeout(() => {
+                  console.log('🔄 Trying perform method as fallback...');
+                  subscriptionRef.current.perform('request_initial_threads', {
+                    outlet_type: outletTypeRef.current
+                  });
+                }, 1000);
+                
+                // Check if we get a response within 5 seconds
+                setTimeout(() => {
+                  console.log('⏰ Checking if user threads were loaded...');
+                  console.log('⏰ Current user threads count:', userThreads.length);
+                  if (userThreads.length === 0) {
+                    console.log('⚠️ No user threads loaded after 5 seconds');
+                    console.log('⚠️ This might indicate an issue with the Rails backend');
+                    console.log('⚠️ Or the request might not be reaching the server');
+                    console.log('⚠️ Trying to load threads via API as fallback...');
+                    
+                    // Try to load threads via API as fallback
+                    loadAllUserThreads();
+                  } else {
+                    console.log('✅ User threads loaded successfully');
+                  }
+                }, 5000);
               
               // Test if we can receive messages by sending a test message
               setTimeout(() => {
@@ -221,24 +241,66 @@ export const useMessaging = (authToken, outletType = '') => {
                   message: {
                     content: 'Test message from admin',
                     message_type: 'text',
-                    user_id: userId,
+                    user_id: 'test-user-id',
                     user_role: 'admin'
                   },
                   outlet_type: outletTypeRef.current,
-                  user_id: userId,
+                  user_id: 'test-user-id',
                   user_role: 'admin'
                 };
                 // Only send test message if we're in development
                 if (process.env.NODE_ENV === 'development') {
+                  console.log('🧪 Sending test message via perform...');
                   subscriptionRef.current.perform('receive', testMessage);
+                  
+                  // Also try sending directly
+                  setTimeout(() => {
+                    console.log('🧪 Sending test message via send...');
+                    subscriptionRef.current.send(testMessage);
+                  }, 1000);
                 }
               }, 3000);
+              
+              // Test manual message send after 10 seconds
+              setTimeout(() => {
+                if (selectedUser && selectedUser.user_id) {
+                  console.log('🧪 Testing manual message send to verify WebSocket...');
+                  const testManualMessage = {
+                    action: 'receive',
+                    message: {
+                      content: 'Manual test message',
+                      message_type: 'text',
+                      user_id: selectedUser.user_id,
+                      user_role: 'admin'
+                    },
+                    outlet_type: outletTypeRef.current,
+                    user_id: selectedUser.user_id,
+                    user_role: 'admin'
+                  };
+                  console.log('🧪 Sending manual test message:', testManualMessage);
+                  subscriptionRef.current.perform('receive', testManualMessage);
+                }
+              }, 10000);
               
               // Send a simple ping to test connection
               setTimeout(() => {
                 console.log('🏓 Sending ping to test WebSocket connection...');
                 subscriptionRef.current.send({ type: 'ping', timestamp: Date.now() });
               }, 1000);
+              
+              // Send another ping after 5 seconds to keep connection alive
+              setTimeout(() => {
+                console.log('🏓 Sending second ping to keep connection alive...');
+                subscriptionRef.current.send({ type: 'ping', timestamp: Date.now() });
+              }, 5000);
+              
+              // Periodic connection test every 30 seconds
+              setInterval(() => {
+                if (subscriptionRef.current && isConnected) {
+                  console.log('🏓 Periodic ping to keep connection alive...');
+                  subscriptionRef.current.send({ type: 'ping', timestamp: Date.now() });
+                }
+              }, 30000);
             }
           },
 
@@ -266,22 +328,22 @@ export const useMessaging = (authToken, outletType = '') => {
             console.log('📨 Timestamp:', new Date().toISOString());
             console.log('👤 Current user role:', localStorage.getItem('userRole'));
             console.log('👤 Selected user:', selectedUser?.user_id);
+            console.log('📨 Current user messages count:', currentUserMessages.length);
+            console.log('📨 User threads count:', userThreads.length);
+            console.log('🔗 WebSocket connection state:', consumerRef.current?.connection?.getState());
+            console.log('🔗 Subscription state:', subscriptionRef.current?.connection?.getState());
             
-            // Log every received message for debugging
-            if (data.type === 'new_message') {
-              console.log('🚨 NEW MESSAGE RECEIVED VIA WEBSOCKET!');
-              console.log('🚨 Message content:', data.content);
-              console.log('🚨 Message user_id:', data.user_id);
-              console.log('🚨 Message user_role:', data.user_role);
-              console.log('🚨 Message matches selected user:', selectedUser?.user_id === data.user_id);
+            // Handle ping response
+            if (data.type === 'pong') {
+              console.log('🏓 Pong response received:', data);
+              console.log('🏓 Connection is working!');
+              return;
             }
-            
-            // Log ALL received messages to see if anything is coming through
-            console.log('🔍 ANY WebSocket message received:', data.type || 'unknown type');
             
             // Handle test response
             if (data.type === 'test_response') {
               console.log('🧪 Test response received:', data);
+              return;
             }
             
             // Handle user threads response from WebSocket
@@ -289,11 +351,18 @@ export const useMessaging = (authToken, outletType = '') => {
               console.log('📋 User threads response received:', data);
               console.log('📋 Threads count:', data.threads?.length || 0);
               console.log('📋 Threads structure:', JSON.stringify(data.threads, null, 2));
+              console.log('📋 Error if any:', data.error);
               
               const threads = data.threads || [];
               setUserThreads(threads);
               setIsLoading(false);
               console.log('✅ User threads loaded from WebSocket:', threads.length);
+              
+              if (threads.length === 0) {
+                console.log('⚠️ No user threads loaded - this might be why messages aren\'t showing');
+                console.log('⚠️ Check if the Rails backend is creating threads properly');
+              }
+              return;
             }
             
             // Handle user messages response from WebSocket
@@ -307,66 +376,158 @@ export const useMessaging = (authToken, outletType = '') => {
               console.log('📨 Setting current user messages to:', messages.length, 'messages');
               setCurrentUserMessages(messages);
               console.log('✅ User messages loaded from WebSocket:', messages.length);
+              return;
             }
             
             // Handle new user thread
             if (data.type === 'new_user_thread') {
               console.log('🆕 New user thread received:', data.user_thread);
               setUserThreads(prev => {
-                const exists = prev.some(thread => thread.user_id === data.user_thread.user_id);
+                const exists = prev.some(thread => String(thread.user_id) === String(data.user_thread.user_id));
                 return exists ? prev : [...prev, data.user_thread];
               });
+              return;
             }
             
-            // Handle new message - REAL-TIME UPDATE
-            if (data.type === 'new_message') {
-              console.log('🚨 REAL-TIME: New message received via WebSocket!');
-              console.log('💬 Message user_id:', data.user_id);
-              console.log('💬 Message content:', data.content);
-              console.log('💬 Message user role:', data.user_role);
-              console.log('💬 Selected user user_id:', selectedUser?.user_id);
-              console.log('💬 Message matches selected user:', selectedUser?.user_id === data.user_id);
+            // Handle user thread updates
+            if (data.type === 'user_thread_updated') {
+              console.log('🔄 User thread updated:', data);
+              console.log('🔄 Full thread update data:', JSON.stringify(data, null, 2));
               
-              // Extract user info from nested user object or direct properties
-              const messageUserId = data.user_id || data.user?.id;
-              const messageUserRole = data.user_role || data.user?.role;
+              // Check if this update includes a new message that should be added to current user messages
+              if (data.last_message && data.user_id) {
+                console.log('🔄 Thread update includes new message, adding to current user messages');
+                
+                // Create message object from thread update
+                const newMessage = {
+                  id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                  content: data.last_message,
+                  message_type: 'text',
+                  user_id: data.user_id,
+                  user_name: data.user_name || 'Unknown User',
+                  user_email: data.user_email || '',
+                  user_role: data.user_role || 'user',
+                  timestamp: data.last_activity || new Date().toISOString(),
+                  created_at: data.last_activity || new Date().toISOString(),
+                  display_time: new Date(data.last_activity || new Date()).toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                  })
+                };
+                
+                // Add to current user messages if it matches the selected user
+                const shouldAddMessage = !selectedUser || String(data.user_id) === String(selectedUser.user_id);
+                
+                if (shouldAddMessage) {
+                  console.log('🚨 REAL-TIME: Adding thread update message to current user messages!');
+                  setCurrentUserMessages(prev => {
+                    const newMessages = [...prev, newMessage];
+                    console.log('✅ Thread update message added! New count:', newMessages.length);
+                    return newMessages;
+                  });
+                }
+              }
+              
+              // Update the thread list
+              setUserThreads(prev => 
+                prev.map(thread => 
+                  String(thread.user_id) === String(data.user_id)
+                    ? { 
+                        ...thread, 
+                        last_message: data.last_message,
+                        last_activity: data.last_activity,
+                        last_activity_display: new Date(data.last_activity || new Date()).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false
+                        }),
+                        message_count: data.message_count
+                      }
+                    : thread
+                )
+              );
+              return;
+            }
+            
+            // Handle message update confirmations
+            if (data.type === 'message_update_confirmation') {
+              console.log('✅ Message update confirmation:', data);
+              return;
+            }
+            
+            // Handle ALL new message types in one consolidated place
+            if (data.type === 'new_message' || data.type === 'broadcast_message' || data.type === 'message_broadcast') {
+              console.log('🚨 REAL-TIME: New message received via WebSocket!');
+              console.log('💬 Message type:', data.type);
+              console.log('💬 Full message data:', JSON.stringify(data, null, 2));
+              
+              // Extract message data with fallbacks
+              const messageUserId = data.user_id || data.user?.id || data.chat?.user_id;
+              const messageContent = data.content || data.chat?.content;
+              
+              if (!messageUserId || !messageContent) {
+                console.warn('⚠️ Invalid message data - missing user_id or content');
+                return;
+              }
               
               // Create standardized message object with date and time
-              const currentTimestamp = data.created_at || new Date().toISOString();
-              const newMessage = {
-                id: data.id || data.chat_id || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                content: data.content,
-                message_type: data.message_type || 'text',
+              const currentTimestamp = data.created_at || data.timestamp || data.chat?.timestamp || new Date().toISOString();
+              const standardizedMessage = {
+                id: data.id || data.chat_id || data.chat?.id || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                content: messageContent,
+                message_type: data.message_type || data.chat?.message_type || 'text',
                 user_id: messageUserId,
-                user_name: data.user?.name || 'Unknown User',
-                user_email: data.user?.email || '',
-                user_role: messageUserRole,
+                user_name: data.user?.name || data.chat?.user_name || 'Unknown User',
+                user_email: data.user?.email || data.chat?.user_email || '',
+                user_role: data.user_role || data.chat?.user_role,
                 timestamp: currentTimestamp,
                 created_at: currentTimestamp,
-                // Formatted time with date for display
                 display_time: new Date(currentTimestamp).toLocaleString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   hour: '2-digit',
                   minute: '2-digit',
                   hour12: false
-                }) // e.g., "Dec 25, 23:16"
+                })
               };
               
-              // IMMEDIATELY add new messages to current user messages if it's for the selected user
-              if (selectedUser && messageUserId === selectedUser.user_id) {
+              console.log('📨 Processed standardized message:', standardizedMessage);
+              
+              // Add to current user messages if it matches the selected user OR if no user is selected
+              const shouldAddMessage = !selectedUser || String(messageUserId) === String(selectedUser.user_id);
+              
+              if (shouldAddMessage) {
                 console.log('🚨 REAL-TIME: Adding message to current user messages immediately!');
-                setCurrentUserMessages(prev => [...prev, newMessage]);
+                setCurrentUserMessages(prev => {
+                  // Check for duplicates
+                  const isDuplicate = prev.some(msg => msg.id === standardizedMessage.id);
+                  if (isDuplicate) {
+                    console.log('⚠️ Duplicate message in currentUserMessages, skipping');
+                    return prev;
+                  }
+                  const newMessages = [...prev, standardizedMessage];
+                  console.log('✅ Message added! New count:', newMessages.length);
+                  return newMessages;
+                });
+              } else {
+                console.log('⚠️ Message not added to current user messages - user mismatch');
+                console.log('⚠️ Message user_id:', messageUserId);
+                console.log('⚠️ Selected user user_id:', selectedUser?.user_id);
               }
               
-              // IMMEDIATELY update user threads with latest message
+              // Update user threads with latest message
               const threadUpdateTimestamp = data.created_at || new Date().toISOString();
               setUserThreads(prev => 
                 prev.map(thread => 
-                  thread.user_id === messageUserId 
+                  String(thread.user_id) === String(messageUserId)
                     ? { 
                         ...thread, 
-                        last_message: data.content || 'New message',
+                        last_message: messageContent,
                         last_activity: threadUpdateTimestamp,
                         last_activity_display: new Date(threadUpdateTimestamp).toLocaleString('en-US', {
                           month: 'short',
@@ -374,7 +535,7 @@ export const useMessaging = (authToken, outletType = '') => {
                           hour: '2-digit',
                           minute: '2-digit',
                           hour12: false
-                        }), // e.g., "Dec 25, 23:16"
+                        }),
                         message_count: (thread.message_count || 0) + 1
                       }
                     : thread
@@ -382,24 +543,24 @@ export const useMessaging = (authToken, outletType = '') => {
               );
               
               console.log('✅ REAL-TIME: Message processed and state updated immediately!');
-            }
-            
-            // Handle message updates
-            if (data.type === 'message_updated') {
-              console.log('🔄 Message updated:', data);
-              // Handle message updates if needed
-            }
-            
-            // Handle message update confirmations
-            if (data.type === 'message_update_confirmation') {
-              console.log('✅ Message update confirmation:', data);
-              // Handle confirmation if needed
+              return;
             }
             
             // Log any other message types
-            if (!['user_threads_response', 'new_user_thread', 'new_message', 'message_updated', 'message_update_confirmation'].includes(data.type)) {
+            if (!['user_threads_response', 'new_user_thread', 'new_message', 'broadcast_message', 'message_broadcast', 'user_thread_updated', 'message_updated', 'message_update_confirmation', 'pong', 'test_response'].includes(data.type)) {
               console.log('❓ Unknown message type received:', data.type);
+              console.log('❓ Full unknown message data:', JSON.stringify(data, null, 2));
             }
+            
+            // Log ALL received messages for debugging
+            console.log('🔍 ALL MESSAGES: Message processed successfully');
+            console.log('🔍 ALL MESSAGES: Type:', data.type);
+            console.log('🔍 ALL MESSAGES: Has content:', !!data.content);
+            console.log('🔍 ALL MESSAGES: Has user_id:', !!data.user_id);
+            console.log('🔍 ALL MESSAGES: Has last_message:', !!data.last_message);
+            console.log('🔍 ALL MESSAGES: Has chat data:', !!data.chat);
+            console.log('🔍 ALL MESSAGES: Connection alive:', isConnected);
+            console.log('🔍 ALL MESSAGES: Subscription active:', !!subscriptionRef.current);
           }
         }
       );
