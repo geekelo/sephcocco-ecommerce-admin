@@ -12,8 +12,14 @@ const FlexibleTableRow = ({
   className = '',
   clickableRow = true
 }) => {
+  console.log('FlexibleTableRow received data:', data);
+  console.log('FlexibleTableRow received columns:', columns);
+  
+  // Safety check for data
+  if (!data) {
+    return null;
+  }
   const [showActions, setShowActions] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const actionsRef = useRef(null);
   const triggerRef = useRef(null);
 
@@ -31,23 +37,52 @@ const FlexibleTableRow = ({
     }
   }, [showActions]);
 
-  // Calculate dropdown position when showing
+  // Calculate dropdown position to handle screen edges and prevent overflow
   useEffect(() => {
-    if (showActions && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    if (showActions && triggerRef.current && actionsRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const dropdown = actionsRef.current.querySelector('.actions-menu-table');
       
-      const top = rect.bottom + scrollTop + 4;
-      const left = rect.right + scrollLeft - 160;
-      
-      const adjustedLeft = Math.max(16, Math.min(left, window.innerWidth - 176));
-      const adjustedTop = rect.bottom + 160 > window.innerHeight ? rect.top + scrollTop - 160 - 4 : top;
-      
-      setDropdownPosition({
-        top: adjustedTop,
-        left: adjustedLeft
-      });
+      if (dropdown) {
+        // Reset classes and inline styles
+        dropdown.classList.remove('align-left', 'align-up');
+        dropdown.style.position = 'fixed';
+        
+        const dropdownWidth = 160;
+        const dropdownHeight = 200; // Approximate dropdown height
+        
+        // Calculate initial position (below and right-aligned)
+        let top = triggerRect.bottom + 4;
+        let left = triggerRect.right - dropdownWidth;
+        
+        // Check if dropdown would go off bottom of screen
+        const spaceBelow = window.innerHeight - triggerRect.bottom;
+        const spaceAbove = triggerRect.top;
+        
+        if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+          // Position above the button
+          top = triggerRect.top - dropdownHeight - 4;
+          dropdown.classList.add('align-up');
+        }
+        
+        // Check if dropdown would go off left side of screen
+        if (left < 16) {
+          // Align to left side of button instead
+          left = triggerRect.left;
+          dropdown.classList.add('align-left');
+        }
+        
+        // Check if dropdown would go off right side of screen
+        if (left + dropdownWidth > window.innerWidth - 16) {
+          left = window.innerWidth - dropdownWidth - 16;
+        }
+        
+        // Apply calculated positions
+        dropdown.style.top = `${top}px`;
+        dropdown.style.left = `${left}px`;
+        dropdown.style.right = 'auto';
+        dropdown.style.bottom = 'auto';
+      }
     }
   }, [showActions]);
 
@@ -60,7 +95,6 @@ const FlexibleTableRow = ({
     }).format(value);
   };
   
-
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -80,6 +114,7 @@ const FlexibleTableRow = ({
       case 'active':
       case 'completed':
       case 'delivered':
+      case 'open':
         return 'status-completed status-active';
       case 'pending':
       case 'delivering':
@@ -88,6 +123,7 @@ const FlexibleTableRow = ({
       case 'cancelled':
       case 'inactive':
       case 'rejected':
+      case 'closed':
         return 'status-cancelled';
       default:
         return 'status-pending';
@@ -128,8 +164,37 @@ const FlexibleTableRow = ({
     );
   };
 
+  // Enhanced cell value getter that handles different column structures
+  const getCellValue = (column, data) => {
+    // Handle column.cell function (from react-table style)
+    if (column.cell && typeof column.cell === 'function') {
+      return column.cell({ row: { original: data } });
+    }
+
+    // Handle accessorKey (from react-table style)
+    if (column.accessorKey) {
+      return column.accessorKey.split('.').reduce((obj, key) => obj?.[key], data);
+    }
+
+    // Handle key or accessor (from custom style)
+    const key = column.key || column.accessor;
+    if (key) {
+      if (key.includes('.')) {
+        return key.split('.').reduce((obj, k) => obj?.[k], data);
+      }
+      return data[key];
+    }
+
+    return null;
+  };
+
   // Default cell renderer with enhanced type handling
   const defaultCellRenderer = (column, data, value) => {
+    // If the column already has a cell renderer, it was handled in getCellValue
+    if (column.cell && typeof column.cell === 'function') {
+      return value; // This is already the rendered content
+    }
+
     // Handle different cell types based on column configuration
     if (column.type === 'custom' && column.render) {
       return column.render(value, data, column);
@@ -171,13 +236,12 @@ const FlexibleTableRow = ({
     }
 
     // Enhanced auto-detection based on column key
-    const columnKey = column.key?.toLowerCase() || '';
+    const columnKey = (column.key || column.accessorKey || '')?.toLowerCase() || '';
     
     // Currency fields
     if (columnKey.includes('price') || columnKey.includes('cost') || columnKey.includes('amount')) {
       return (
         <div className="currency-cell">
-  
           <span className="currency-value">{formatCurrency(value)}</span>
         </div>
       );
@@ -384,13 +448,13 @@ const FlexibleTableRow = ({
     return (
       <div className="actions-cell-rows">
         <div 
-          className={`actions-dropdown ${showActions ? 'show-menu' : ''}`}
+          className={`actions-dropdown-table ${showActions ? 'show-menu-table' : ''}`}
           ref={actionsRef}
           onClick={(e) => e.stopPropagation()}
         >
           <button
             ref={triggerRef}
-            className="actions-trigger"
+            className="actions-trigger-table"
             onClick={() => setShowActions(!showActions)}
             aria-label="More actions"
             aria-expanded={showActions}
@@ -399,19 +463,11 @@ const FlexibleTableRow = ({
           </button>
           
           {showActions && (
-            <div 
-              className="actions-menu"
-              style={{
-                position: 'fixed',
-                top: `${dropdownPosition.top}px`,
-                left: `${dropdownPosition.left}px`,
-                zIndex: 10001
-              }}
-            >
+            <div className="actions-menu-table">
               {actions.map((action) => (
                 <button
                   key={action.key}
-                  className={`action-item ${action.className || ''}`}
+                  className={`action-item-table ${action.className || ''}`}
                   onClick={() => {
                     onActionClick && onActionClick(action.key, data);
                     setShowActions(false);
@@ -431,7 +487,7 @@ const FlexibleTableRow = ({
 
   const handleRowClick = (e) => {
     // Don't trigger row click if clicking on actions or buttons
-    if (!e.target.closest('.actions-dropdown') && 
+    if (!e.target.closest('.actions-dropdown-table') && 
         !e.target.closest('.cell-button') && 
         !e.target.closest('.action-button') &&
         clickableRow) {
@@ -445,14 +501,19 @@ const FlexibleTableRow = ({
       onClick={handleRowClick}
       style={{ cursor: clickableRow ? 'pointer' : 'default' }}
     >
-      {columns.map((column) => {
-        const value = column.accessor 
-          ? column.accessor.split('.').reduce((obj, key) => obj?.[key], data)
-          : data[column.key] || (column.key.includes('.') ? column.key.split('.').reduce((obj, key) => obj?.[key], data) : data[column.key]);
+      {columns.map((column, columnIndex) => {
+        if (!column) {
+          return null;
+        }
+        
+        const value = getCellValue(column, data);
+        const columnKey = column.key || column.accessorKey || column.header || `column-${columnIndex}`;
+
+        console.log(`Column: ${columnKey}, Value:`, value);
 
         return (
           <div
-            key={column.key}
+            key={columnKey}
             className={`table-cell ${column.className || ''}`}
             style={{
               flex: column.flex || 1,
@@ -461,7 +522,7 @@ const FlexibleTableRow = ({
               textAlign: column.align || 'left',
               ...column.style
             }}
-            data-label={column.label}
+            data-label={column.label || column.header}
           >
             {renderCell 
               ? renderCell(column, data, value)

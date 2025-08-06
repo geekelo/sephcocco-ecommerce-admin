@@ -1,7 +1,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { updateNotifyAdmin } from "../services/UpdateNotification";
+import { updateNotifyAdmin } from "../services/updateNotification";
 
 export const useUpdateNotifyAdmin = () => {
  

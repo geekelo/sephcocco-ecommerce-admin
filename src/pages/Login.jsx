@@ -76,10 +76,14 @@ const handleSubmit = async (e) => {
     
     const response = await login(payload);
     if (response?.message) {
-    localStorage.setItem('token', response?.token)
+      localStorage.setItem('token', response?.token);
+      localStorage.setItem('userRole', response?.user?.role || 'user');
       Cookies.set('outlets', JSON.stringify(response?.user?.outlets), { expires: 1 }); 
-    console.log("Login success:", response);
-    navigate("/store");
+      console.log("Login success:", response);
+      console.log("User role saved:", response?.user?.role);
+      console.log("Full user object:", JSON.stringify(response?.user, null, 2));
+      console.log("User role object:", JSON.stringify(response?.user?.role, null, 2));
+      navigate("/store");
     }
 
   } catch (error) {

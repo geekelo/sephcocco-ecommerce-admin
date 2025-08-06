@@ -1,9 +1,10 @@
-import React, { act, useEffect, useState } from 'react';
-import { Eye, EyeOff, Pause, UserPlus, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Eye, EyeOff, UserPlus, X } from 'lucide-react';
 import '../styles/UserAdminFormModal.css';
 import { useRegister } from '../hooks/useRegister';
 import { validateEmail, validatePassword } from '../schema/LoginSchema';
 import Cookies from 'js-cookie';
+
 const UserAdminFormModal = ({
   isEdit,
   activeTab,
@@ -17,29 +18,13 @@ const UserAdminFormModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { mutateAsync: register } = useRegister();
-const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [outletOptions, setOutletOptions] = useState([]);
-
 
   useEffect(() => {
     loadOutlets();
- 
   }, [activeTab]);
- const handlePasswordChange = (e) => {
-    const value = e.target.value;
-    setPassword(value);
-
-    // Real-time validation
-    if (value.trim() === "") {
-      setPasswordError("Password is required");
-    } else if (!validatePassword(value)) {
-      setPasswordError("Password must be at least 6 characters");
-    } else {
-      setPasswordError("");
-    }
-  };
 
   const loadOutlets = () => {
     try {
@@ -54,18 +39,10 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     } catch (error) {
       console.error('Error parsing outlets from cookies:', error);
       setOutletOptions([]);
-    } finally {
-     
     }
   };
-console.log(outletOptions);
 
-  // Available outlets
-  // const outletOptions = [
-  //   { value: "restaurant", label: "Restaurant" },
-  //   { value: "pharmacy", label: "Pharmacy" },
-  //   { value: "lounge", label: "Lounge" }
-  // ];
+  console.log(outletOptions);
 
   // Validation functions
   const validateName = (name) => name.trim().length >= 2;
@@ -113,7 +90,7 @@ console.log(outletOptions);
   // Get available options (exclude already selected ones)
   const getAvailableOptions = () => {
     const selectedOutlets = formValues.outlets || [];
-    return outletOptions.filter(option => !selectedOutlets.includes(option.value));
+    return outletOptions.filter(option => !selectedOutlets.includes(option));
   };
 
   const handleInputChange = (e) => {
@@ -218,71 +195,86 @@ console.log(outletOptions);
   };
 
   const handleFormSubmit = async () => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
+    setApiError("");
+    
     try {
-      // Validate outlets before submission
-      if (!formValues.outlets || formValues.outlets.length === 0) {
+      // Validate outlets for admins
+      if (activeTab === "admins" && (!formValues.outlets || formValues.outlets.length === 0)) {
         setValidationErrors(prev => ({
           ...prev,
           outlets: "Please select at least one outlet"
         }));
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Check for validation errors
+      if (Object.keys(validationErrors).length > 0) {
+        setIsSubmitting(false);
         return;
       }
 
       // Merge firstName and lastName into full name
       const fullName = `${formValues.firstName || ''} ${formValues.lastName || ''}`.trim();
-      if (activeTab === "admins") {
-  const payload = {
-        user: {
-          name: fullName,
-          address: formValues.address || '',
-          email: formValues.email || '',
-          phone_number: formValues.phone_number || '',
-          whatsapp_number: formValues.whatsapp_number || '',
-          password: formValues.password || '',
-          password_confirmation: formValues.password_confirmation || '',
-          role: "admin",
-          outlets: formValues.outlets || [] // Send as array
-        }
-      };
-      return payload
-      } else if (activeTab === "users") {
-  const payload = {
-        user: {
-          name: fullName,
-          address: formValues.address || '',
-          email: formValues.email || '',
-          phone_number: formValues.phone_number || '',
-          whatsapp_number: formValues.whatsapp_number || '',
-          role: "user",
-       
-        }
-      };
-      return payload
-      }
+      
+      let payload;
 
-      console.log(payload);
+      if (isEdit) {
+        // For editing, call the onSubmit function passed from parent
+        // The parent component will handle the API calls
+        onSubmit(formValues);
+      } else {
+        // For adding new users/admins
+        if (activeTab === "admins") {
+          payload = {
+            user: {
+              name: fullName,
+              address: formValues.address || '',
+              email: formValues.email || '',
+              phone_number: formValues.phone_number || '',
+              whatsapp_number: formValues.whatsapp_number || '',
+              password: formValues.password || '',
+              password_confirmation: formValues.password_confirmation || '',
+              role: "admin",
+              outlets: formValues.outlets || []
+            }
+          };
+        } else if (activeTab === "users") {
+          payload = {
+            user: {
+              name: fullName,
+              address: formValues.address || '',
+              email: formValues.email || '',
+              phone_number: formValues.phone_number || '',
+              whatsapp_number: formValues.whatsapp_number || '',
+              role: "user"
+            }
+          };
+        }
 
-      const response = await register(payload);
-      console.log(response);
-      if (response?.message) {
-        closeAllModals(); 
-        setIsSubmitting(false)
+        console.log('Registration payload:', payload);
+
+        const response = await register(payload);
+        console.log('Registration response:', response);
+        
+        if (response?.message) {
+          closeAllModals(); 
+        }
       }
-     
     } catch (error) {
-      console.error('Registration failed:', error);
-      // Handle error appropriately
+      console.error('Form submission failed:', error);
+      setApiError(error.message || 'An error occurred while processing your request');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
     
-    // Trigger validation on blur if validateField function exists
-    if (typeof validateField === 'function') {
-      validateField(name, value);
-    }
+    // Additional validation can be added here if needed
+    console.log(`Field ${name} blurred with value:`, value);
   };
 
   return (
@@ -291,7 +283,7 @@ console.log(outletOptions);
         <div className="modal-header-form">
           <h2 className="modal-title-form">
             <UserPlus size={20} />
-            {isEdit ? 'Edit' : 'Add New'} {'User'}
+            {isEdit ? 'Edit' : 'Add New'} {activeTab === 'users' ? 'User' : 'Admin'}
           </h2>
           <button className="modal-close-form" onClick={closeAllModals}>
             ×
@@ -399,108 +391,111 @@ console.log(outletOptions);
                 <div className="form-error-form">{validationErrors.whatsapp_number || formErrors.whatsapp_number}</div>
               )}
             </div>
-            {activeTab === "admins" &&          <div className="form-field-form">
-  <label className="form-label-form" htmlFor="password">Password</label>
-  <div className="form-input-wrapper">
-    <input
-      id="password"
-      name="password"
-      type={showPassword ? "text" : "password"}
-      value={formValues.password || ''}
-      onChange={handleInputChange}
-      className={`form-input-form ${validationErrors.password || formErrors.password ? 'error' : ''}`}
-      placeholder="Enter password"
-    />
-    <button
-      type="button"
-      className="password-toggle-icon"
-      onClick={() => setShowPassword(prev => !prev)}
-      tabIndex={-1}
-    >
-      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-    </button>
-  </div>
-  {(validationErrors.password || formErrors.password) && (
-    <div className="form-error-form">{validationErrors.password || formErrors.password}</div>
-  )}
-</div>}
-{activeTab === "admins" &&       <div className="form-field-form">
-  <label className="form-label-form" htmlFor="confirmPassword">Confirm Password</label>
-  <div className="form-input-wrapper">
-    <input
-      id="confirmPassword"
-      name="confirmPassword"
-      type={showConfirmPassword ? "text" : "password"}
-      value={formValues.confirmPassword || ''}
-      onChange={handleInputChange}
-      className={`form-input-form ${validationErrors.confirmPassword || formErrors.confirmPassword ? 'error' : ''}`}
-      placeholder="Confirm password"
-    />
-    <button
-      type="button"
-      className="password-toggle-icon"
-      onClick={() => setShowConfirmPassword(prev => !prev)}
-      tabIndex={-1}
-    >
-      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-    </button>
-  </div>
-  {(validationErrors.confirmPassword || formErrors.confirmPassword) && (
-    <div className="form-error-form">{validationErrors.confirmPassword || formErrors.confirmPassword}</div>
-  )}
-</div>}
 
-
-
-
-          
-
-            {/* Multi-select Outlets with badges */}
-            {activeTab === "admins" &&   <div className="form-field-form">
-              <label className="form-label-form">Outlets</label>
-              
-              {/* Selected outlets display as badges */}
-              {formValues.outlets && formValues.outlets.length > 0 && (
-                <div className="selected-outlets-badges">
-                  {formValues.outlets.map((outlet) => {
-                    const outletLabel = outletOptions.find(opt => opt === outlet)
-                    return (
-                      <span key={outlet} className="outlet-badge">
-                        {outletLabel}
-                        <button
-                          type="button"
-                          onClick={() => removeOutlet(outlet)}
-                          className="outlet-badge-remove"
-                        >
-                          <X size={14} />
-                        </button>
-                      </span>
-                    );
-                  })}
+            {/* Password fields - only show for admins or when adding new users */}
+            {(activeTab === "admins" || !isEdit) && (
+              <>
+                <div className="form-field-form">
+                  <label className="form-label-form" htmlFor="password">Password</label>
+                  <div className="form-input-wrapper">
+                    <input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formValues.password || ''}
+                      onChange={handleInputChange}
+                      className={`form-input-form ${validationErrors.password || formErrors.password ? 'error' : ''}`}
+                      placeholder="Enter password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-icon"
+                      onClick={() => setShowPassword(prev => !prev)}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  {(validationErrors.password || formErrors.password) && (
+                    <div className="form-error-form">{validationErrors.password || formErrors.password}</div>
+                  )}
                 </div>
-              )}
 
-              {/* Dropdown to add outlets */}
-              <select
-                onChange={handleOutletSelect}
-                className={`form-select-form ${validationErrors.outlets || formErrors.outlets ? 'error' : ''}`}
-                value=""
-              >
-                <option value="">
-                  {getAvailableOptions().length > 0 ? 'Select outlet to add' : 'All outlets selected'}
-                </option>
-                {getAvailableOptions().map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                <div className="form-field-form">
+                  <label className="form-label-form" htmlFor="password_confirmation">Confirm Password</label>
+                  <div className="form-input-wrapper">
+                    <input
+                      id="password_confirmation"
+                      name="password_confirmation"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={formValues.password_confirmation || ''}
+                      onChange={handleInputChange}
+                      className={`form-input-form ${validationErrors.password_confirmation || formErrors.password_confirmation ? 'error' : ''}`}
+                      placeholder="Confirm password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-icon"
+                      onClick={() => setShowConfirmPassword(prev => !prev)}
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  {(validationErrors.password_confirmation || formErrors.password_confirmation) && (
+                    <div className="form-error-form">{validationErrors.password_confirmation || formErrors.password_confirmation}</div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Multi-select Outlets with badges - only for admins */}
+            {activeTab === "admins" && (
+              <div className="form-field-form">
+                <label className="form-label-form">Outlets</label>
+                
+                {/* Selected outlets display as badges */}
+                {formValues.outlets && formValues.outlets.length > 0 && (
+                  <div className="selected-outlets-badges">
+                    {formValues.outlets.map((outlet) => {
+                      const outletLabel = outletOptions.find(opt => opt === outlet) || outlet;
+                      return (
+                        <span key={outlet} className="outlet-badge">
+                          {outletLabel}
+                          <button
+                            type="button"
+                            onClick={() => removeOutlet(outlet)}
+                            className="outlet-badge-remove"
+                          >
+                            <X size={14} />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Dropdown to add outlets */}
+                <select
+                  onChange={handleOutletSelect}
+                  className={`form-select-form ${validationErrors.outlets || formErrors.outlets ? 'error' : ''}`}
+                  value=""
+                >
+                  <option value="">
+                    {getAvailableOptions().length > 0 ? 'Select outlet to add' : 'All outlets selected'}
                   </option>
-                ))}
-              </select>
+                  {getAvailableOptions().map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
 
-              {(validationErrors.outlets || formErrors.outlets) && (
-                <div className="form-error-form">{validationErrors.outlets || formErrors.outlets}</div>
-              )}
-            </div>}
-          
+                {(validationErrors.outlets || formErrors.outlets) && (
+                  <div className="form-error-form">{validationErrors.outlets || formErrors.outlets}</div>
+                )}
+              </div>
+            )}
 
             {apiError && <div className="form-error-form api-error">{apiError}</div>}
 
@@ -521,7 +516,7 @@ console.log(outletOptions);
                 {isSubmitting ? (
                   `${isEdit ? 'Updating...' : 'Adding...'}`
                 ) : (
-                  `${isEdit ? 'Update' : 'Add'} User`
+                  `${isEdit ? 'Update' : 'Add'} ${activeTab === 'users' ? 'User' : 'Admin'}`
                 )}
               </button>
             </div>
