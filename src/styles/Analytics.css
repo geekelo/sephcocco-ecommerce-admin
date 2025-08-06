@@ -1,0 +1,540 @@
+/* ===== ANALYTICS PAGE STYLES ===== */
+
+/* Main Analytics Container */
+.analytics {
+  background-color: #ffffff;
+  overflow: hidden;
+  max-width: 100%;
+  color: #000;
+  padding: 16px 20px;
+  min-height: 100vh;
+}
+
+/* Analytics Header */
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  padding: 0 4px;
+}
+
+.analytics-title h1 {
+  color: #333;
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+}
+
+.analytics-title p {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+  font-weight: 400;
+}
+
+.analytics-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.analytics-outlet-switcher {
+  min-width: 180px;
+}
+
+/* Timeframe Selector in Chart Headers */
+.chart-header .timeframe-selector {
+  display: flex;
+  gap: 4px;
+  background: #f8f9fa;
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid #F93A0130;
+}
+
+.chart-header .timeframe-btn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.chart-header .timeframe-btn:hover {
+  background: #FFE5E0;
+  color: #FF6B35;
+}
+
+.chart-header .timeframe-btn.active {
+  background: #FF6B35;
+  color: white;
+  box-shadow: 0 1px 3px rgba(255, 107, 53, 0.2);
+}
+
+/* Overview Stats */
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #F93A0130;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.stat-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-icon {
+  font-size: 24px;
+  opacity: 0.8;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.stat-trend {
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-trend.positive {
+  color: #22c55e;
+}
+
+.stat-trend.negative {
+  color: #ef4444;
+}
+
+.stat-trend.neutral {
+  color: #FF6B35;
+}
+
+.stat-trend.positive::before {
+  content: "↗";
+  font-size: 14px;
+}
+
+.stat-trend.negative::before {
+  content: "↘";
+  font-size: 14px;
+}
+
+/* Charts Section */
+.charts-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #F93A0130;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.chart-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.chart-container {
+  margin-top: 16px;
+}
+
+/* Bottom Section */
+.bottom-section {
+  display: block;
+}
+
+/* Chat Resolution Specific */
+.chat-resolution {
+  width: 100%;
+}
+
+.chat-resolution .chart-container {
+  position: relative;
+}
+
+.resolution-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.resolution-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.resolution-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.resolution-label {
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+
+.resolution-value {
+  font-weight: 600;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Unresolved Chats List */
+.unresolved-chats-list {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.unresolved-chats-list h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.chat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.chat-item:last-child {
+  border-bottom: none;
+}
+
+.chat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.chat-user {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.chat-product {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.chat-message {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.chat-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  margin-left: 16px;
+}
+
+.chat-status {
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: #FFE5E0;
+  color: #FF6B35;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chat-date {
+  font-size: 11px;
+  color: #888;
+}
+
+.no-chats {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.no-chats p {
+  margin: 0;
+  font-style: italic;
+}
+
+/* Performance Comparison Specific */
+.performance-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.legend-line {
+  width: 20px;
+  height: 2px;
+}
+
+.legend-line.solid {
+  background: #FF6B35;
+}
+
+.legend-line.dashed {
+  background: linear-gradient(to right, #FFE5E0 50%, transparent 50%);
+  background-size: 4px 2px;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #FFE5E0;
+  border-top: 3px solid #FF6B35;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .overview-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .bottom-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics {
+    padding: 16px;
+  }
+  
+  .analytics-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  
+  .analytics-title {
+    text-align: center;
+  }
+  
+  .analytics-title h1 {
+    font-size: 28px;
+  }
+  
+  .analytics-title p {
+    font-size: 14px;
+  }
+  
+  .analytics-controls {
+    justify-content: center;
+  }
+  
+  .analytics-outlet-switcher {
+    min-width: 160px;
+  }
+  
+  .timeframe-section {
+    margin-bottom: 24px;
+  }
+  
+  .chart-header .timeframe-selector {
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .chart-header .timeframe-btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+  
+  .overview-stats {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .charts-section {
+    gap: 16px;
+  }
+  
+  .chart-card {
+    padding: 16px;
+  }
+  
+  .stat-card {
+    padding: 20px;
+  }
+  
+  .stat-value {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-header {
+    margin-bottom: 20px;
+    gap: 16px;
+  }
+  
+  .analytics-title h1 {
+    font-size: 24px;
+  }
+  
+  .business-selector,
+  .timeframe-selector {
+    padding: 2px;
+  }
+  
+  .business-btn,
+  .timeframe-btn {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+  }
+  
+  .resolution-stats {
+    gap: 8px;
+  }
+  
+  .performance-legend {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .stat-card,
+  .chart-card {
+    border-color: #FF6B35;
+    border-width: 2px;
+  }
+  
+  .business-btn.active,
+  .timeframe-btn.active {
+    border: 2px solid #333;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .stat-card,
+  .business-btn,
+  .timeframe-btn {
+    transition: none;
+  }
+  
+  .loading-spinner {
+    animation: none;
+  }
+  
+  .stat-card:hover {
+    transform: none;
+  }
+}
