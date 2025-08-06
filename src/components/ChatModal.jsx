@@ -386,6 +386,10 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
                               )}
                             </div>
                             <div className="message-content">
+                              {/* Add user name display */}
+                              <div className="message-sender">
+                                {message.user_name}
+                              </div>
                               <div className="message-bubble">
                                 <p>{message.text}</p>
                               </div>

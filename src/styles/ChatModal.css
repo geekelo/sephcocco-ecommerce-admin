@@ -378,6 +378,18 @@
   gap: 4px;
 }
 
+.message-sender {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 4px;
+  text-transform: capitalize;
+}
+
+.message.admin .message-sender {
+  color: #1f2937;
+}
+
 .message-bubble {
   padding: 12px 16px;
   border-radius: 18px;
