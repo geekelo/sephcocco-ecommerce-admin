@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import '../styles/ManageAccounts.css';
-import { Users, Shield, UserPlus, Edit3, Trash2, Eye, MoreVertical, Ban, CheckCircle, Mail, Calendar, Phone, MapPin } from 'lucide-react';
+import { Users, Shield, UserPlus, Edit3, Trash2, Eye, MoreVertical, Ban, CheckCircle, Mail, Calendar, Phone, MapPin, Truck, Package, Star, Clock } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import FlexibleTable from '../components/FlexibleTable';
 import UserAdminFormModal from '../components/UserAdminFormModal';
@@ -11,6 +11,7 @@ import { useUpdateUsers } from '../hooks/useUpdateUsers';
 import { useSwitchRole } from '../hooks/useSwitchUser';
 import { useSuspendUser } from '../hooks/useSuspendUser';
 import { useUnsuspendUser } from '../hooks/useUnsuspendUser';
+import ManageAccountsSkeleton from '../components/ManageAccountSkeleton';
 
 const itemsPerPage = 10;
 
@@ -43,14 +44,56 @@ const ManageAccounts = () => {
     firstName: '',
     lastName: '',
     email: '',
-    role: activeTab === 'users' ? 'user' : 'admin',
+    role: activeTab === 'users' ? 'user' : activeTab === 'riders' ? 'rider' : 'admin',
     phone_number: '',
     whatsapp_number: '',
     address: '',
     outlets: [],
+    // Rider-specific fields
+    license_number: '',
+    vehicle_type: '',
+    vehicle_plate: '',
+    emergency_contact: '',
+    emergency_phone: '',
   });
 
   const [formErrors, setFormErrors] = useState({});
+
+  // Function to generate mock delivery data for riders
+  const generateMockDeliveryData = (riderId) => {
+    // Generate consistent mock data based on rider ID
+    const seed = riderId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const random = (seed * 9301 + 49297) % 233280;
+    
+    const totalDeliveries = Math.floor((random / 233280) * 300) + 50; // 50-350 deliveries
+    const deliveredToday = Math.floor((random / 233280) * 15); // 0-15 deliveries today
+    const averageRating = 3.5 + ((random / 233280) * 1.5); // 3.5-5.0 rating
+    const totalEarnings = totalDeliveries * (150 + (random / 233280) * 200); // Variable earnings per delivery
+    
+    const statuses = ['available', 'busy', 'offline'];
+    const currentStatus = statuses[Math.floor((random / 233280) * 3)];
+    
+    const vehicleTypes = ['Motorcycle', 'Bicycle', 'Van', 'Car'];
+    const vehicleType = vehicleTypes[Math.floor((random / 233280) * 4)];
+    
+    const locations = ['Victoria Island, Lagos', 'Ikeja, Lagos', 'Lekki, Lagos', 'Surulere, Lagos', 'Yaba, Lagos'];
+    const currentLocation = locations[Math.floor((random / 233280) * 5)];
+    
+    return {
+      total_deliveries: totalDeliveries,
+      delivered_today: deliveredToday,
+      average_rating: Math.round(averageRating * 10) / 10,
+      current_status: currentStatus,
+      total_earnings: Math.round(totalEarnings),
+      vehicle_type: vehicleType,
+      vehicle_plate: vehicleType === 'Bicycle' ? 'N/A' : `${String.fromCharCode(65 + Math.floor((random / 233280) * 26))}${String.fromCharCode(65 + Math.floor(((random * 2) / 233280) * 26))}${String.fromCharCode(65 + Math.floor(((random * 3) / 233280) * 26))}-${Math.floor((random / 233280) * 900) + 100}-${String.fromCharCode(88 + Math.floor((random / 233280) * 3))}${String.fromCharCode(88 + Math.floor(((random * 2) / 233280) * 3))}`,
+      license_number: `LIC${Math.floor((random / 233280) * 900000) + 100000}`,
+      emergency_contact: 'Emergency Contact',
+      emergency_phone: '+234' + Math.floor((random / 233280) * 9000000000) + 1000000000,
+      current_location: currentLocation,
+      last_delivery: currentStatus !== 'offline' ? new Date(Date.now() - (random / 233280) * 86400000).toISOString() : new Date(Date.now() - 86400000 - (random / 233280) * 172800000).toISOString()
+    };
+  };
 
   // Transform API users to match component expectations
   const transformedUsers = useMemo(() => {
@@ -70,18 +113,20 @@ const ManageAccounts = () => {
       joinDate: user.created_at,
       lastLogin: user.last_login_at || new Date().toISOString(),
       orders: user.total_orders,
+      // Add mock delivery data for riders
+      ...(user.role === 'rider' ? generateMockDeliveryData(user.id) : {})
     }));
   }, [apiUsers]);
 
-  // Separate users and admins
+  // Separate users, admins, and riders from the transformed data
   const users = transformedUsers.filter(user => user.role === 'user');
   const admins = transformedUsers.filter(user => user.role === 'admin');
+  const riders = transformedUsers.filter(user => user.role === 'rider');
 
   // Filter data based on search and status
   const filteredUsers = useMemo(() => {
     let filtered = users;
 
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,7 +136,6 @@ const ManageAccounts = () => {
       );
     }
 
-    // Filter by status
     if (filterStatus && filterStatus !== 'All Status') {
       filtered = filtered.filter(user => user.status === filterStatus);
     }
@@ -102,7 +146,6 @@ const ManageAccounts = () => {
   const filteredAdmins = useMemo(() => {
     let filtered = admins;
 
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(admin =>
         admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -112,13 +155,36 @@ const ManageAccounts = () => {
       );
     }
 
-    // Filter by status
     if (filterStatus && filterStatus !== 'All Status') {
       filtered = filtered.filter(admin => admin.status === filterStatus);
     }
 
     return filtered;
   }, [admins, searchTerm, filterStatus]);
+
+  const filteredRiders = useMemo(() => {
+    let filtered = riders;
+
+    if (searchTerm) {
+      filtered = filtered.filter(rider =>
+        rider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rider.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rider.phone_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (rider.vehicle_type && rider.vehicle_type.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (rider.vehicle_plate && rider.vehicle_plate.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    if (filterStatus && filterStatus !== 'All Status') {
+      if (filterStatus === 'available' || filterStatus === 'busy' || filterStatus === 'offline') {
+        filtered = filtered.filter(rider => rider.current_status === filterStatus);
+      } else {
+        filtered = filtered.filter(rider => rider.status === filterStatus);
+      }
+    }
+
+    return filtered;
+  }, [riders, searchTerm, filterStatus]);
 
   // Column definitions for users table
   const userColumns = [
@@ -317,6 +383,101 @@ const ManageAccounts = () => {
     }
   ];
 
+  // Column definitions for riders table
+  const riderColumns = [
+    {
+      key: 'rider',
+      label: 'Rider',
+      flex: 2,
+      minWidth: '200px',
+      format: (value, data) => (
+        <div className="avatar-cell">
+          <div className="avatar-placeholder">
+            <Truck size={16} />
+          </div>
+          <div className="avatar-details">
+            <span className="avatar-name">{data.name}</span>
+            <span className="avatar-sub">{data.email}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'phone_number',
+      label: 'Phone',
+      flex: 1.5,
+      minWidth: '150px',
+      format: (value, data) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Phone size={14} style={{ color: '#6b7280', flexShrink: 0 }} />
+          <span>{value || 'N/A'}</span>
+        </div>
+      )
+    },
+   
+    {
+      key: 'total_deliveries',
+      label: 'Total Deliveries',
+      flex: 1,
+      minWidth: '120px',
+      format: (value, data) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Package size={14} style={{ color: '#6b7280', flexShrink: 0 }} />
+          <div>
+            <div style={{ fontWeight: '600' }}>{value || 0}</div>
+            <div style={{ fontSize: '12px', color: '#9ca3af' }}>Today: {data.delivered_today || 0}</div>
+          </div>
+        </div>
+      )
+    },
+
+    {
+      key: 'current_status',
+      label: 'Status',
+      flex: 1,
+      minWidth: '120px',
+      type: 'status',
+      statusConfig: {
+        classMap: {
+          'available': 'status-active',
+          'busy': 'status-warning',
+          'offline': 'status-inactive'
+        },
+        textMap: {
+          'available': 'Available',
+          'busy': 'Busy',
+          'offline': 'Offline'
+        },
+        showIcon: true,
+        iconMap: {
+          'available': '🟢',
+          'busy': '🟡',
+          'offline': '⭕'
+        }
+      }
+    },
+    {
+      key: 'last_delivery',
+      label: 'Last Delivery',
+      flex: 1,
+      minWidth: '120px',
+      format: (value) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6b7280' }}>
+          <Clock size={14} style={{ color: '#9ca3af', flexShrink: 0 }} />
+          <span>{value ? new Date(value).toLocaleString() : 'Never'}</span>
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      flex: 0,
+      minWidth: '60px',
+      type: 'actions',
+      className: 'actions-column'
+    }
+  ];
+
   // Actions configuration
   const accountActions = [
     {
@@ -363,7 +524,7 @@ const ManageAccounts = () => {
     setFilterStatus(status);
   };
 
-  // Handle view user/admin
+  // Handle view user/admin/rider
   const handleViewAccount = (account) => {
     setSelectedAccount(account);
     setShowViewModal(true);
@@ -382,9 +543,9 @@ const ManageAccounts = () => {
       role: account.role || '',
       phone_number: account.phone_number || '',
       whatsapp_number: account.whatsapp_number || '',
-   
       address: account.address || '',
       outlets: account.outlets || [],
+
     });
     setShowEditModal(true);
   };
@@ -409,6 +570,8 @@ const ManageAccounts = () => {
           whatsapp_number: submissionData.whatsapp_number
         }
       };
+
+ 
 
       // Add password fields if they exist (for new users or password changes)
       if (submissionData.password) {
@@ -499,7 +662,15 @@ const ManageAccounts = () => {
         return;
       }
 
-      const newRole = selectedAccount.role === 'user' ? 'admin' : 'user';
+      let newRole;
+      if (selectedAccount.role === 'user') {
+        newRole = 'admin';
+      } else if (selectedAccount.role === 'admin') {
+        newRole = 'rider';
+      } else {
+        newRole = 'user';
+      }
+
       const switchRolePayload = {
         user: {
           role: newRole
@@ -521,11 +692,12 @@ const ManageAccounts = () => {
 
   // Handle add account
   const handleAddAccount = () => {
+    const role = activeTab === 'users' ? 'user' : activeTab === 'riders' ? 'rider' : 'admin';
     setFormData({
       firstName: '',
       lastName: '',
       email: '',
-      role: activeTab === 'users' ? 'user' : 'admin',
+      role: role,
       phone_number: '',
       whatsapp_number: '',
       address: '',
@@ -556,6 +728,7 @@ const ManageAccounts = () => {
     if (!formData.email?.trim()) errors.email = 'Email is required';
     if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Email is invalid';
     if (!formData.role) errors.role = 'Role is required';
+    
     
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -599,11 +772,12 @@ const ManageAccounts = () => {
     setShowSwitchRoleModal(false);
     setSelectedAccount(null);
     setActionType('');
+    const role = activeTab === 'users' ? 'user' : activeTab === 'riders' ? 'rider' : 'admin';
     setFormData({ 
       firstName: '', 
       lastName: '', 
       email: '', 
-      role: activeTab === 'users' ? 'user' : 'admin',
+      role: role,
       phone_number: '',
       whatsapp_number: '',
       address: '',
@@ -614,39 +788,55 @@ const ManageAccounts = () => {
 
   // Get current data based on active tab
   const getCurrentData = () => {
-    return activeTab === 'users' ? filteredUsers : filteredAdmins;
+    if (activeTab === 'users') return filteredUsers;
+    if (activeTab === 'riders') return filteredRiders;
+    return filteredAdmins;
   };
 
   // Get current columns based on active tab
   const getCurrentColumns = () => {
-    return activeTab === 'users' ? userColumns : adminColumns;
+    if (activeTab === 'users') return userColumns;
+    if (activeTab === 'riders') return riderColumns;
+    return adminColumns;
   };
 
-  // Get stats using API response summary
+  // Get stats using API response summary and calculated data for riders
   const getStats = () => {
-    if (!usersResponse) {
+    if (!usersResponse && activeTab !== 'riders') {
       return {
         total: 0,
         active: 0,
         inactive: 0,
-     
       };
     }
 
     if (activeTab === 'users') {
       return {
-        total: usersResponse.summary.total_customers || 0,
-        active: usersResponse.summary.total_active_accounts || 0,
-        inactive: usersResponse.summary.total_inactive_accounts || 0,
+        total: users.length,
+        active: users.filter(u => u.status === 'unsuspended').length,
+        inactive: users.filter(u => u.status === 'suspended').length,
+      };
+    } else if (activeTab === 'riders') {
+      // Calculate stats from actual riders data
+      const totalRiders = riders.length;
+      const availableRiders = riders.filter(r => r.current_status === 'available').length;
+      const busyRiders = riders.filter(r => r.current_status === 'busy').length;
+      const offlineRiders = riders.filter(r => r.current_status === 'offline').length;
+      const totalDeliveries = riders.reduce((sum, r) => sum + (r.total_deliveries || 0), 0);
       
+      return {
+        total: totalRiders,
+        active: availableRiders,
+        inactive: offlineRiders,
+        busy: busyRiders,
+        totalDeliveries: totalDeliveries,
       };
     } else {
       // For admins tab
       return {
-        total: usersResponse.summary.total_admins || 0,
-        active: usersResponse.summary.total_active_accounts || 0,
-        inactive: usersResponse.summary.total_inactive_accounts || 0,
-       
+        total: admins.length,
+        active: admins.filter(a => a.status === 'unsuspended').length,
+        inactive: admins.filter(a => a.status === 'suspended').length,
       };
     }
   };
@@ -656,12 +846,7 @@ const ManageAccounts = () => {
   // Handle loading state
   if (isLoading) {
     return (
-      <div className="manage-accounts">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Loading accounts...</p>
-        </div>
-      </div>
+     <ManageAccountsSkeleton/>
     );
   }
 
@@ -689,7 +874,7 @@ const ManageAccounts = () => {
           message: `Are you sure you want to suspend ${selectedAccount.name}'s account? They will no longer be able to access the system.`,
           confirmButtonText: 'Suspend Account',
           type: 'suspend',
-          onConfirm: handleSuspendUser // Now uses the standalone function
+          onConfirm: handleSuspendUser
         };
       case 'unsuspend':
         return {
@@ -697,7 +882,7 @@ const ManageAccounts = () => {
           message: `Are you sure you want to unsuspend ${selectedAccount.name}'s account? They will regain access to the system.`,
           confirmButtonText: 'Unsuspend Account',
           type: 'activate',
-          onConfirm: handleUnsuspendUser // Now uses the standalone function
+          onConfirm: handleUnsuspendUser
         };
       default:
         return {
@@ -712,17 +897,25 @@ const ManageAccounts = () => {
 
   const confirmationContent = getConfirmationModalContent();
 
+  // Get filter options based on active tab
+  const getFilterOptions = () => {
+    if (activeTab === 'riders') {
+      return ['All Status', 'available', 'busy', 'offline', 'suspended'];
+    }
+    return ['All Status', 'unsuspended', 'suspended'];
+  };
+
   return (
     <div className="manage-accounts">
       {/* Stats Cards */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon total">
-            <Users size={20} />
+            {activeTab === 'riders' ? <Truck size={20} /> : activeTab === 'users' ? <Users size={20} /> : <Shield size={20} />}
           </div>
           <div className="stat-content">
             <span className="stat-number">{stats.total}</span>
-            <span className="stat-label">Total {activeTab === 'users' ? 'Users' : 'Admins'}</span>
+            <span className="stat-label">Total {activeTab === 'users' ? 'Users' : activeTab === 'riders' ? 'Riders' : 'Admins'}</span>
           </div>
         </div>
         
@@ -732,9 +925,21 @@ const ManageAccounts = () => {
           </div>
           <div className="stat-content">
             <span className="stat-number">{stats.active}</span>
-            <span className="stat-label">Active</span>
+            <span className="stat-label">{activeTab === 'riders' ? 'Available' : 'Active'}</span>
           </div>
         </div>
+        
+        {activeTab === 'riders' && (
+          <div className="stat-card">
+            <div className="stat-icon warning">
+              <Clock size={20} />
+            </div>
+            <div className="stat-content">
+              <span className="stat-number">{stats.busy}</span>
+              <span className="stat-label">Busy</span>
+            </div>
+          </div>
+        )}
         
         <div className="stat-card">
           <div className="stat-icon inactive">
@@ -742,17 +947,27 @@ const ManageAccounts = () => {
           </div>
           <div className="stat-content">
             <span className="stat-number">{stats.inactive}</span>
-            <span className="stat-label">Inactive</span>
+            <span className="stat-label">{activeTab === 'riders' ? 'Offline' : 'Inactive'}</span>
           </div>
         </div>
         
-
+        {activeTab === 'riders' && (
+          <div className="stat-card">
+            <div className="stat-icon delivery">
+              <Package size={20} />
+            </div>
+            <div className="stat-content">
+              <span className="stat-number">{stats.totalDeliveries}</span>
+              <span className="stat-label">Total Deliveries</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="manage-accounts-header">
         <button className="add-account-btn" onClick={handleAddAccount}>
           <UserPlus size={16} />
-          <span>Add {activeTab === 'users' ? 'User' : 'Admin'}</span>
+          <span>Add {activeTab === 'users' ? 'User' : activeTab === 'riders' ? 'Rider' : 'Admin'}</span>
         </button>
       </div>
 
@@ -766,6 +981,15 @@ const ManageAccounts = () => {
             <Users size={16} />
             <span>Users</span>
             <span className="tab-count">{users.length}</span>
+          </button>
+          
+          <button
+            className={`tab-button ${activeTab === 'riders' ? 'active' : ''}`}
+            onClick={() => setActiveTab('riders')}
+          >
+            <Truck size={16} />
+            <span>Riders</span>
+            <span className="tab-count">{riders.length}</span>
           </button>
           
           <button
@@ -786,7 +1010,7 @@ const ManageAccounts = () => {
           onFilter={handleFilter}
           searchTerm={searchTerm}
           placeholder={`Search ${activeTab}...`}
-          filterOptions={['All Status', 'active', 'inactive', 'suspended']}
+          filterOptions={getFilterOptions()}
           filterLabel="Filter by status"
         />
       </div>
@@ -813,7 +1037,7 @@ const ManageAccounts = () => {
               </p>
               <button className="add-first-btn" onClick={handleAddAccount}>
                 <UserPlus size={16} />
-                Add First {activeTab === 'users' ? 'User' : 'Admin'}
+                Add First {activeTab === 'users' ? 'User' : activeTab === 'riders' ? 'Rider' : 'Admin'}
               </button>
             </div>
           }
@@ -864,7 +1088,7 @@ const ManageAccounts = () => {
           onClose={closeAllModals}
           onConfirm={handleSwitchRole}
           title="Switch User Role"
-          message={`Are you sure you want to switch ${selectedAccount.name}'s role from ${selectedAccount.role} to ${selectedAccount.role === 'user' ? 'admin' : 'user'}? This will change their access permissions.`}
+          message={`Are you sure you want to switch ${selectedAccount.name}'s role from ${selectedAccount.role} to ${selectedAccount.role === 'user' ? 'admin' : selectedAccount.role === 'admin' ? 'rider' : 'user'}? This will change their access permissions.`}
           type="switch"
         />
       )}

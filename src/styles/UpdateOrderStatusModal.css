@@ -1,52 +1,81 @@
+.modal-overlay-confirm {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 10px;
+}
+
 .update-status-modal {
-  width: 500px;
-  max-width: 90%;
-  min-height: 400px;
-  max-height: 80vh;
+  width: 480px;
+  max-width: 95%;
+  max-height: 95vh;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  margin: 4rem auto;
-  padding: 20px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header-confirm {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+.modal-content {
+  padding: 16px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Allow content to shrink */
 }
 
 .update-status-title {
   color: #000;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   text-align: center;
 }
 
 .update-status-description {
-  font-size: 16px;
+  font-size: 14px;
   color: #666;
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .status-options {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 8px;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
 .status-option {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 8px 12px;
   border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
   background-color: #fff;
   position: relative;
+  min-height: 40px;
 }
 
 .status-option:hover {
@@ -64,15 +93,15 @@
 }
 
 .status-indicator {
-  font-size: 20px;
-  margin-right: 12px;
+  font-size: 16px;
+  margin-right: 8px;
   line-height: 1;
   display: flex;
   align-items: center;
 }
 
 .status-text {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   color: #333;
   flex: 1;
@@ -97,16 +126,17 @@
 }
 
 .completed-dropdown {
-  margin-top: 8px;
-  margin-left: 16px;
+  margin-top: 4px;
+  margin-left: 12px;
   border-left: 2px solid #e0e0e0;
-  padding-left: 8px;
+  padding-left: 6px;
 }
 
 .dropdown-option {
-  margin-bottom: 8px;
-  padding: 8px 12px;
-  font-size: 14px;
+  margin-bottom: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+  min-height: 32px;
 }
 
 .dropdown-option:last-child {
@@ -114,12 +144,32 @@
 }
 
 .dropdown-option .status-indicator {
-  font-size: 16px;
-  margin-right: 8px;
+  font-size: 14px;
+  margin-right: 6px;
 }
 
 .dropdown-option .status-text {
+  font-size: 13px;
+}
+
+.form-actions-order {
+  padding: 16px 20px;
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+.form-actions-order button {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
   font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 40px;
 }
 
 .update-status-button {
@@ -129,6 +179,15 @@
 
 .update-status-button:hover {
   background-color: #e03000 !important;
+}
+
+.cancel-button {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.cancel-button:hover {
+  background-color: #e0e0e0;
 }
 
 /* Enhanced button styles for different types */
@@ -170,41 +229,73 @@
 
 /* Responsive styles for update status modal */
 @media (max-width: 576px) {
+  .modal-overlay-confirm {
+    padding: 5px;
+  }
+  
   .update-status-modal {
-    width: 95%;
-    min-height: 350px;
-    max-height: 90vh;
-    margin: 2rem auto;
-    padding: 16px;
+    width: 100%;
+    max-height: 98vh;
+  }
+  
+  .modal-header-confirm {
+    padding: 8px 12px;
+  }
+  
+  .modal-content {
+    padding: 12px 16px;
   }
 
   .update-status-title {
-    font-size: 18px;
+    font-size: 16px;
+    margin-bottom: 2px;
   }
 
   .update-status-description {
-    font-size: 14px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .status-options {
+    gap: 6px;
   }
 
   .status-option {
-    padding: 10px 12px;
+    padding: 6px 10px;
+    min-height: 36px;
   }
 
   .status-text {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .status-indicator {
-    font-size: 18px;
-    margin-right: 8px;
-  }
-
-  .dropdown-option .status-indicator {
     font-size: 14px;
     margin-right: 6px;
   }
 
-  .dropdown-option .status-text {
+  .dropdown-option {
+    min-height: 28px;
+    padding: 4px 6px;
+  }
+
+  .dropdown-option .status-indicator {
     font-size: 12px;
+    margin-right: 4px;
+  }
+
+  .dropdown-option .status-text {
+    font-size: 11px;
+  }
+  
+  .form-actions-order {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+  
+  .form-actions-order button {
+    padding: 8px 12px;
+    font-size: 13px;
+    min-height: 36px;
   }
 }

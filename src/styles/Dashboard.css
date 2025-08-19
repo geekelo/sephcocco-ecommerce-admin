@@ -52,6 +52,7 @@
   max-width: 100%;   
   color: #000;   
   padding: 16px 20px; 
+  position: relative;
 }    
 
 /* Mini trend bars */ 

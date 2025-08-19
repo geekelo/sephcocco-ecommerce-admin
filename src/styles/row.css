@@ -1,3 +1,4 @@
+/* tABLE ROW */
 .table-row {
   display: flex;
   align-items: stretch;
@@ -7,6 +8,8 @@
   background: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   position: relative;
+
+  width: 100%;
 }
 
 .table-row:hover {
@@ -28,6 +31,7 @@
   min-height: 56px;
   overflow: hidden;
   position: relative;
+
 }
 
 /* Special handling for actions column */
@@ -713,5 +717,414 @@
   
   .actions-menu-table {
     animation: none;
+  }
+}
+
+/* ===== MOBILE CARD RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .flexible-table {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    background: #f8fafc;
+  }
+
+  .table-header {
+    display: none;
+  }
+
+  .table-body {
+    display: block;
+    padding: 12px;
+    gap: 12px;
+    overflow-x: visible;
+  }
+
+  .table-empty-state,
+  .table-loading-state {
+    padding: 40px 20px;
+    margin: 12px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .empty-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  /* ===== CARD LAYOUT FOR MOBILE ===== */
+  .table-row {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+    border-bottom: none;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    background: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    position: relative;
+    min-width: auto;
+    width: 100%;
+  }
+
+  .table-row:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+  }
+
+  .table-row:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ===== CARD HEADER - Primary Information ===== */
+  .table-row .card-header {
+    background: #f8fafc;
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .table-row .card-header .primary-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .table-row .card-header .card-actions {
+    flex-shrink: 0;
+  }
+
+  /* ===== CARD BODY - Secondary Information ===== */
+  .table-row .card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .table-row .card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .table-row .card-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .table-row .card-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+
+  .table-row .card-value {
+    flex: 1;
+    text-align: right;
+    min-width: 0;
+  }
+
+  /* ===== HIDE ORIGINAL TABLE CELLS ON MOBILE ===== */
+  .table-cell {
+    display: none;
+  }
+
+  /* ===== MOBILE CARD CONTENT STYLES ===== */
+  .mobile-card-content {
+    display: block;
+  }
+
+  /* Primary avatar/user info in card header */
+  .mobile-primary-avatar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-primary-avatar .avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .mobile-primary-avatar .avatar-details {
+    gap: 4px;
+  }
+
+  .mobile-primary-avatar .avatar-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .mobile-primary-avatar .avatar-sub {
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  /* Status badges in card header */
+  .mobile-primary-status {
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+
+  /* Card row content styling */
+  .mobile-card-currency {
+    font-weight: 600;
+    color: #059669;
+    font-size: 15px;
+  }
+
+  .mobile-card-date {
+    color: #64748b;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+
+  .mobile-card-status {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .mobile-card-stages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+  }
+
+  .mobile-card-text {
+    color: #374151;
+    font-size: 14px;
+    word-wrap: break-word;
+    text-align: right;
+  }
+
+  /* Actions in card header */
+  .mobile-card-actions {
+    z-index: 100;
+  }
+
+  .mobile-card-actions .actions-dropdown-table {
+    position: relative;
+  }
+
+  .mobile-card-actions .actions-trigger-table {
+    width: 36px;
+    height: 36px;
+    border-color: #cbd5e1;
+    background: #ffffff;
+  }
+
+  .mobile-card-actions .actions-trigger-table:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+  }
+
+  /* ===== MOBILE SKELETON CARDS ===== */
+  .skeleton-row {
+    background: #ffffff;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+  }
+
+  .skeleton-row .skeleton-card-header {
+    background: #f8fafc;
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .skeleton-row .skeleton-card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .skeleton-row .skeleton-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+  }
+
+  .skeleton-row .skeleton-card-label {
+    width: 60px;
+    height: 12px;
+    background-color: #f3f4f6;
+    border-radius: 4px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  .skeleton-row .skeleton-card-value {
+    width: 80px;
+    height: 14px;
+    background-color: #f3f4f6;
+    border-radius: 4px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  /* ===== MOBILE DROPDOWN POSITIONING ===== */
+  .actions-menu-table {
+    position: fixed;
+    max-width: calc(100vw - 32px);
+    width: auto;
+    min-width: 140px;
+    right: 16px;
+    z-index: 99999;
+  }
+
+  /* ===== MOBILE CARD INTERACTIONS ===== */
+  .table-row {
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .table-row:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
+  /* ===== COMPACT CARD VARIANT (Optional) ===== */
+  .table-row.compact-card {
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .table-row.compact-card .mobile-card-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .table-row.compact-card .card-header,
+  .table-row.compact-card .card-body {
+    display: none;
+  }
+
+  .table-row.compact-card .mobile-compact-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .table-row.compact-card .mobile-compact-secondary {
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  /* ===== ACCESSIBILITY IMPROVEMENTS ===== */
+  .table-row:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  .mobile-card-actions {
+    position: relative;
+  }
+
+  /* ===== REDUCED MOTION SUPPORT ===== */
+  @media (prefers-reduced-motion: reduce) {
+    .table-row {
+      transition: none;
+      transform: none;
+    }
+    
+    .table-row:hover {
+      transform: none;
+    }
+  }
+}
+
+/* ===== TABLET BREAKPOINT (768px - 1024px) ===== */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .flexible-table {
+    overflow-x: auto;
+  }
+  
+  .table-header,
+  .table-body {
+    min-width: 800px;
+  }
+}
+
+/* ===== EXTRA SMALL MOBILE (max-width: 480px) ===== */
+@media (max-width: 480px) {
+  .table-body {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .table-row {
+    margin-bottom: 8px;
+    border-radius: 8px;
+  }
+
+  .table-row .card-header {
+    padding: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .table-row .card-header .primary-info {
+    order: 1;
+  }
+
+  .table-row .card-header .card-actions {
+    order: 2;
+    align-self: flex-end;
+  }
+
+  .table-row .card-body {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .table-row .card-row {
+    padding: 6px 0;
+  }
+
+  .mobile-primary-avatar .avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .mobile-primary-avatar .avatar-name {
+    font-size: 15px;
+  }
+
+  .mobile-primary-avatar .avatar-sub {
+    font-size: 12px;
   }
 }

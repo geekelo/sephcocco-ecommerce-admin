@@ -63,8 +63,8 @@ console.log('prod',order);
   const rightCardItems = [
     { label: "Order Status:", value: order.status,badge: true },
     { label: "Stages:", value: order.stages, isStages: true },
-    { label: "Payment Method:", value: paymentMethod },
-    { label: "Payment Status:", value: paymentStatus,badge: true },
+    { label: "Payment Method:", value: paymentMethod || '--/--' },
+    { label: "Payment Status:", value: paymentStatus || '--/--', badge: true },
     { label: "Order Notes:", value: order.additional_notes || '--/--' }
   ];
 
@@ -129,7 +129,7 @@ console.log('prod',order);
 
             <div className="ordered-products-section">
               <h3>Ordered Products</h3>
-              <div className="products-grid">
+              <div className="ordered-products-grid">
                
                   <ProductCard
                    

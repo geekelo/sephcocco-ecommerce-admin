@@ -14,7 +14,7 @@ import { createOrderColumns } from "../columns/orderColumns";
 import { useGetOrder } from "../hooks/useGetOrder";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import LoadingSkeleton from "../components/LoadingSkeleton";
-
+import '../styles/OrderPage.css'
 const itemsPerPage = 10;
 
 const OrderPage = () => {
@@ -32,6 +32,7 @@ const OrderPage = () => {
   currentPage,
      itemsPerPage,
   );
+
 
   const orders = data?.orders || [];
   const meta = data?.meta || {};
@@ -72,6 +73,7 @@ const OrderPage = () => {
   };
 
   const orderColumns = useMemo(() => createOrderColumns(handleViewOrder), []);
+console.log('oks',selectedOrder);
 
   return (
     <div className="order-page">
@@ -113,7 +115,7 @@ const OrderPage = () => {
                 />
               </>
             ) : (
-              <EmptyState title="No orders found" searchTerm={filters.search_terms} />
+              <EmptyState message="No orders found" searchTerm={filters.search_terms} />
             )}
           </div>
         </>

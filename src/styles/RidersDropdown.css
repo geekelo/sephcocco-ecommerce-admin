@@ -1,0 +1,348 @@
+/* Rider Statistics Styles */
+.rider-stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.rider-stat-card {
+  background-color: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.rider-stat-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.rider-stat-icon {
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rider-stat-icon.available {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.rider-stat-icon.active {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.rider-stat-icon.total {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.rider-stat-info {
+  flex: 1;
+}
+
+.rider-stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.rider-stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Rider Dropdown Styles - Fixed z-index and positioning */
+.rider-dropdown {
+  position: relative;
+  display: inline-block;
+  z-index: 1000;
+}
+
+.rider-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  justify-content: space-between;
+}
+
+.rider-dropdown-trigger:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.rider-dropdown-trigger.rider-assigned {
+  background-color: #d1fae5;
+  border-color: #10b981;
+  color: #065f46;
+}
+
+.rider-dropdown-trigger.rider-assigned:hover {
+  background-color: #a7f3d0;
+}
+
+.rider-dropdown-trigger.rider-unassigned {
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.rider-dropdown-trigger.rider-unassigned:hover {
+  background-color: #fde68a;
+}
+
+.rider-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  max-width: 100px;
+}
+
+.dropdown-arrow {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu - Fixed z-index and positioning */
+.rider-dropdown-menu {
+  position: fixed; /* Use fixed positioning to escape table constraints */
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  width: 280px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 99999; /* Very high z-index to ensure it appears on top */
+  max-height: 320px;
+  overflow-y: auto;
+  animation: slideInDown 0.2s ease-out;
+  transform-origin: top left;
+}
+
+/* Animation for dropdown appearing above the trigger */
+.rider-dropdown-menu.dropdown-above {
+  animation: slideInUp 0.2s ease-out;
+  transform-origin: bottom left;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.rider-dropdown-content {
+  padding: 12px;
+}
+
+.rider-dropdown-header {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Rider Options */
+.rider-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  text-align: left;
+  background-color: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-bottom: 4px;
+}
+
+.rider-option:hover {
+  background-color: #f9fafb;
+}
+
+.rider-option:last-child {
+  margin-bottom: 0;
+}
+
+.rider-avatar {
+  width: 32px;
+  height: 32px;
+  background-color: #dbeafe;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #1e40af;
+}
+
+.rider-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.rider-option-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.rider-option-phone {
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.rider-option-vehicle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.rider-no-available {
+  padding: 16px 8px;
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Ensure table container doesn't create stacking context issues */
+.flexible-table {
+  position: relative;
+  z-index: 1;
+}
+
+.table-row {
+  position: relative;
+  z-index: 1;
+  /* Remove any transform or will-change properties that create stacking context */
+  transform: none;
+  will-change: auto;
+}
+
+.table-cell {
+  /* Allow overflow for dropdown cells */
+  overflow: visible;
+}
+
+/* Special handling for rider dropdown cells */
+.table-cell:has(.rider-dropdown) {
+  overflow: visible;
+  z-index: 1001;
+}
+
+/* When dropdown is open, ensure the row has higher z-index */
+.rider-dropdown:has(.rider-dropdown-menu) {
+  z-index: 1002;
+}
+
+.rider-dropdown.open {
+  z-index: 1002;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  .rider-stats-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .rider-stat-card {
+    padding: 12px;
+  }
+  
+  .rider-stat-value {
+    font-size: 18px;
+  }
+  
+  .rider-dropdown-menu {
+    width: 240px;
+  }
+  
+  .rider-dropdown-trigger {
+    min-width: 120px;
+    padding: 6px 10px;
+  }
+  
+  .rider-name {
+    max-width: 80px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .rider-dropdown-menu {
+    width: 220px;
+    right: 0;
+    left: auto;
+  }
+  
+  .rider-dropdown-trigger {
+    min-width: 100px;
+    font-size: 11px;
+  }
+  
+  .rider-stat-card {
+    gap: 8px;
+  }
+  
+  .rider-stat-icon {
+    padding: 8px;
+  }
+}
