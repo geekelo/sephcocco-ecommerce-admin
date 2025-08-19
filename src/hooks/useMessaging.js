@@ -177,15 +177,15 @@ export const useMessaging = (authToken, outletType = '') => {
 
       // Subscribe to messaging channel - ADMIN CHANNEL
       subscriptionRef.current = consumerRef.current.subscriptions.create(
-        {
-          channel: "MessagingChannel",
+      {
+        channel: "MessagingChannel",
           outlet_type: outletTypeRef.current
-        },
-        {
-          connected() {
-            setIsConnected(true);
+      },
+      {
+        connected() {
+          setIsConnected(true);
             setIsConnecting(false);
-            setConnectionError(null);
+          setConnectionError(null);
             console.log('🎉 Successfully connected to messaging channel');
             console.log('📡 Channel: MessagingChannel');
             console.log('🏪 Outlet type:', outletTypeRef.current);
@@ -302,34 +302,33 @@ export const useMessaging = (authToken, outletType = '') => {
                 }
               }, 30000);
             }
-          },
+        },
 
-          disconnected() {
-            setIsConnected(false);
+        disconnected() {
+          setIsConnected(false);
             setIsConnecting(false);
             connectionAttemptedRef.current = false;
             console.log('💔 Disconnected from messaging channel');
             console.log('💔 Connection lost - real-time messaging will not work');
-          },
+        },
 
-          rejected() {
-            setIsConnected(false);
+        rejected() {
+          setIsConnected(false);
             setIsConnecting(false);
             connectionAttemptedRef.current = false;
             setConnectionError('Failed to connect to messaging channel - authentication may have failed');
             console.log('❌ Failed to connect to messaging channel - subscription rejected');
-          },
+        },
 
-          received(data) {
+        received(data) {
             console.log('📨 Received WebSocket message:', data);
             console.log('📨 Message type:', data.type);
             console.log('📨 Full message data:', JSON.stringify(data, null, 2));
             console.log('📨 Data keys:', Object.keys(data));
             console.log('📨 Timestamp:', new Date().toISOString());
             console.log('👤 Current user role:', localStorage.getItem('userRole'));
-            console.log('👤 Selected user:', selectedUser?.user_id);
-            console.log('📨 Current user messages count:', currentUserMessages.length);
-            console.log('📨 User threads count:', userThreads.length);
+            // Note: We can't access current state values in the received handler due to closure
+            // The state updates will be handled by the setState functions
             console.log('🔗 WebSocket connection state:', consumerRef.current?.connection?.getState());
             console.log('🔗 Subscription state:', subscriptionRef.current?.connection?.getState());
             
@@ -419,7 +418,8 @@ export const useMessaging = (authToken, outletType = '') => {
                 };
                 
                 // Add to current user messages if it matches the selected user
-                const shouldAddMessage = !selectedUser || String(data.user_id) === String(selectedUser.user_id);
+                const currentSelectedUser = selectedUser;
+                const shouldAddMessage = !currentSelectedUser || String(data.user_id) === String(currentSelectedUser.user_id);
                 
                 if (shouldAddMessage) {
                   console.log('🚨 REAL-TIME: Adding thread update message to current user messages!');
@@ -501,12 +501,15 @@ export const useMessaging = (authToken, outletType = '') => {
               // Add to current user messages if it matches the selected user OR if no user is selected
               // Use thread_owner_id to determine which conversation this message belongs to
               const threadOwnerId = data.thread_owner_id || data.user_id || messageUserId;
-              const shouldAddMessage = !selectedUser || String(threadOwnerId) === String(selectedUser.user_id);
+              
+              // Get current selectedUser from state instead of closure
+              const currentSelectedUser = selectedUser;
+              const shouldAddMessage = !currentSelectedUser || String(threadOwnerId) === String(currentSelectedUser.user_id);
               
               console.log('🔍 Message routing analysis:');
               console.log('🔍 Message sender ID:', messageUserId);
               console.log('🔍 Thread owner ID:', threadOwnerId);
-              console.log('🔍 Selected user ID:', selectedUser?.user_id);
+              console.log('🔍 Selected user ID:', currentSelectedUser?.user_id);
               console.log('🔍 Should add message:', shouldAddMessage);
               
               if (shouldAddMessage) {
@@ -525,7 +528,7 @@ export const useMessaging = (authToken, outletType = '') => {
               } else {
                 console.log('⚠️ Message not added to current user messages - user mismatch');
                 console.log('⚠️ Message user_id:', messageUserId);
-                console.log('⚠️ Selected user user_id:', selectedUser?.user_id);
+                console.log('⚠️ Selected user user_id:', currentSelectedUser?.user_id);
               }
               
               // Update user threads with latest message
@@ -581,12 +584,12 @@ export const useMessaging = (authToken, outletType = '') => {
       connectionAttemptedRef.current = false;
       setConnectionError(errorMsg);
     }
-  }, [selectedUser]); // Add selectedUser dependency so received handler can access it
+  }, []); // Remove selectedUser dependency to prevent circular dependency
 
   const disconnect = useCallback(() => {
     console.log('🧹 Cleaning up connection...');
-    if (subscriptionRef.current) {
-      subscriptionRef.current.unsubscribe();
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
       subscriptionRef.current = null;
     }
     if (consumerRef.current) {
@@ -669,4 +672,4 @@ export const useMessaging = (authToken, outletType = '') => {
     refreshUserThreads,
     refreshCurrentUserMessages
   };
-}; 
+};

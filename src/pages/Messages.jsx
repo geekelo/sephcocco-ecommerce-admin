@@ -19,7 +19,7 @@ const MessagesPage = () => {
   console.log('📊 Messages page - authToken present:', !!authToken);
   
   // Use the new user thread messaging system
-  const {
+  const { 
     userThreads,
     isLoading,
     isConnected,
@@ -86,9 +86,9 @@ const MessagesPage = () => {
   };
   // Filter data based on search term
   const filteredData = transformUserThreadsToTableData()?.filter(item => {
-    if (!searchTerm) return true;
-    
-    const searchLower = searchTerm.toLowerCase();
+        if (!searchTerm) return true;
+        
+        const searchLower = searchTerm.toLowerCase();
     const customer = (item.customer || '').toLowerCase();
     const customerEmail = (item.customer_email || '').toLowerCase();
     const preview = (item.preview || '').toLowerCase();
@@ -193,7 +193,7 @@ console.log('testing',filteredData);
             <button className="filter-btn" onClick={handleFilter}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
-              </svg>
+                    </svg>
               Filter by
             </button>
             <div className="date-filters">
@@ -204,9 +204,9 @@ console.log('testing',filteredData);
               <div className="date-input">
                 <label>End Date:</label>
                 <input type="date" placeholder="dd/mm/yyyy" />
-              </div>
+                  </div>
               <button className="apply-btn">Apply</button>
-            </div>
+                </div>
           </div>
         </div>
 
@@ -220,11 +220,11 @@ console.log('testing',filteredData);
         </div>
       </div>
 
-      <ChatModal
-        isOpen={isChatModalOpen}
-        onClose={closeChatModal}
+        <ChatModal
+          isOpen={isChatModalOpen}
+          onClose={closeChatModal}
         selectedUser={selectedUser}
-      />
+        />
     </div>
   );
 };
