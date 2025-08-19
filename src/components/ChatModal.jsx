@@ -160,7 +160,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
     setSendingMessages(prev => new Set([...prev, tempMessageId]));
     
     try {
-      // Send message via ActionCable
+    // Send message via ActionCable
       console.log('📤 Calling sendMessage function...');
       console.log('📤 sendMessage function:', sendMessage);
       console.log('📤 sendMessage type:', typeof sendMessage);
@@ -229,7 +229,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
     return date.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
+      hour: '2-digit', 
       minute: '2-digit',
       hour12: false
     });
@@ -297,7 +297,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
               </div>
             )}
           </div>
-          
+         
           <div className="chat-actions">
             <button className="view-product-btn" onClick={handleProductClick}>
               <Eye size={16} />
@@ -352,8 +352,8 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
                   </div>
                 </div>
 
-                {/* Messages Container */}
-                <div className="chat-content">
+        {/* Messages Container */}
+        <div className="chat-content">
                   <div 
                     className="chat-messages"
                     ref={messagesContainerRef}
@@ -372,8 +372,8 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
                             key={message.id} 
                             className={`message ${message.sender} ${message.optimistic ? 'sending' : ''}`}
                           >
-                            <div className="message-avatar">
-                              {message.sender === "customer" ? (
+                <div className="message-avatar">
+                  {message.sender === "customer" ? (
                                 <div className="customer-avatar">
                                   <span className="avatar-initials">
                                     {getUserInitials(message.user_name)}
@@ -383,37 +383,37 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
                                 <div className="admin-avatar">
                                   <MessageCircle size={16} />
                                 </div>
-                              )}
-                            </div>
-                            <div className="message-content">
+                  )}
+                </div>
+                <div className="message-content">
                               {/* Add user name display */}
                               <div className="message-sender">
                                 {message.user_name}
                               </div>
-                              <div className="message-bubble">
-                                <p>{message.text}</p>
-                              </div>
+                  <div className="message-bubble">
+                    <p>{message.text}</p>
+                  </div>
                               <div className="message-time">
                                 {formatTime(message.timestamp, message.display_time)}
                                 {message.optimistic && <span className="sending-indicator">Sending...</span>}
                                 {!message.optimistic && renderMessageStatus(message)}
                               </div>
-                            </div>
-                          </div>
+                </div>
+              </div>
                         );
                       })
                     )}
-                    <div ref={messagesEndRef} />
-                  </div>
+            <div ref={messagesEndRef} />
+          </div>
 
-                  {/* Input Area */}
-                  <div className="chat-input-area">
-                    <div className="chat-input-container">
-                      <textarea
-                        ref={textareaRef}
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={handleKeyPress}
+          {/* Input Area */}
+          <div className="chat-input-area">
+            <div className="chat-input-container">
+              <textarea
+                ref={textareaRef}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
                         placeholder={
                           isConnecting 
                             ? "Connecting..." 
@@ -421,13 +421,13 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
                               ? "Type your message..." 
                               : "Disconnected - Cannot send messages"
                         }
-                        className="message-input"
-                        rows="1"
+                className="message-input"
+                rows="1"
                         disabled={!isConnected || isSending}
                         maxLength={1000}
-                      />
+              />
                       
-                      <button 
+              <button 
                         className={`send-btn ${(!isConnected || newMessage.trim() === "" || isSending) ? 'disabled' : ''}`}
                         onClick={(e) => {
                           console.log('🔘 Send button clicked!');
@@ -451,8 +451,8 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
                         ) : (
                           <Send size={20} />
                         )}
-                      </button>
-                    </div>
+              </button>
+            </div>
                     
                     {/* Character count for long messages */}
                     {newMessage.length > 800 && (

@@ -30,10 +30,14 @@ const isAuthenticated = () => {
   const token = localStorage.getItem('token');
   const activeOutlet = Cookies.get('activeOutlet');
   
+  console.log('🔐 Auth check - Token:', !!token);
+  console.log('🔐 Auth check - Active outlet:', activeOutlet);
+  
   // If no token or no active outlet, user is not authenticated
   if (!token || !activeOutlet) {
     // Remove token if activeOutlet is missing
     if (token && !activeOutlet) {
+      console.log('🔐 Removing token due to missing activeOutlet');
       localStorage.removeItem('token');
     }
     return false;

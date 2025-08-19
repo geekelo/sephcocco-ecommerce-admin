@@ -644,7 +644,7 @@ const FlexibleTableRow = ({
       </div>
     );
   };
-  
+
   // Button cell renderer
   const renderButtonCell = (value, data, config) => {
     return (

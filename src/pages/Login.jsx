@@ -80,6 +80,16 @@ const handleSubmit = async (e) => {
       localStorage.setItem('userRole', response?.user?.role);
       localStorage.setItem('userName', response?.user?.name );
       Cookies.set('outlets', JSON.stringify(response?.user?.outlets), { expires: 1 }); 
+      
+      // Set activeOutlet to the first available outlet or a default value
+      const outlets = response?.user?.outlets || [];
+      if (outlets.length > 0) {
+        Cookies.set('activeOutlet', outlets[0], { expires: 1 });
+      } else {
+        // Set a default outlet if none are available
+        Cookies.set('activeOutlet', 'pharmacy', { expires: 1 });
+      }
+      
       console.log("Login success:", response);
       console.log("User role saved:", response?.user?.role);
       console.log("Full user object:", JSON.stringify(response?.user, null, 2));
