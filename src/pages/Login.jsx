@@ -87,7 +87,7 @@ const handleSubmit = async (e) => {
         Cookies.set('activeOutlet', outlets[0], { expires: 1 });
       } else {
         // Set a default outlet if none are available
-        Cookies.set('activeOutlet', 'pharmacy', { expires: 1 });
+        Cookies.set('activeOutlet', '', { expires: 1 });
       }
       
       console.log("Login success:", response);
