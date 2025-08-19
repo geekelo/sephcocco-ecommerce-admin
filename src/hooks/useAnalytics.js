@@ -1,11 +1,13 @@
 import { useQuery,  useQueryClient } from '@tanstack/react-query';
 import { getAllAnalytics } from "../services/analytics/getAllAnalytics";
+import { overallPerformance } from '../services/analytics/overallPerformance';
 
 
 // Define analytics query keys
 export const AnalyticsKeys = {
   all: ['analytics'],
   getAllAnalytics: (outlet) => ['analytics', 'all', outlet],
+  overallPerformance: (outlet, year) => ['performance', outlet, year],
 //   totalOrders: (outlet) => ['analytics', 'totalOrders', outlet],
 //   totalPayments: (outlet) => ['analytics', 'totalPayments', outlet],
 //   totalProducts: (outlet) => ['analytics', 'totalProducts', outlet],
@@ -17,7 +19,7 @@ export const AnalyticsKeys = {
 //   unresolvedChats: (outlet) => ['analytics', 'unresolvedChats', outlet],
 };
 
-export const useAnalytics = ({ active_outlet }) => {
+export const useAnalytics = ({ active_outlet, year }) => {
   const queryClient = useQueryClient();
 
   // Query for getting all analytics
@@ -30,6 +32,25 @@ export const useAnalytics = ({ active_outlet }) => {
     queryKey: AnalyticsKeys.getAllAnalytics(active_outlet),
     queryFn: () => getAllAnalytics(active_outlet),
     enabled: !!active_outlet,
+    retry: (failureCount, error) => {
+      if (error?.status === 401 || error?.response?.status === 401) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+  });
+    const {
+    data: overallPerformanceData,
+    isLoading: isLoadingOverallPerformance,
+    error: overallPerformanceError,
+    isSuccess: overallPerformanceQuerySuccess 
+  } = useQuery({
+    queryKey: AnalyticsKeys.overallPerformance(active_outlet),
+    queryFn: () => overallPerformance(active_outlet, year),
+    enabled: !!active_outlet || !!year,
     retry: (failureCount, error) => {
       if (error?.status === 401 || error?.response?.status === 401) {
         return false;
@@ -224,6 +245,7 @@ export const useAnalytics = ({ active_outlet }) => {
   return {
     // Data
     allAnalyticsData,
+    overallPerformanceData,
     // totalOrdersData,
     // totalPaymentsData,
     // totalProductsData,
@@ -236,6 +258,7 @@ export const useAnalytics = ({ active_outlet }) => {
 
     // Loading states
     isLoadingAllAnalytics,
+    isLoadingOverallPerformance,
     // isLoadingTotalOrders,
     // isLoadingTotalPayments,
     // isLoadingTotalProducts,
@@ -249,9 +272,11 @@ export const useAnalytics = ({ active_outlet }) => {
 
     // Success states
     allAnalyticsQuerySuccess,
+    overallPerformanceQuerySuccess,
 
     // Errors
     analyticsErrors,
+    overallPerformanceError,
 
     // Refetch functions
     // refetchTotalOrders,
