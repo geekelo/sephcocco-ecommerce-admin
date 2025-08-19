@@ -38,11 +38,15 @@ const DashboardPage = () => {
   
   const {
     allAnalyticsData,
+    overallPerformanceData,
+    isLoadingOverallPerformance,
     isLoadingAllAnalytics,
     analyticsErrors,
-  } = useAnalytics({ active_outlet: activeOutlet });
+    overallPerformanceError
+  } = useAnalytics({ active_outlet: activeOutlet, year: new Date().getFullYear });
   
   const deleteMutation = useDeleteProduct();
+  console.log(overallPerformanceData);
   
   // Extract products from API response
   const topSellingProducts = productsResponse?.products || [];
