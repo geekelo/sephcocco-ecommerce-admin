@@ -1,51 +1,154 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Add this import
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
 import StatsCard from '../components/StatsCard';
 import ChatItem from '../components/ChatItem';
 import ProductCard from '../components/ProductCard';
 import OutletSwitcher from '../components/OutletSwitcher';
-import { mockCategories, mockProduct, paymentsData, performanceData, topSellingProducts, unresolvedChats } from '../constants/data';
+import ChatModal from '../components/ChatModal'; // Add this import
+import { mockCategories, paymentsData, performanceData, unresolvedChats } from '../constants/data';
 import '../styles/Dashboard.css'
 import '../styles/ProductCard.css';
+import '../styles/ProductDetails.css'
+import '../styles/ChatItem.css';
 import ConfirmActionModal from '../components/ConfirmActionModal';
 import UpdateOrderStatusModal from '../components/UpdateOrderStatusModal';
 import EditProductModal from '../components/EditModal';
 import ProductDetails from '../components/ProductDetails';
 import ProgressPie from '../components/ProgressPie';
+import { getActiveOutlet } from "../utils/getActiveOutlets";
+import { useViewAllProduct } from "../hooks/useGetAllProduct";
+import { useAnalytics } from '../hooks/useAnalytics';
+import { useDeleteProduct } from '../hooks/useDeleteProduct';
+import { useViewProductId } from '../hooks/useGetProductById';
+import { toast } from "react-toastify";
+import { EmptyState } from '../components/EmptyState';
+import DashboardSkeleton from '../components/DashboardSkeleton';
 
 const DashboardPage = () => {
+  const navigate = useNavigate(); // Add navigation hook
+  const activeOutlet = getActiveOutlet();
+  
+  // API hooks
+  const { data: productsResponse, isLoading: isLoadingProducts, error: productsError, refetch: refetchProducts } = useViewAllProduct(
+    activeOutlet, 
+    1, // first page
+    6  // limit to 6 products for dashboard
+  );
+  
+  const {
+    allAnalyticsData,
+    isLoadingAllAnalytics,
+    analyticsErrors,
+  } = useAnalytics({ active_outlet: activeOutlet });
+  
+  const deleteMutation = useDeleteProduct();
+  
+  // Extract products from API response
+  const topSellingProducts = productsResponse?.products || [];
+  
+  // Modal states
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProductId, setSelectedProductId] = useState('');
   const [isEditModal, setIsEditModal] = useState(false);
   const [isDeleteModal, setIsDeleteModal] = useState(false);
   const [isViewModal, setIsViewModal] = useState(false);
-
   const [isVerifyModal, setIsVerifyModal] = useState(false);
   const [isSuccessModal, setIsSuccessModal] = useState(false);
   const [isUpdateStatusModal, setIsUpdateStatusModal] = useState(false);
   const [isDiscardOrderModal, setIsDiscardOrderModal] = useState(false);
-  const [isDiscardPaymentModal, setIsDiscardPaymentModal] = useState(false)
+  const [isDiscardPaymentModal, setIsDiscardPaymentModal] = useState(false);
+  
+  // Add chat modal states
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+
+  // Fetch selected product details
+  const { data: selectedProductDetails } = useViewProductId(
+    activeOutlet,
+    selectedProductId, 
+    { 
+      enabled: !!selectedProductId && selectedProductId.trim() !== ''
+    }
+  );
+
+  // Helper function to validate product ID
+  const isValidProductId = (productId) => {
+    return productId && productId.trim() !== '' && productId !== null && productId !== undefined;
+  };
 
   const handleProductEdit = (product) => {
-    setIsEditModal(true)
     console.log('Edit product:', product);
+    if (!isValidProductId(product.id)) {
+      toast.error('Invalid product selected for editing');
+      return;
+    }
+    setSelectedProductId(product.id);
+    setIsEditModal(true);
   };
 
   const handleProductDelete = (product) => {
     console.log('Delete product:', product);
-    setIsDeleteModal(true)
+    if (!isValidProductId(product.id)) {
+      toast.error('Invalid product selected for deletion');
+      return;
+    }
+    setSelectedProductId(product.id);
+    setIsDeleteModal(true);
   };
 
   const handleProductView = (product) => {
-    setIsViewModal(true)
+    console.log('View product:', product);
+    if (!isValidProductId(product.id)) {
+      toast.error('Invalid product selected for viewing');
+      return;
+    }
+    setSelectedProductId(product.id);
+    setIsViewModal(true);
   };
 
+  // Updated chat reply handler to open chat modal
   const handleChatReply = (chat) => {
     console.log('Reply to chat:', chat);
+    setSelectedChat(chat);
+    setIsChatModalOpen(true);
+  };
+
+  // Handler for "See all" link to navigate to messages page
+  const handleSeeAllChats = () => {
+    navigate('/messages');
+  };
+
+  // Handler to close chat modal
+  const closeChatModal = () => {
+    setIsChatModalOpen(false);
+    setSelectedChat(null);
   };
 
   const handleConfirm = () => {
-    console.log("Deleting product:", mockProduct.name);
-    setIsDeleteModal(false);
+    if (!isValidProductId(selectedProductId)) {
+      toast.error('No valid product selected for deletion');
+      return;
+    }
+
+    deleteMutation.mutate(
+      { 
+        active_outlet: activeOutlet, 
+        productId: selectedProductId 
+      },
+      {
+        onSuccess: () => {
+          toast.success('Product deleted successfully');
+          setIsDeleteModal(false);
+          setSelectedProductId('');
+          refetchProducts();
+        },
+        onError: (error) => {
+          console.error('Delete error:', error);
+          toast.error('Failed to delete product');
+        },
+      }
+    );
   };
 
   const handleVerifyConfirm = () => {
@@ -55,9 +158,7 @@ const DashboardPage = () => {
   };
 
   const handleConfirmStatusUpdate = (newStatus) => {
-    console.log("Updating order status to:", newStatus, "for order:", selectedOrder.id);
-    // Update the order status in your state/backend here
-    // You might want to update the selectedOrder state or refetch data
+    console.log("Updating order status to:", newStatus, "for order:", selectedOrder?.id);
   };
 
   const handleEdit = () => {
@@ -73,35 +174,66 @@ const DashboardPage = () => {
   };
 
   const handleConfirmDiscardOrder = () => {
-    console.log("Discarding order:", selectedOrder.id);
-    setShowOrderSummary(false);
+    console.log("Discarding order:", selectedOrder?.id);
     setIsDiscardOrderModal(false);
-    setSelectedOrder(null);
+  };
+
+  const handleConfirmDiscardPayment = () => {
+    console.log("Discarding payment");
+    setIsDiscardPaymentModal(false);
   };
 
   // Handle outlet change
   const handleOutletChange = (newOutlet) => {
     console.log('Outlet changed to:', newOutlet);
-    // You can add additional logic here if needed
-    // The component will automatically refresh the page
+    // Refetch data when outlet changes
+    refetchProducts();
   };
 
-  // Payment Tracker Component
-  const PaymentTracker = () => (
-    <div className="payment-tracker">
-      <div className="tracker-line"></div>
-      <div className="tracker-dots">
-        <div className="tracker-dot active"></div>
-        <div className="tracker-dot active"></div>
-        <div className="tracker-dot"></div>
-        <div className="tracker-dot"></div>
-      </div>
-      <div className="tracker-circle">
-        <div className="inner-dot"></div>
-      </div>
-    </div>
-  );
+  // Close all modals and reset state
+  const handleCloseModals = () => {
+    setSelectedProductId('');
+    setSelectedProduct(null);
+    setIsEditModal(false);
+    setIsDeleteModal(false);
+    setIsViewModal(false);
+  };
 
+  // Format currency
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
+  // Get stats from analytics data
+  const getAnalyticsStats = () => {
+    if (!allAnalyticsData) {
+      return {
+        totalOrders: 0,
+        totalPayments: 0,
+        unresolvedChats: 0
+      };
+    }
+
+    return {
+      totalOrders: allAnalyticsData.total_orders || 0,
+      totalPayments: parseFloat(allAnalyticsData.total_payment_received || '0'),
+      unresolvedChats: allAnalyticsData.total_unresolved_chats || 0
+    };
+  };
+
+  const analyticsStats = getAnalyticsStats();
+
+
+
+  // Show loading state
+  if (isLoadingProducts || isLoadingAllAnalytics) {
+    return <DashboardSkeleton />;
+  }
   return (
     <div className="dashboard">
       {/* Dashboard Header with Outlet Switcher */}
@@ -122,117 +254,124 @@ const DashboardPage = () => {
       <div className="stats-row">
         <StatsCard
           title="Total Orders"
-          value="22000"
-          trend={
-            <div className="trend-chart">
-              <ResponsiveContainer width={100} height={50}>
-                <BarChart data={[
-                  { value: 25, name: 'bar1' }, 
-                  { value: 45, name: 'bar2' }, 
-                  { value: 15, name: 'bar3' }, 
-                  { value: 35, name: 'bar4' }, 
-                  { value: 20, name: 'bar5' }
-                ]}>
-                  <Bar dataKey="value" radius={[2, 2, 0, 0]}>
-                    <Cell fill="#FFE5E0" />
-                    <Cell fill="#FF6B35" />
-                    <Cell fill="#FFE5E0" />
-                    <Cell fill="#FFE5E0" />
-                    <Cell fill="#FFE5E0" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          }
+          value={analyticsStats.totalOrders.toLocaleString()}
+          // trend={
+          //   <div className="trend-chart">
+          //     <ResponsiveContainer width={100} height={50}>
+          //       <BarChart data={[
+          //         { value: 25, name: 'bar1' }, 
+          //         { value: 45, name: 'bar2' }, 
+          //         { value: 15, name: 'bar3' }, 
+          //         { value: 35, name: 'bar4' }, 
+          //         { value: 20, name: 'bar5' }
+          //       ]}>
+          //         <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+          //           <Cell fill="#FFE5E0" />
+          //           <Cell fill="#FF6B35" />
+          //           <Cell fill="#FFE5E0" />
+          //           <Cell fill="#FFE5E0" />
+          //           <Cell fill="#FFE5E0" />
+          //         </Bar>
+          //       </BarChart>
+          //     </ResponsiveContainer>
+          //   </div>
+          // }
         />
         
         <StatsCard
           title="Total Payments"
-          value="₦6000"
-          trend={
-            <div className="payment-trend">
-              <ResponsiveContainer width={100} height={50}>
-                <LineChart data={paymentsData}>
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#FF6B35" 
-                    strokeWidth={2}
-                    dot={false}
-                    strokeDasharray="none"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-              <PaymentTracker />
-            </div>
-          }
+          value={formatCurrency(analyticsStats.totalPayments)}
+          // trend={
+          //   <div className="payment-trend">
+          //     <ResponsiveContainer width={100} height={50}>
+          //       <LineChart data={paymentsData}>
+          //         <Line 
+          //           type="monotone" 
+          //           dataKey="value" 
+          //           stroke="#FF6B35" 
+          //           strokeWidth={2}
+          //           dot={false}
+          //           strokeDasharray="none"
+          //         />
+          //       </LineChart>
+          //     </ResponsiveContainer>
+          //     <PaymentTracker />
+          //   </div>
+          // }
         />
         
         <StatsCard
           title="Unresolved Chats"
-          value="15"
-          isOrange={true}
-          icon={<ProgressPie percentage={25} size={60} strokeWidth={6} />} 
+          value={analyticsStats.unresolvedChats.toString()}
+          isOrange={analyticsStats.unresolvedChats > 0}
+          icon={<ProgressPie percentage={analyticsStats.unresolvedChats > 0 ? Math.floor((analyticsStats.unresolvedChats / analyticsStats.totalOrders) * 100) : 0} size={60} strokeWidth={6} />} 
         />
       </div>
 
       {/* Main Content Row */}
       <div className="main-content">
         {/* Performance Chart */}
-<div className="chart-section">
-  <div className="section-header">
-    <h2>Overall Performance</h2>
-  </div>
-  <div className="chart-container performance-chart-container">
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={performanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-        <XAxis 
-          dataKey="name" 
-          axisLine={false}
-          tickLine={false}
-          tick={{ fontSize: 12, fill: '#888' }}
-        />
-        <YAxis 
-          axisLine={false}
-          tickLine={false}
-          tick={{ fontSize: 12, fill: '#888' }}
-        />
-        
-        {/* Dashed line in orange - will be clipped on the right */}
-        <ReferenceLine 
-          y={performanceData.find(item => item.name === 'Aug')?.value || 80} 
-          stroke="#FF6B35" 
-          strokeDasharray="4 4"
-          strokeWidth={1}
-          label={{ 
-            value: "", 
-            position: "insideTopLeft", 
-            fill: "#FF6B35", 
-            fontSize: 12, 
-            fontWeight: 600 
-          }}
-        />
-        
-        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-          {performanceData.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.name === 'Aug' ? '#FF6B35' : '#FFE5E0'} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
-  </div>
-</div>
+        <div className="chart-section">
+          <div className="section-header">
+            <h2>Overall Performance</h2>
+          </div>
+          <div className="chart-container performance-chart-container">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={performanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#888' }}
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#888' }}
+                />
+                
+                {/* Dashed line in orange */}
+                <ReferenceLine 
+                  y={performanceData.find(item => item.name === 'Aug')?.value || 80} 
+                  stroke="#FF6B35" 
+                  strokeDasharray="4 4"
+                  strokeWidth={1}
+                  label={{ 
+                    value: "", 
+                    position: "insideTopLeft", 
+                    fill: "#FF6B35", 
+                    fontSize: 12, 
+                    fontWeight: 600 
+                  }}
+                />
+                
+                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                  {performanceData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.name === 'Aug' ? '#FF6B35' : '#FFE5E0'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
         {/* Unresolved Chats Sidebar */}
         <div className="chat-sidebar">
           <div className="section-header">
             <h3>Unresolved Chats</h3>
-            <span className="see-all">See all</span>
+            {/* Updated "See all" link with click handler */}
+            <span className="see-all" onClick={handleSeeAllChats} style={{ cursor: 'pointer' }}>
+              See all
+            </span>
           </div>
           <div className="chat-list">
-            {unresolvedChats.map(chat => (
-              <ChatItem key={chat.id} chat={chat} onReply={handleChatReply} />
-            ))}
+            {allAnalyticsData?.unresolved_chats && allAnalyticsData.unresolved_chats.length > 0 ? (
+              allAnalyticsData.unresolved_chats.slice(0, 5).map(chat => (
+                <ChatItem key={chat.id} chat={chat} onReply={handleChatReply} />
+              ))
+            ) : (
+                 <EmptyState message='No messsage available'/>
+            )}
           </div>
         </div>
       </div>
@@ -243,35 +382,59 @@ const DashboardPage = () => {
           <h2>Top selling Products</h2>
         </div>
         <div className="products-grid">
-          {topSellingProducts.map(product => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onEdit={handleProductEdit}
-              onDelete={handleProductDelete}
-              onView={handleProductView}
-            />
-          ))}
+          {topSellingProducts.length > 0 ? (
+            topSellingProducts.map(product => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onEdit={() => handleProductEdit(product)}
+                onDelete={() => handleProductDelete(product)}
+                onView={() => handleProductView(product)}
+              />
+            ))
+          ) : (
+          <EmptyState message='No product available'/>
+          )}
         </div>
       </div>
 
-      {isViewModal && (
-        <ProductDetails
-          product={mockProduct}
+      {/* Chat Modal for individual chat replies */}
+      <ChatModal
+        isOpen={isChatModalOpen}
+        onClose={closeChatModal}
+        selectedUser={selectedChat}
+      />
+
+      {/* Product View Modal */}
+      {isViewModal && selectedProductDetails && isValidProductId(selectedProductId) && (
+       
+  <ProductDetails
+          product={selectedProductDetails}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onClose={() => setIsViewModal(false)}
+          onClose={() => {
+            setIsViewModal(false);
+            handleCloseModals();
+          }}
         />
+      
+      
       )}
 
       {/* Edit Product Modal */}
-      {isEditModal && (
+      {isEditModal && selectedProductDetails && isValidProductId(selectedProductId) && (
+      
         <EditProductModal
           isOpen={isEditModal}
-          onClose={() => setIsEditModal(false)}
-          product={mockProduct}
+          onClose={() => {
+            setIsEditModal(false);
+            handleCloseModals();
+            refetchProducts();
+          }}
+          product={selectedProductDetails}
           categories={mockCategories}
         />
+      
       )}
 
       {/* Update Order Status Modal */}
@@ -285,17 +448,20 @@ const DashboardPage = () => {
       )}
 
       {/* Delete Product Confirmation Modal */}
-      {isDeleteModal && (
+      {isDeleteModal && selectedProductDetails && isValidProductId(selectedProductId) && (
         <ConfirmActionModal
           isOpen={isDeleteModal}
-          onClose={() => setIsDeleteModal(false)}
+          onClose={() => {
+            setIsDeleteModal(false);
+            handleCloseModals();
+          }}
           onConfirm={handleConfirm}
           type="delete"
           title="Confirm Delete"
           message={
             <>
               Are you sure you want to delete{" "}
-              <strong>{mockProduct.name}</strong>?
+              <strong>{selectedProductDetails.name}</strong>?
             </>
           }
         />
@@ -311,8 +477,7 @@ const DashboardPage = () => {
           title="Confirm Discard Order"
           message={
             <>
-              Are you sure you want to discard order{" "}
-              <strong>#{selectedOrder?.id}</strong>? This action cannot be undone.
+              Are you sure you want to discard this order? This action cannot be undone.
             </>
           }
         />
@@ -344,9 +509,7 @@ const DashboardPage = () => {
           title="Confirm Verification"
           message={
             <>
-              Are you sure you want to verify this payment made by{" "}
-              <strong>{selectedOrder?.customerName}</strong> with Payment ID{" "}
-              <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>?
+              Are you sure you want to verify this payment?
             </>
           }
         />
@@ -361,9 +524,7 @@ const DashboardPage = () => {
           title="Verification Successful"
           message={
             <>
-              You have successfully verified this payment made by{" "}
-              <strong>{selectedOrder?.customerName}</strong> with Payment ID{" "}
-              <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>
+              You have successfully verified this payment.
             </>
           }
         />

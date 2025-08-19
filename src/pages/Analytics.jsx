@@ -4,6 +4,10 @@ import OutletSwitcher from '../components/OutletSwitcher';
 import '../styles/Analytics.css';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 import { useAnalytics } from '../hooks/useAnalytics';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import DashboardSkeleton from '../components/DashboardSkeleton';
+import AnalyticsSkeleton from '../components/AnalyticsSkeleton';
+import ChatItem from '../components/ChatItem';
 
 const AnalyticsPage = () => {
   const [ordersTimeframe, setOrdersTimeframe] = useState('monthly');
@@ -203,23 +207,11 @@ const AnalyticsPage = () => {
     return trends;
   };
 
-  // Get unresolved chats data only (no resolved calculation)
-  const getUnresolvedChatsData = () => {
-    if (!allAnalyticsData) {
-      return [];
-    }
-    
-    return allAnalyticsData.unresolved_chats || [];
-  };
+
 
   if (isLoadingAllAnalytics) {
     return (
-      <div className="analytics">
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading analytics data...</p>
-        </div>
-      </div>
+ <AnalyticsSkeleton/>
     );
   }
 
@@ -363,7 +355,7 @@ const AnalyticsPage = () => {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#888' }}
-                  tickFormatter={(value) => `₦${(value/1000).toFixed(0)}K`}
+                  tickFormatter={(value) => `₦${(value/1000).toFixed(0)}`}
                 />
                 <Bar dataKey="payments" radius={[4, 4, 0, 0]}>
                   {paymentsChartData?.map((entry, index) => (
@@ -379,39 +371,7 @@ const AnalyticsPage = () => {
         </div>
       </div>
 
-      {/* Bottom Section */}
-      <div className="bottom-section">
-        {/* Unresolved Chats */}
-        <div className="chart-card chat-resolution">
-          <div className="chart-header">
-            <h3>Unresolved Chats ({allAnalyticsData?.total_unresolved_chats || 0})</h3>
-          </div>
-          <div className="chart-container">            
-            {/* Unresolved Chats List */}
-            {allAnalyticsData?.unresolved_chats && allAnalyticsData.unresolved_chats.length > 0 ? (
-              <div className="unresolved-chats-list">
-                {allAnalyticsData.unresolved_chats.map(chat => (
-                  <div key={chat.id} className="chat-item">
-                    <div className="chat-info">
-                      <span className="chat-user">{chat.user_name}</span>
-                      <span className="chat-product">{chat.product_name}</span>
-                      <span className="chat-message">{chat.last_message}</span>
-                    </div>
-                    <div className="chat-meta">
-                      <span className="chat-status">{chat.status}</span>
-                      <span className="chat-date">{new Date(chat.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="no-chats">
-                <p>No unresolved chats at the moment</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+   
     </div>
   );
 };

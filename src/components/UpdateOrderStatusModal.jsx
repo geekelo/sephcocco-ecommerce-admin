@@ -80,7 +80,7 @@ const UpdateOrderStatusModal = ({
       <div className="update-status-modal">
         <div className="modal-header-confirm">
           <div className="logo-container-confirm">
-            <div className="logo-placeholder">LOGO</div>
+             <img src="/logo.png" alt="Logo" className="logo" />
           </div>
           <button type="button" className="close-button-confirm" onClick={onClose}>
             <X size={24} color='#000'/>
@@ -171,7 +171,7 @@ const UpdateOrderStatusModal = ({
           </div>
         </div>
 
-        <div className="form-actions">
+        <div className="form-actions-order">
           <button
             type="button"
             className="confirm-button update-status-button"

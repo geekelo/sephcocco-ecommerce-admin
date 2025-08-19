@@ -1,0 +1,116 @@
+/* PaymentSetting.css */
+.payment-setting {
+  width: 100%;
+}
+
+.payment-section {
+  margin-bottom: 32px;
+}
+
+.payment-section h3 {
+  font-size: 18px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.payment-section h4 {
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+.bank-transfer-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.editable-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.editable-field:last-child {
+  border-bottom: none;
+}
+
+.field-label {
+  color: #6b7280;
+  min-width: 120px;
+  font-size: 14px;
+}
+
+.field-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.field-value {
+  color: #111827;
+}
+
+.field-edit-btn {
+  color: #6b7280;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+  font-size: 14px;
+}
+
+.field-edit-btn:hover {
+  color: #374151;
+}
+
+.field-edit-btn svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+}
+
+.gateway-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group label {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.input-group input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #dc2626;
+  border-color: transparent;
+}
+
+.input-group input::placeholder {
+  color: #9ca3af;
+}

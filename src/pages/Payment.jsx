@@ -276,8 +276,9 @@ const PaymentPage = () => {
             />
 
             <Pagination
-              currentPage={meta.current_page || 1}
-              totalPages={meta.total_pages || 1}
+              currentPage={Number(meta.current_page || 1)}
+              itemsPerPage={itemsPerPage}
+              totalPages={Number(meta.total_pages || 1)}
               onPageChange={handlePageChange}
               totalItems={meta.total_count || 0}
               showInfo={true}

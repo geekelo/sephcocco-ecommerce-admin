@@ -10,7 +10,8 @@ const FlexibleTableRow = ({
   actions = [],
   renderCell,
   className = '',
-  clickableRow = true
+  clickableRow = true,
+  mobileCardConfig = null // New prop for mobile card configuration
 }) => {
   console.log('FlexibleTableRow received data:', data);
   console.log('FlexibleTableRow received columns:', columns);
@@ -20,8 +21,20 @@ const FlexibleTableRow = ({
     return null;
   }
   const [showActions, setShowActions] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const actionsRef = useRef(null);
   const triggerRef = useRef(null);
+
+  // Check if we're on mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -188,7 +201,234 @@ const FlexibleTableRow = ({
     return null;
   };
 
-  // Default cell renderer with enhanced type handling
+  // Mobile card configuration
+  const getDefaultMobileConfig = () => {
+    // Try to auto-detect primary fields
+    const primaryField = columns.find(col => {
+      const key = (col.key || col.accessorKey || '').toLowerCase();
+      return key.includes('name') || key.includes('user') || key.includes('customer') || key.includes('title');
+    });
+
+    const statusField = columns.find(col => {
+      const key = (col.key || col.accessorKey || '').toLowerCase();
+      return key === 'status' || key === 'current_stage';
+    });
+
+    return {
+      primaryField: primaryField?.key || primaryField?.accessorKey || columns[0]?.key || columns[0]?.accessorKey,
+      showInHeader: ['status', 'current_stage'],
+      excludeFromBody: ['actions', 'action'],
+      compactMode: false
+    };
+  };
+
+  const mobileConfig = mobileCardConfig || getDefaultMobileConfig();
+
+  // Render mobile card layout
+  const renderMobileCard = () => {
+    const primaryColumn = columns.find(col => 
+      (col.key || col.accessorKey) === mobileConfig.primaryField
+    );
+    const primaryValue = primaryColumn ? getCellValue(primaryColumn, data) : null;
+
+    // Header fields (primary info + status/actions)
+    const headerFields = columns.filter(col => {
+      const key = (col.key || col.accessorKey || '').toLowerCase();
+      return mobileConfig.showInHeader.includes(key) || key === 'actions' || key === 'action';
+    });
+
+    // Body fields (everything else except excluded and header fields)
+    const bodyFields = columns.filter(col => {
+      const key = (col.key || col.accessorKey || '').toLowerCase();
+      const isPrimary = (col.key || col.accessorKey) === mobileConfig.primaryField;
+      const isInHeader = mobileConfig.showInHeader.includes(key);
+      const isExcluded = mobileConfig.excludeFromBody.includes(key);
+      const isAction = key === 'actions' || key === 'action';
+      
+      return !isPrimary && !isInHeader && !isExcluded && !isAction;
+    });
+
+    return (
+      <div className="mobile-card-content">
+        {/* Card Header */}
+        <div className="card-header">
+          <div className="primary-info">
+            {primaryColumn && (
+              <div className="mobile-primary-info">
+                {renderMobileCellContent(primaryColumn, data, primaryValue, true)}
+              </div>
+            )}
+            
+            {/* Status in header */}
+            {headerFields.filter(col => {
+              const key = (col.key || col.accessorKey || '').toLowerCase();
+              return key !== 'actions' && key !== 'action';
+            }).map(column => {
+              const value = getCellValue(column, data);
+              return (
+                <div key={column.key || column.accessorKey} className="mobile-primary-status">
+                  {renderMobileCellContent(column, data, value)}
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Actions in header */}
+          <div className="card-actions mobile-card-actions">
+            {renderMobileActions()}
+          </div>
+        </div>
+
+        {/* Card Body */}
+        {bodyFields.length > 0 && (
+          <div className="card-body">
+            {bodyFields.map(column => {
+              const value = getCellValue(column, data);
+              const label = column.label || column.header || column.accessorKey || column.key;
+              
+              return (
+                <div key={column.key || column.accessorKey} className="card-row">
+                  <div className="card-label">{label}</div>
+                  <div className="card-value">
+                    {renderMobileCellContent(column, data, value)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render cell content for mobile
+  const renderMobileCellContent = (column, data, value, isPrimary = false) => {
+    const columnKey = (column.key || column.accessorKey || '').toLowerCase();
+    
+    // Handle custom cell renderers first
+    if (column.cell && typeof column.cell === 'function') {
+      return value; // This is already the rendered content
+    }
+
+    // Avatar/User fields
+    if (columnKey.includes('user') || columnKey.includes('customer') || columnKey.includes('name')) {
+      if (isPrimary && data.avatar) {
+        return (
+          <div className="mobile-primary-avatar">
+            <img 
+              src={data.avatar} 
+              alt={value || 'Avatar'}
+              className="avatar"
+            />
+            <div className="avatar-details">
+              <div className="avatar-name">{value}</div>
+              {data.email && <div className="avatar-sub">{data.email}</div>}
+            </div>
+          </div>
+        );
+      }
+      return <div className="mobile-card-text">{value || '-'}</div>;
+    }
+
+    // Currency fields
+    if (columnKey.includes('price') || columnKey.includes('cost') || columnKey.includes('amount')) {
+      return <div className="mobile-card-currency">{formatCurrency(value)}</div>;
+    }
+    
+    // Date fields
+    if (columnKey.includes('date') || columnKey.includes('created') || columnKey.includes('updated')) {
+      return (
+        <div className="mobile-card-date">
+          <Calendar size={14} />
+          <span>{formatDate(value)}</span>
+        </div>
+      );
+    }
+    
+    // Status fields
+    if (columnKey === 'status' || columnKey === 'current_stage') {
+      return (
+        <div className="mobile-card-status">
+          <span className={`status-badge ${getStatusClass(value)}`}>
+            {capitalizeText(value)}
+          </span>
+        </div>
+      );
+    }
+    
+    // Stages field
+    if (columnKey === 'stages') {
+      return <div className="mobile-card-stages">{renderStages(value)}</div>;
+    }
+
+    // Default text
+    return <div className="mobile-card-text">{value || '-'}</div>;
+  };
+
+  // Render actions for mobile
+  const renderMobileActions = () => {
+    if (!actions || actions.length === 0) return null;
+
+    // Single action - render as button
+    if (actions.length === 1) {
+      const action = actions[0];
+      return (
+        <button
+          className={`action-button ${action.className || ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onActionClick && onActionClick(action.key, data);
+          }}
+          disabled={action.disabled?.(data)}
+        >
+          {action.icon && <span className="action-icon">{action.icon}</span>}
+          {action.label}
+        </button>
+      );
+    }
+
+    // Multiple actions - render as dropdown
+    return (
+      <div className="actions-cell-rows">
+        <div 
+          className={`actions-dropdown-table ${showActions ? 'show-menu-table' : ''}`}
+          ref={actionsRef}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            ref={triggerRef}
+            className="actions-trigger-table"
+            onClick={() => setShowActions(!showActions)}
+            aria-label="More actions"
+            aria-expanded={showActions}
+          >
+            <MoreVertical size={16} />
+          </button>
+          
+          {showActions && (
+            <div className="actions-menu-table">
+              {actions.map((action) => (
+                <button
+                  key={action.key}
+                  className={`action-item-table ${action.className || ''}`}
+                  onClick={() => {
+                    onActionClick && onActionClick(action.key, data);
+                    setShowActions(false);
+                  }}
+                  disabled={action.disabled?.(data)}
+                >
+                  {action.icon && <span className="action-icon">{action.icon}</span>}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Default cell renderer with enhanced type handling (for desktop)
   const defaultCellRenderer = (column, data, value) => {
     // If the column already has a cell renderer, it was handled in getCellValue
     if (column.cell && typeof column.cell === 'function') {
@@ -395,7 +635,7 @@ const FlexibleTableRow = ({
     
     const formattedValue = config.formatter 
       ? config.formatter(value)
-      : `${config.symbol || '$'}${value}`;
+      : `${config.symbol || ''}${value}`
     
     return (
       <div className="currency-cell">
@@ -404,7 +644,7 @@ const FlexibleTableRow = ({
       </div>
     );
   };
-
+  
   // Button cell renderer
   const renderButtonCell = (value, data, config) => {
     return (
@@ -490,11 +730,26 @@ const FlexibleTableRow = ({
     if (!e.target.closest('.actions-dropdown-table') && 
         !e.target.closest('.cell-button') && 
         !e.target.closest('.action-button') &&
+        !e.target.closest('.mobile-card-actions') &&
         clickableRow) {
       onRowClick && onRowClick(data);
     }
   };
 
+  // Return mobile card layout if on mobile
+  if (isMobile) {
+    return (
+      <div 
+        className={`table-row ${className}`}
+        onClick={handleRowClick}
+        style={{ cursor: clickableRow ? 'pointer' : 'default' }}
+      >
+        {renderMobileCard()}
+      </div>
+    );
+  }
+
+  // Return desktop table layout
   return (
     <div 
       className={`table-row ${className}`}

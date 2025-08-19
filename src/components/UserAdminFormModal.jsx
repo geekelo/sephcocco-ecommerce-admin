@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+
 import { Eye, EyeOff, UserPlus, X } from 'lucide-react';
 import '../styles/UserAdminFormModal.css';
 import { useRegister } from '../hooks/useRegister';
 import { validateEmail, validatePassword } from '../schema/LoginSchema';
 import Cookies from 'js-cookie';
+import { useEffect, useState } from 'react';
 
 const UserAdminFormModal = ({
   isEdit,
@@ -48,6 +49,11 @@ const UserAdminFormModal = ({
   const validateName = (name) => name.trim().length >= 2;
   const validatePhone = (phone) => /^\+?[\d\s\-\(\)]{10,}$/.test(phone.trim());
   const validateAddress = (address) => address.trim().length >= 5;
+
+  // Check if password is required for current tab
+  const isPasswordRequired = () => {
+    return activeTab === "admins" && !isEdit;
+  };
 
   // Handle outlet selection from dropdown
   const handleOutletSelect = (e) => {
@@ -161,29 +167,34 @@ const UserAdminFormModal = ({
         }
         break;
 
+      // Password validation - only for admins
       case 'password':
-        if (!value.trim()) {
-          newErrors.password = "Password is required";
-        } else if (!validatePassword(value)) {
-          newErrors.password = "Password must be at least 6 characters";
-        } else {
-          delete newErrors.password;
-        }
-        // Check password confirmation match if it exists
-        if (formValues.password_confirmation && value !== formValues.password_confirmation) {
-          newErrors.password_confirmation = "Passwords do not match";
-        } else if (formValues.password_confirmation && value === formValues.password_confirmation) {
-          delete newErrors.password_confirmation;
+        if (isPasswordRequired()) {
+          if (!value.trim()) {
+            newErrors.password = "Password is required";
+          } else if (!validatePassword(value)) {
+            newErrors.password = "Password must be at least 6 characters";
+          } else {
+            delete newErrors.password;
+          }
+          // Check password confirmation match if it exists
+          if (formValues.password_confirmation && value !== formValues.password_confirmation) {
+            newErrors.password_confirmation = "Passwords do not match";
+          } else if (formValues.password_confirmation && value === formValues.password_confirmation) {
+            delete newErrors.password_confirmation;
+          }
         }
         break;
 
       case 'password_confirmation':
-        if (!value.trim()) {
-          newErrors.password_confirmation = "Please confirm your password";
-        } else if (value !== formValues.password) {
-          newErrors.password_confirmation = "Passwords do not match";
-        } else {
-          delete newErrors.password_confirmation;
+        if (isPasswordRequired()) {
+          if (!value.trim()) {
+            newErrors.password_confirmation = "Please confirm your password";
+          } else if (value !== formValues.password) {
+            newErrors.password_confirmation = "Passwords do not match";
+          } else {
+            delete newErrors.password_confirmation;
+          }
         }
         break;
 
@@ -225,7 +236,7 @@ const UserAdminFormModal = ({
         // The parent component will handle the API calls
         onSubmit(formValues);
       } else {
-        // For adding new users/admins
+        // For adding new users/admins/riders
         if (activeTab === "admins") {
           payload = {
             user: {
@@ -249,6 +260,17 @@ const UserAdminFormModal = ({
               phone_number: formValues.phone_number || '',
               whatsapp_number: formValues.whatsapp_number || '',
               role: "user"
+            }
+          };
+        } else if (activeTab === "riders") {
+          payload = {
+            user: {
+              name: fullName,
+              address: formValues.address || '',
+              email: formValues.email || '',
+              phone_number: formValues.phone_number || '',
+              whatsapp_number: formValues.whatsapp_number || '',
+              role: "rider"
             }
           };
         }
@@ -283,7 +305,7 @@ const UserAdminFormModal = ({
         <div className="modal-header-form">
           <h2 className="modal-title-form">
             <UserPlus size={20} />
-            {isEdit ? 'Edit' : 'Add New'} {activeTab === 'users' ? 'User' : 'Admin'}
+            {isEdit ? 'Edit' : 'Add New'} {activeTab === 'users' ? 'User' : activeTab === 'riders' ? 'Rider' : 'Admin'}
           </h2>
           <button className="modal-close-form" onClick={closeAllModals}>
             ×
@@ -392,8 +414,8 @@ const UserAdminFormModal = ({
               )}
             </div>
 
-            {/* Password fields - only show for admins or when adding new users */}
-            {(activeTab === "admins" || !isEdit) && (
+            {/* Password fields - only show for admins when not editing */}
+            {isPasswordRequired() && (
               <>
                 <div className="form-field-form">
                   <label className="form-label-form" htmlFor="password">Password</label>
@@ -516,7 +538,7 @@ const UserAdminFormModal = ({
                 {isSubmitting ? (
                   `${isEdit ? 'Updating...' : 'Adding...'}`
                 ) : (
-                  `${isEdit ? 'Update' : 'Add'} ${activeTab === 'users' ? 'User' : 'Admin'}`
+                  `${isEdit ? 'Update' : 'Add'} ${activeTab === 'users' ? 'User' : activeTab === 'riders' ? 'Rider' : 'Admin'}`
                 )}
               </button>
             </div>

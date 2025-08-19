@@ -1,0 +1,259 @@
+/* Shipping Page Specific Styles */
+.shipping-page {
+  background-color: #ffffff;
+  overflow: hidden;
+  max-width: 100%;
+  color: #000;
+  padding: 16px 20px;
+}
+
+.shipping-table-container {
+  margin-top: 35px;
+}
+
+/* Customer info styling in table */
+.customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customer-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.customer-phone {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Tracking Section */
+.tracking-section {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.tracking-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.tracking-input-container {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+/* Google Map Tracker */
+.google-map-tracker {
+  width: 100%;
+}
+
+.map-header {
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid #e9ecef;
+  border-bottom: none;
+}
+
+.map-container {
+  border-radius: 0 0 8px 8px;
+  transition: all 0.3s ease;
+}
+
+.map-container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Status badge improvements for shipping */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-delivering {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-processing {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+/* Tracking input field styling */
+.tracking-input-container input {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.tracking-input-container input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.tracking-input-container input::placeholder {
+  color: #9ca3af;
+}
+
+/* Button styling for tracking */
+.tracking-input-container .add-button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: auto;
+}
+
+.tracking-input-container .add-button:hover:not(:disabled) {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.tracking-input-container .add-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Shipped products table */
+.ordered-products-section table {
+  border-collapse: collapse;
+}
+
+.ordered-products-section th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ordered-products-section td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.ordered-products-section tr:last-child td {
+  border-bottom: none;
+}
+
+.ordered-products-section tr:hover {
+  background-color: #f9fafb;
+}
+.view-action-btn {
+  background-color: #f97316;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.view-action-btn:hover {
+  background-color: #ea580c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(249, 115, 22, 0.3);
+}
+
+.view-action-btn:active {
+  transform: translateY(0);
+}
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  .shipping-page {
+    border-radius: 0;
+    box-shadow: none;
+    padding: 12px 16px;
+  }
+  
+  .tracking-input-container .flex {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .tracking-input-container input {
+    width: 100%;
+  }
+  
+  .tracking-input-container .add-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .map-container {
+    height: 300px;
+  }
+  
+  .customer-info {
+    gap: 1px;
+  }
+  
+  .customer-phone {
+    font-size: 11px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .ordered-products-section {
+    overflow-x: auto;
+  }
+  
+  .ordered-products-section table {
+    min-width: 500px;
+  }
+  
+  .map-header {
+    padding: 12px;
+  }
+  
+  .map-header .text-sm {
+    font-size: 12px;
+  }
+}

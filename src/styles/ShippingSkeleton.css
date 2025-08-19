@@ -1,0 +1,567 @@
+/* Shipping Skeleton Styles */
+.shipping-skeleton {
+  padding: 24px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* Base skeleton animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* Base skeleton line */
+.skeleton-line {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 4px;
+  height: 16px;
+}
+
+/* Header Skeleton */
+.shipping-header-skeleton {
+  margin-bottom: 24px;
+}
+
+.header-content-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title-skeleton {
+  width: 250px;
+  height: 32px;
+}
+
+.subtitle-skeleton {
+  width: 400px;
+  height: 16px;
+}
+
+/* Search Bar Section Skeleton */
+.search-bar-section-skeleton {
+  margin-bottom: 24px;
+}
+
+.search-container-skeleton {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.search-input-skeleton {
+  width: 100%;
+  height: 44px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 8px;
+}
+
+.filter-controls-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-dropdown-skeleton {
+  width: 150px;
+  height: 36px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+.date-inputs-skeleton {
+  display: flex;
+  gap: 12px;
+}
+
+.date-input-skeleton {
+  width: 120px;
+  height: 36px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+.apply-button-skeleton {
+  width: 80px;
+  height: 36px;
+
+  background-size: 200px 100%;
+
+  border-radius: 6px;
+}
+
+/* Rider Statistics Skeleton */
+.rider-stats-skeleton {
+  margin-bottom: 24px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stats-header-skeleton {
+  margin-bottom: 16px;
+}
+
+.stats-title {
+  width: 180px;
+  height: 20px;
+}
+
+.stats-grid-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stat-card-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #f3f4f6;
+}
+
+.stat-icon-skeleton {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.stat-content-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-value {
+  width: 60px;
+  height: 20px;
+}
+
+.stat-label {
+  width: 80px;
+  height: 14px;
+}
+
+/* Table Container Skeleton */
+.table-container-skeleton {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.table-skeleton {
+  width: 100%;
+}
+
+/* Table Header */
+.table-header-skeleton {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.5fr 1.2fr 1fr 1.3fr 1fr 80px;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header-cell-skeleton {
+  height: 16px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+.tracking-header {
+  width: 120px;
+}
+
+.status-header {
+  width: 60px;
+}
+
+.customer-header {
+  width: 80px;
+}
+
+.order-header {
+  width: 70px;
+}
+
+.amount-header {
+  width: 60px;
+}
+
+.rider-header {
+  width: 100px;
+}
+
+.date-header {
+  width: 80px;
+}
+
+.action-header {
+  width: 50px;
+}
+
+/* Table Rows */
+.table-row-skeleton {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.5fr 1.2fr 1fr 1.3fr 1fr 80px;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.table-row-skeleton:nth-child(even) {
+  background: #fafbfc;
+}
+
+.table-row-skeleton:last-child {
+  border-bottom: none;
+}
+
+.table-cell-skeleton {
+  display: flex;
+  align-items: center;
+}
+
+/* Tracking Number Cell */
+.tracking-cell-skeleton {
+  align-items: center;
+}
+
+.tracking-number {
+  width: 150px;
+  height: 16px;
+}
+
+/* Status Cell */
+.status-cell-skeleton {
+  align-items: center;
+}
+
+.status-badge-skeleton {
+  width: 80px;
+  height: 24px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 12px;
+}
+
+/* Customer Cell */
+.customer-cell-skeleton {
+  align-items: flex-start;
+}
+
+.customer-info-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.customer-name {
+  width: 120px;
+  height: 16px;
+}
+
+.customer-phone {
+  width: 100px;
+  height: 14px;
+}
+
+/* Order ID Cell */
+.order-cell-skeleton {
+  align-items: center;
+}
+
+.order-id {
+  width: 100px;
+  height: 14px;
+}
+
+/* Amount Cell */
+.amount-cell-skeleton {
+  align-items: center;
+}
+
+.amount-value {
+  width: 80px;
+  height: 16px;
+}
+
+/* Rider Cell */
+.rider-cell-skeleton {
+  align-items: center;
+}
+
+.rider-dropdown-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 12px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+.rider-name {
+  width: 80px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.dropdown-arrow-skeleton {
+  width: 12px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+/* Date Cell */
+.date-cell-skeleton {
+  align-items: center;
+}
+
+.date-value {
+  width: 90px;
+  height: 14px;
+}
+
+/* Action Cell */
+.action-cell-skeleton {
+  justify-content: center;
+}
+
+.view-button-skeleton {
+  width: 50px;
+  height: 28px;
+
+  background-size: 200px 100%;
+
+  border-radius: 4px;
+}
+
+/* Pagination Skeleton */
+.pagination-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.pagination-info-skeleton {
+  display: flex;
+  align-items: center;
+}
+
+.pagination-text {
+  width: 200px;
+  height: 16px;
+}
+
+.pagination-controls-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-button-skeleton {
+  width: 80px;
+  height: 36px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+.pagination-number-skeleton {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .shipping-skeleton {
+    padding: 20px;
+  }
+  
+  .stats-grid-skeleton {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .table-header-skeleton,
+  .table-row-skeleton {
+    grid-template-columns: 1fr 1fr 1.5fr 1fr 80px;
+    gap: 12px;
+  }
+  
+  .search-container-skeleton {
+    padding: 16px;
+  }
+  
+  .filter-controls-skeleton {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .date-inputs-skeleton {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .date-input-skeleton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .shipping-skeleton {
+    padding: 16px;
+  }
+  
+  .header-content-skeleton {
+    align-items: center;
+    text-align: center;
+  }
+  
+  .title-skeleton {
+    width: 200px;
+  }
+  
+  .subtitle-skeleton {
+    width: 300px;
+  }
+  
+  .stats-grid-skeleton {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-card-skeleton {
+    padding: 12px;
+  }
+  
+  .table-header-skeleton,
+  .table-row-skeleton {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .table-row-skeleton {
+    padding: 12px 16px;
+  }
+  
+  .customer-cell-skeleton,
+  .rider-cell-skeleton {
+    align-items: flex-start;
+  }
+  
+  .pagination-skeleton {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+  
+  .pagination-controls-skeleton {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .shipping-skeleton {
+    padding: 12px;
+  }
+  
+  .search-container-skeleton {
+    padding: 12px;
+  }
+  
+  .rider-stats-skeleton {
+    padding: 16px;
+  }
+  
+  .table-row-skeleton {
+    padding: 8px 12px;
+  }
+  
+  .stat-card-skeleton {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .stat-icon-skeleton {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .pagination-button-skeleton {
+    width: 60px;
+    height: 32px;
+  }
+  
+  .pagination-number-skeleton {
+    width: 32px;
+    height: 32px;
+  }
+}

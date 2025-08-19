@@ -15,6 +15,8 @@ export const ManageAccountPage = lazy(() => import("../pages/ManageAccounts"));
 export const ProductCategoresPage = lazy(() => import("../pages/ProductCategories"));
 export const FAQPage = lazy(() => import("../pages/FAQ"));
 export const AnalyticsPage = lazy(() => import("../pages/Analytics"));
+export const SettingsPage = lazy(() => import("../pages/Settings"));
+export const ShippingPage = lazy(() => import("../pages/ShippingPage"));
 
 
 

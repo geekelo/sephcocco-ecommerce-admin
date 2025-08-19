@@ -5,6 +5,8 @@ import ActivitiesCard from '../components/ActivitiesCard';
 import AdminModal from '../components/AdminModal';
 import SearchBar from '../components/SearchBar';
 import Pagination from '../components/Pagination'; 
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import { EmptyState } from '../components/EmptyState';
 
 const itemsPerPage = 10;
 
@@ -88,9 +90,14 @@ console.log('actt',filters);
 
       <div className="activities-products-grid mt-6">
         {isLoading ? (
-          <p>Loading activities...</p>
+          
+            Array.from({ length: 5 }).map((_, idx) => (
+                  <div className="product-grid-item" key={`skeleton-${idx}`}>
+                    <LoadingSkeleton />
+                  </div>
+                ))
         ) : activities.length === 0 ? (
-          <p>No activities found.</p>
+          <EmptyState message='No activities found'/>
         ) : (
           activities.map((item) => (
             <ActivitiesCard

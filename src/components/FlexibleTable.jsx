@@ -18,7 +18,10 @@ const FlexibleTable = ({
   isLoading = false,
   emptyState = null,
   loadingState = null,
-  skeletonRows = 5 // Number of skeleton rows to show
+  skeletonRows = 5, // Number of skeleton rows to show
+  // New mobile card configuration props
+  mobileCardConfig = null, // Configuration for mobile card layout
+  enableMobileCards = true // Enable/disable mobile card view
 }) => {
   console.log('FlexibleTable received data:', data);
   console.log('Data type:', typeof data);
@@ -73,27 +76,52 @@ const FlexibleTable = ({
     return <div className="skeleton-text skeleton-text-default"></div>;
   };
 
-  // Generate skeleton rows
+  // Generate skeleton rows - enhanced for mobile cards
   const renderSkeletonRows = () => {
     return Array.from({ length: skeletonRows }, (_, index) => (
       <div key={`skeleton-row-${index}`} className="table-row skeleton-row">
-        {columns.map((column, colIndex) => (
-          <div
-            key={`skeleton-cell-${index}-${colIndex}-${column.key || column.header || column.accessorKey || 'default'}`}
-            className="table-cell"
-            style={{
-              flex: column.flex || 1,
-              minWidth: column.minWidth || 'auto',
-              maxWidth: column.maxWidth || 'none',
-              textAlign: column.align || 'left',
-              padding: '16px'
-            }}
-          >
-            <div className="skeleton-content">
-              {getSkeletonContent(column)}
+        {/* Desktop skeleton */}
+        <div className="desktop-skeleton" style={{ display: 'flex', width: '100%' }}>
+          {columns.map((column, colIndex) => (
+            <div
+              key={`skeleton-cell-${index}-${colIndex}-${column.key || column.header || column.accessorKey || 'default'}`}
+              className="table-cell"
+              style={{
+                flex: column.flex || 1,
+                minWidth: column.minWidth || 'auto',
+                maxWidth: column.maxWidth || 'none',
+                textAlign: column.align || 'left',
+                padding: '16px'
+              }}
+            >
+              <div className="skeleton-content">
+                {getSkeletonContent(column)}
+              </div>
             </div>
+          ))}
+        </div>
+
+        {/* Mobile card skeleton */}
+        <div className="mobile-skeleton" style={{ display: 'none' }}>
+          <div className="skeleton-card-header">
+            <div className="skeleton-avatar-cell">
+              <div className="skeleton-avatar"></div>
+              <div className="skeleton-text-group">
+                <div className="skeleton-text skeleton-text-medium"></div>
+                <div className="skeleton-text skeleton-text-small"></div>
+              </div>
+            </div>
+            <div className="skeleton-badge"></div>
           </div>
-        ))}
+          <div className="skeleton-card-body">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="skeleton-card-row">
+                <div className="skeleton-card-label"></div>
+                <div className="skeleton-card-value"></div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     ));
   };
@@ -131,9 +159,42 @@ const FlexibleTable = ({
   console.log('Final table data:', tableData);
   console.log('Table data length:', tableData.length);
 
+  // Enhanced mobile card configuration
+  const getEnhancedMobileConfig = () => {
+    if (mobileCardConfig) return mobileCardConfig;
+    
+    // Auto-detect configuration based on column structure
+    const primaryField = columns.find(col => {
+      const key = (col.key || col.accessorKey || '').toLowerCase();
+      return key.includes('name') || key.includes('user') || key.includes('customer') || 
+             key.includes('title') || key.includes('email') || col.type === 'avatar';
+    });
+
+    const statusFields = columns.filter(col => {
+      const key = (col.key || col.accessorKey || '').toLowerCase();
+      return key === 'status' || key === 'current_stage' || key.includes('stage') || 
+             col.type === 'status' || col.type === 'badge';
+    }).map(col => col.key || col.accessorKey);
+
+    const actionFields = columns.filter(col => {
+      const key = (col.key || col.accessorKey || '').toLowerCase();
+      return key === 'actions' || key === 'action' || col.type === 'actions';
+    }).map(col => col.key || col.accessorKey);
+
+    return {
+      primaryField: primaryField?.key || primaryField?.accessorKey || columns[0]?.key || columns[0]?.accessorKey,
+      showInHeader: [...statusFields],
+      excludeFromBody: [...actionFields, 'actions', 'action'],
+      compactMode: false,
+      groupSimilarFields: true // Group similar fields together in mobile view
+    };
+  };
+
+  const finalMobileConfig = enableMobileCards ? getEnhancedMobileConfig() : null;
+
   return (
     <div className={`flexible-table ${isLoading ? 'loading' : ''} ${className}`}>
-      {/* Table Header - Always show when loading to maintain structure */}
+      {/* Table Header - Always show when loading to maintain structure on desktop */}
       <div className={`table-header ${headerClassName}`}>
         {columns.map((column) => (
           <div
@@ -173,6 +234,7 @@ const FlexibleTable = ({
                   renderCell={renderCell}
                   className={rowClassName}
                   clickableRow={clickableRows}
+                  mobileCardConfig={finalMobileConfig}
                 />
               );
             })

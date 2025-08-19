@@ -269,7 +269,7 @@ const handleConfirmDelete = () => {
             
             <div className="products-grid">
               {isLoading &&
-                Array.from({ length: 6 }).map((_, idx) => (
+                Array.from({ length: 8 }).map((_, idx) => (
                   <div className="product-grid-item" key={`skeleton-${idx}`}>
                     <ProductSkeleton />
                   </div>

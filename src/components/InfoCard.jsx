@@ -18,7 +18,10 @@ const InfoCard = ({ items }) => {
   };
   
   const getStageClass = (stage) => {
-    switch (stage?.toLowerCase()) {
+    // stage parameter should always be a single string value now
+    const stageString = String(stage || '').toLowerCase();
+    
+    switch (stageString) {
       case 'completed':
       case 'shipped':
       case 'delivered':
@@ -39,17 +42,19 @@ const InfoCard = ({ items }) => {
   
   const capitalizeText = (text) => {
     if (!text) return '-';
-    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+    return String(text).charAt(0).toUpperCase() + String(text).slice(1).toLowerCase();
   };
 
   const renderStages = (stages) => {
-    if (!stages || !Array.isArray(stages)) return '-';
+    if (!stages || !Array.isArray(stages) || stages.length === 0) {
+      return <span className="info-value">No stages</span>;
+    }
     
     return (
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-        {stages.map((stage, index) => (
-          <span key={index} className={`status-badge ${getStageClass(stage)}`}>
-            {capitalizeText(stage)}
+        {stages.map((stageObj, index) => (
+          <span key={index} className={`status-badge ${getStageClass(stageObj.status)}`}>
+            {capitalizeText(stageObj.status)}
           </span>
         ))}
       </div>
@@ -68,12 +73,14 @@ const InfoCard = ({ items }) => {
   };
 
   const getStatusBadgeClass = (value) => {
-    // Convert value to string and then to lowercase
-    const status = String(value || '').toLowerCase();
+    // Handle case where value might be an array (take first element)
+    const statusValue = Array.isArray(value) ? value[0] : value;
+    const status = String(statusValue || '').toLowerCase();
+    
     switch (status) {
       case 'pending':
         return 'status-badge status-pending';
-      case 'completed':
+      case 'paid':
         return 'status-badge status-completed';
       case 'cancelled':
         return 'status-badge status-cancelled';
@@ -109,8 +116,11 @@ const InfoCard = ({ items }) => {
           >
             {item.isEmail && <Mail size={14} />}
             {item.isPhone && <Phone size={14} />}
-            {item.isStages && renderStages(item.value)}
-            {item.badge ? (
+            
+            {/* Handle stages separately */}
+            {item.isStages ? (
+              renderStages(item.value)
+            ) : item.badge ? (
               <span className={getStatusBadgeClass(item.value)}>
                 {String(item?.value || '').toUpperCase()}
               </span>

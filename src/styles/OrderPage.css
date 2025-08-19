@@ -1,25 +1,57 @@
-.order-page {
-  background-color: #ffffff;
- 
-
-  overflow: hidden;
-  max-width: 100%;
-  color: #000;
+/* Order Page Layout - Fixed for proper table scrolling */
+.order-page {   
+  background-color: #ffffff;      
+  overflow: hidden; /* Changed from hidden to auto */
+  max-width: 100%;   
+  color: #000;   
   padding: 16px 20px;
+  height: 100vh; /* Add fixed height */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+} 
+
+.order-table-container {     
+  margin-top: 35px;
+  flex: 1; 
+  display: flex;
+  flex-direction: column;
+  min-height: 0; 
+  overflow: hidden; 
+
 }
-.order-table-container {
-    margin-top: 35px;
+
+/* Ensure the FlexibleTable takes proper space */
+.order-table-container .flexible-table {
+  flex: 1;
+  height: 100%;
+
+  overflow: hidden; /* Let internal table handle scrolling */
 }
 
 
+
+/* Page header adjustments */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0; /* Don't let header shrink */
+  margin-bottom: 16px;
+}
+
+/* Search bar container */
+.order-page > div:first-child {
+  flex-shrink: 0; /* Don't let search bar shrink */
+}
+
+/* Pagination container */
+.order-page .pagination-container {
+  flex-shrink: 0; /* Don't let pagination shrink */
+  margin-top: 16px;
 }
 
 /* ProductCategoriesPage.css */
-
 .spinning {
   animation: spin 1s linear infinite;
 }
@@ -29,20 +61,12 @@
   to { transform: rotate(360deg); }
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
 .header-actions {
   display: flex;
   gap: 8px;
 }
 
-.refresh-btn,
-.add-category-btn {
+.refresh-btn, .add-category-btn {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -72,8 +96,7 @@
   background-color: #0056b3;
 }
 
-.refresh-btn:disabled,
-.add-category-btn:disabled {
+.refresh-btn:disabled, .add-category-btn:disabled {
   background-color: #ccc;
   cursor: not-allowed;
   opacity: 0.6;
@@ -131,16 +154,28 @@
     align-items: stretch;
     gap: 16px;
   }
-  
+    
   .header-actions {
     justify-content: center;
   }
-  
+    
   .refresh-btn,
   .add-category-btn {
     flex: 1;
     justify-content: center;
   }
+
+  /* Adjust heights for mobile */
+  .order-page {
+    height: 100vh;
+    padding: 12px 16px;
+  }
+
+  .order-table-container .flexible-table {
+    max-height: calc(100vh - 180px);
+  }
+
+
 }
 
 @media (max-width: 480px) {
@@ -148,12 +183,23 @@
     flex-direction: column;
     gap: 12px;
   }
-  
+    
   .refresh-btn,
   .add-category-btn {
     width: 100%;
   }
+
+  .order-page {
+    padding: 8px 12px;
+  }
+
+  .order-table-container .flexible-table {
+    max-height: calc(100vh - 160px);
+  }
+
+
 }
+
 @media screen and (max-width: 768px) {
   .order-page {
     border-radius: 0;

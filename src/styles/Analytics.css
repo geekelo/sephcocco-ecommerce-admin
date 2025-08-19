@@ -297,7 +297,7 @@
   margin-left: 16px;
 }
 
-.chat-status {
+.chat-status-analytics {
   padding: 3px 8px;
   border-radius: 12px;
   background: #FFE5E0;
@@ -308,7 +308,7 @@
   letter-spacing: 0.5px;
 }
 
-.chat-date {
+.chat-date-analytics {
   font-size: 11px;
   color: #888;
 }

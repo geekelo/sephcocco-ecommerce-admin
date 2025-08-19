@@ -13,7 +13,7 @@ const Header = ({ toggleSidebar, isMobile }) => {
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const activeOutlet = getActiveOutlet();
-
+const user = localStorage.getItem('userName')
   // Destructure refetch from the query hook
   const { data: notifyData, refetch } = useNotifyAdmin(activeOutlet);
   const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
@@ -60,10 +60,10 @@ const Header = ({ toggleSidebar, isMobile }) => {
             </div>
 
             <div className="user-profile-header">
-              <div className="avatar-header">
+              {/* <div className="avatar-header">
                 <img src={Image} alt="John David" />
-              </div>
-              <span className="username">John David</span>
+              </div> */}
+              <span className="username">{user}</span>
             </div>
           </div>
         </div>
