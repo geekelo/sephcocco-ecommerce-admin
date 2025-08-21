@@ -32,26 +32,23 @@ const ShippingSummary = ({
     customer_email,
     customer_phone,
     customer_address,
+    additional_notes,
+    order_status,
     products,
     coordinates,
     total_amount,
     created_at
   } = shipping;
 
-  // Fetch product details when a product is selected for view/edit
-  const { data: selectedProduct } = useViewProductId(
-    activeOutlet,
-    selectedProductId, 
-    { 
-      enabled: !!selectedProductId && selectedProductId.trim() !== ''
-    }
-  );
+
 
   const leftCardItems = [
     { label: "Tracking Number:", value: tracking_number },
     { label: "Order ID:", value: sephcocco_pharmacy_order },
+    { label: "Order Status:", value: order_status },
     { label: "Status:", value: status },
     { label: "Dispatching:", value: dispatching },
+
     { label: "Total Amount:", value: `₦${total_amount?.toLocaleString()}` }
   ];
 
@@ -68,6 +65,7 @@ const ShippingSummary = ({
       isPhone: true
     },
     { label: "Address:", value: customer_address },
+     { label: "Additional notes:", value: additional_notes },
     { 
       label: "Delivered:", 
       value: datetime_delivered ? new Date(datetime_delivered).toLocaleString() : 'Pending' 
@@ -132,7 +130,7 @@ const ShippingSummary = ({
     <div className="modal-overlay-order-summary">
       <div className="add-product-modal">
         {/* Product View Modal */}
-        {isViewModal && selectedProduct && isValidProductId(selectedProductId) && (
+        {/* {isViewModal && selectedProduct && isValidProductId(selectedProductId) && (
           <ProductDetails
             product={selectedProduct}
             onEdit={() => {
@@ -145,7 +143,7 @@ const ShippingSummary = ({
               handleCloseModals();
             }}
           />
-        )}
+        )} */}
 
 
 
@@ -153,7 +151,7 @@ const ShippingSummary = ({
         {!isViewModal && !isEditModal && (
           <>
             <div className="modal-header">
-              <h2>Shipping Details ({tracking_number})</h2>
+              <h2>Shipping Details</h2>
               <div className="header-actions">
                 {/* Email button */}
                 <button
@@ -179,7 +177,7 @@ const ShippingSummary = ({
               </div>
 
               {/* Shipped Products Section */}
-              {products && products.length > 0 && (
+              {/* {products && products.length > 0 && (
                 <div className="ordered-products-section">
                   <h3>Shipped Products ({products.length} item{products.length !== 1 ? 's' : ''})</h3>
                   <div className="shipped-products-grid">
@@ -207,7 +205,7 @@ const ShippingSummary = ({
                     ))}
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Tracking Input Section */}
               <div className="tracking-section">

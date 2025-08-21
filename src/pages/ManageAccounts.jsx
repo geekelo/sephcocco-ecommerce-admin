@@ -101,9 +101,9 @@ const ManageAccounts = () => {
     
     return apiUsers.map(user => ({
       id: user.id,
-      name: user.name || 'Unknown User',
+      name: user.name,
       email: user.email || '',
-      role: user.role || 'user',
+      role: user.role || '',
       status: user.suspended ? 'suspended' : 'unsuspended',
       phone_number: user.phone_number || '',
       whatsapp_number: user.whatsapp_number || '',
