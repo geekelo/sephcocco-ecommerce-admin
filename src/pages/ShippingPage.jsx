@@ -16,6 +16,10 @@ import { ridersData } from '../utils/ridersData';
 import { useShippings } from '../hooks/useShippings';
 import { useGetAllUsers } from '../hooks/useGetAllUser';
 import { useRiders } from '../hooks/useRiders';
+import { useCancelDelivery } from '../hooks/useCancelDelivery';
+import { useCompleteDelivery } from '../hooks/useCompleteDelivery';
+import { ShippingStatusUpdateDropdown } from '../components/ShippingStatus';
+import { useTrackOrder } from '../hooks/useTrackOrder';
 
 const itemsPerPage = 10;
 
@@ -29,7 +33,7 @@ const ShippingPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedShipping, setSelectedShipping] = useState(null);
-
+const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   // State to track rider assignments for each order
   const [riderAssignments, setRiderAssignments] = useState({});
 
@@ -93,8 +97,35 @@ const {data: riders, isLoading: isLoadingRiders} = useRiders()
   }, [data]);
 
 
+const {mutateAsync: cancelDelivery} = useCancelDelivery()
+const {mutateAsync: completeDelivery} = useCompleteDelivery()
 
   // Filter data based on current filters
+const handleCompleteDelivery = async (shippingId) => {
+  setIsUpdatingStatus(true);
+  try {
+    // Pass the correct object structure that your hook expects
+    await completeDelivery({ active_outlet: activeOutlet, shippingId });
+    console.log('Delivery completed successfully');
+  } catch (error) {
+    console.error('Failed to complete delivery:', error);
+  } finally {
+    setIsUpdatingStatus(false);
+  }
+};
+
+const handleCancelDelivery = async (shippingId) => {
+  setIsUpdatingStatus(true);
+  try {
+    // Pass the correct object structure that your hook expects
+    await cancelDelivery({ active_outlet: activeOutlet, shippingId });
+    console.log('Delivery cancelled successfully');
+  } catch (error) {
+    console.error('Failed to cancel delivery:', error);
+  } finally {
+    setIsUpdatingStatus(false);
+  }
+};
   const filteredData = useMemo(() => {
     return shippingData.filter(item => {
       const matchesSearch = filters.search_terms === "" || 
@@ -160,16 +191,6 @@ const {data: riders, isLoading: isLoadingRiders} = useRiders()
       cell: ({ row }) => (
         <span className="font-medium text-blue-600">
           {String(row.original.tracking_number || '-')}
-        </span>
-      )
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      accessorKey: 'status',
-      cell: ({ row }) => (
-        <span className={`status-badge ${getStatusColor(row.original.status)}`}>
-          {String(row.original.status || '-').toUpperCase()}
         </span>
       )
     },
@@ -241,7 +262,20 @@ const {data: riders, isLoading: isLoadingRiders} = useRiders()
         }
         return '-';
       }
-    }
+    },
+    {
+  key: 'status',
+  header: 'Status',
+  accessorKey: 'status',
+  cell: ({ row }) => (
+    <ShippingStatusUpdateDropdown
+      shipping={row.original}
+      onComplete={handleCompleteDelivery}
+      onCancel={handleCancelDelivery}
+      isUpdating={isUpdatingStatus}
+    />
+  )
+}
   ];
 
   const shippingActions = [

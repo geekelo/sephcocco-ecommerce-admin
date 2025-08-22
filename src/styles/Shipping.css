@@ -42,10 +42,10 @@
 }
 
 .tracking-input-container {
-  background: #f8f9fa;
+
   padding: 20px;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+
+
 }
 
 /* Google Map Tracker */
@@ -152,7 +152,7 @@
 }
 
 .tracking-input-container .add-button:disabled {
-  background-color: #9ca3af;
+
   cursor: not-allowed;
   transform: none;
 }
