@@ -14,6 +14,8 @@ import { RiderStatistics } from '../components/RidersStats';
 import { RiderDropdown } from '../components/RidersDropdown';
 import { ridersData } from '../utils/ridersData';
 import { useShippings } from '../hooks/useShippings';
+import { useGetAllUsers } from '../hooks/useGetAllUser';
+import { useRiders } from '../hooks/useRiders';
 
 const itemsPerPage = 10;
 
@@ -34,8 +36,10 @@ const ShippingPage = () => {
   const activeOutlet = getActiveOutlet();
   const { data, isLoading, error } = useShippings(activeOutlet,    currentPage, 
     itemsPerPage);
-  
-  console.log('Shipping API data:', data);
+
+
+const {data: riders, isLoading: isLoadingRiders} = useRiders()
+
 
   // Transform API data to match component expectations
   const transformApiData = (apiData) => {
@@ -44,7 +48,7 @@ const ShippingPage = () => {
     }
 
     return apiData.shippings.map((shipping) => {
-      const order = shipping.sephcocco_pharmacy_order || {};
+      const order = shipping[`sephcocco_${activeOutlet}_order`] || {};
       
       return {
         id: shipping.id || '-',
@@ -55,19 +59,13 @@ const ShippingPage = () => {
         sephcocco_pharmacy_order: order.order_number || '-',
         
         // Customer info - we'll need to get this from the order's customer data
-        customer_name: 'Customer Name', // This might need to come from a separate API call
-        customer_phone: order.phone_number || '-',
-        customer_email: 'customer@email.com', // This might need to come from a separate API call
-        customer_address: order.address || '-',
+        customer_name: shipping?.customer?.name, // This might need to come from a separate API call
+        customer_phone: shipping?.customer?.phone_number || shipping?.customer?.whatsapp_number,
+        customer_email: shipping?.customer?.email || '-',
+        customer_address: shipping?.customer?.address || '-',
         
-        // Product info - simplified for now
-        products: [
-          {
-            name: 'Product Name', // This would need product details from API
-            quantity: order.quantity || 0,
-            price: parseFloat(order.unit_price || '0')
-          }
-        ],
+      
+    
         
         // Financial info
         total_amount: parseFloat(order.total_price || '0'),
@@ -93,6 +91,8 @@ const ShippingPage = () => {
   const shippingData = useMemo(() => {
     return transformApiData(data);
   }, [data]);
+
+
 
   // Filter data based on current filters
   const filteredData = useMemo(() => {
@@ -136,19 +136,19 @@ const ShippingPage = () => {
   };
 
   // Handle rider assignment
-  const handleRiderAssignment = (orderId, rider) => {
-    setRiderAssignments(prev => ({
-      ...prev,
-      [orderId]: rider
-    }));
+  // const handleRiderAssignment = (orderId, rider) => {
+  //   setRiderAssignments(prev => ({
+  //     ...prev,
+  //     [orderId]: rider
+  //   }));
     
-    // Here you would typically make an API call to update the rider assignment
-    console.log(`Assigned rider ${rider.name} to order ${orderId}`);
-  };
+  //   // Here you would typically make an API call to update the rider assignment
+  //   console.log(`Assigned rider ${rider.name} to order ${orderId}`);
+  // };
 
   // Get current rider for an order (from assignments or initial data)
   const getCurrentRider = (order) => {
-    return riderAssignments[order.id] || order.assigned_rider;
+    return  order.assigned_rider;
   };
 
   // Enhanced shipping table columns
@@ -210,19 +210,23 @@ const ShippingPage = () => {
         return `₦${Number(amount).toLocaleString()}`;
       }
     },
-    {
-      key: 'assigned_rider',
-      header: 'Assigned Rider',
-      accessorKey: 'assigned_rider',
-      cell: ({ row }) => (
-        <RiderDropdown
-          currentRider={getCurrentRider(row.original)}
-          onRiderChange={handleRiderAssignment}
-          orderId={row.original.id}
-          ridersData={ridersData}
-        />
-      )
-    },
+{
+  key: 'assigned_rider',
+  header: 'Assigned Rider',
+  accessorKey: 'assigned_rider',
+  cell: ({ row }) => {
+    console.log("Row:", row);
+    console.log("Row ID:", row.original.id);
+
+    return (
+      <RiderDropdown
+        currentRider={getCurrentRider(row.original)}
+        shippingId={row.original.id}
+        ridersData={riders}
+      />
+    );
+  }
+},
     {
       key: 'datetime_delivered',
       header: 'Delivered Date',
@@ -271,7 +275,7 @@ const ShippingPage = () => {
   };
 
   // Handle loading state
-  if (isLoading) {
+  if (isLoading || isLoadingRiders) {
     return <ShippingSkeleton />;
   }
 
@@ -314,9 +318,9 @@ const ShippingPage = () => {
 
       {/* Rider Statistics */}
       <RiderStatistics 
-        riderAssignments={riderAssignments} 
+  
         shippingData={shippingData} 
-        ridersData={ridersData}
+        ridersData={riders}
       />
 
       <div className="order-table-container">

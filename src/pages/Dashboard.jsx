@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom'; // Add this import
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
 import StatsCard from '../components/StatsCard';
@@ -6,7 +6,7 @@ import ChatItem from '../components/ChatItem';
 import ProductCard from '../components/ProductCard';
 import OutletSwitcher from '../components/OutletSwitcher';
 import ChatModal from '../components/ChatModal'; // Add this import
-import { mockCategories, paymentsData, performanceData, unresolvedChats } from '../constants/data';
+import { mockCategories, paymentsData } from '../constants/data'; // Remove performanceData and unresolvedChats from here
 import '../styles/Dashboard.css'
 import '../styles/ProductCard.css';
 import '../styles/ProductDetails.css'
@@ -43,7 +43,7 @@ const DashboardPage = () => {
     isLoadingAllAnalytics,
     analyticsErrors,
     overallPerformanceError
-  } = useAnalytics({ active_outlet: activeOutlet, year: new Date().getFullYear });
+  } = useAnalytics({ active_outlet: activeOutlet, year: new Date().getFullYear() });
   
   const deleteMutation = useDeleteProduct();
   console.log(overallPerformanceData);
@@ -75,6 +75,59 @@ const DashboardPage = () => {
       enabled: !!selectedProductId && selectedProductId.trim() !== ''
     }
   );
+
+  // Transform performance data and get current month
+  const transformedPerformanceData = useMemo(() => {
+    if (!overallPerformanceData || !Array.isArray(overallPerformanceData)) {
+      return [];
+    }
+
+    const monthsShort = {
+      'January': 'Jan',
+      'February': 'Feb', 
+      'March': 'Mar',
+      'April': 'Apr',
+      'May': 'May',
+      'June': 'Jun',
+      'July': 'Jul',
+      'August': 'Aug',
+      'September': 'Sep',
+      'October': 'Oct',
+      'November': 'Nov',
+      'December': 'Dec'
+    };
+
+    return overallPerformanceData.map(item => ({
+      name: monthsShort[item.month] || item.month,
+      value: item.orders_count,
+      fullMonth: item.month
+    }));
+  }, [overallPerformanceData]);
+
+  // Get current month name
+  const getCurrentMonth = () => {
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return monthNames[new Date().getMonth()];
+  };
+
+  const currentMonth = getCurrentMonth();
+  const currentMonthShort = {
+    'January': 'Jan',
+    'February': 'Feb', 
+    'March': 'Mar',
+    'April': 'Apr',
+    'May': 'May',
+    'June': 'Jun',
+    'July': 'Jul',
+    'August': 'Aug',
+    'September': 'Sep',
+    'October': 'Oct',
+    'November': 'Nov',
+    'December': 'Dec'
+  }[currentMonth];
 
   // Helper function to validate product ID
   const isValidProductId = (productId) => {
@@ -232,12 +285,11 @@ const DashboardPage = () => {
 
   const analyticsStats = getAnalyticsStats();
 
-
-
   // Show loading state
-  if (isLoadingProducts || isLoadingAllAnalytics) {
+  if (isLoadingProducts || isLoadingAllAnalytics || isLoadingOverallPerformance) {
     return <DashboardSkeleton />;
   }
+
   return (
     <div className="dashboard">
       {/* Dashboard Header with Outlet Switcher */}
@@ -259,49 +311,11 @@ const DashboardPage = () => {
         <StatsCard
           title="Total Orders"
           value={analyticsStats.totalOrders.toLocaleString()}
-          // trend={
-          //   <div className="trend-chart">
-          //     <ResponsiveContainer width={100} height={50}>
-          //       <BarChart data={[
-          //         { value: 25, name: 'bar1' }, 
-          //         { value: 45, name: 'bar2' }, 
-          //         { value: 15, name: 'bar3' }, 
-          //         { value: 35, name: 'bar4' }, 
-          //         { value: 20, name: 'bar5' }
-          //       ]}>
-          //         <Bar dataKey="value" radius={[2, 2, 0, 0]}>
-          //           <Cell fill="#FFE5E0" />
-          //           <Cell fill="#FF6B35" />
-          //           <Cell fill="#FFE5E0" />
-          //           <Cell fill="#FFE5E0" />
-          //           <Cell fill="#FFE5E0" />
-          //         </Bar>
-          //       </BarChart>
-          //     </ResponsiveContainer>
-          //   </div>
-          // }
         />
         
         <StatsCard
           title="Total Payments"
           value={formatCurrency(analyticsStats.totalPayments)}
-          // trend={
-          //   <div className="payment-trend">
-          //     <ResponsiveContainer width={100} height={50}>
-          //       <LineChart data={paymentsData}>
-          //         <Line 
-          //           type="monotone" 
-          //           dataKey="value" 
-          //           stroke="#FF6B35" 
-          //           strokeWidth={2}
-          //           dot={false}
-          //           strokeDasharray="none"
-          //         />
-          //       </LineChart>
-          //     </ResponsiveContainer>
-          //     <PaymentTracker />
-          //   </div>
-          // }
         />
         
         <StatsCard
@@ -320,42 +334,51 @@ const DashboardPage = () => {
             <h2>Overall Performance</h2>
           </div>
           <div className="chart-container performance-chart-container">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={performanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#888' }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#888' }}
-                />
-                
-                {/* Dashed line in orange */}
-                <ReferenceLine 
-                  y={performanceData.find(item => item.name === 'Aug')?.value || 80} 
-                  stroke="#FF6B35" 
-                  strokeDasharray="4 4"
-                  strokeWidth={1}
-                  label={{ 
-                    value: "", 
-                    position: "insideTopLeft", 
-                    fill: "#FF6B35", 
-                    fontSize: 12, 
-                    fontWeight: 600 
-                  }}
-                />
-                
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {performanceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.name === 'Aug' ? '#FF6B35' : '#FFE5E0'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {transformedPerformanceData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={transformedPerformanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#888' }}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#888' }}
+                  />
+                  
+                  {/* Dashed line in orange - position it at current month's value */}
+                  <ReferenceLine 
+                    y={transformedPerformanceData.find(item => item.name === currentMonthShort)?.value || 0} 
+                    stroke="#FF6B35" 
+                    strokeDasharray="4 4"
+                    strokeWidth={1}
+                    label={{ 
+                      value: "", 
+                      position: "insideTopLeft", 
+                      fill: "#FF6B35", 
+                      fontSize: 12, 
+                      fontWeight: 600 
+                    }}
+                  />
+                  
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                    {transformedPerformanceData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.name === currentMonthShort ? '#FF6B35' : '#FFE5E0'} 
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="chart-empty-state">
+                <EmptyState message="No performance data available" />
+              </div>
+            )}
           </div>
         </div>
 
@@ -374,7 +397,7 @@ const DashboardPage = () => {
                 <ChatItem key={chat.id} chat={chat} onReply={handleChatReply} />
               ))
             ) : (
-                 <EmptyState message='No messsage available'/>
+                 <EmptyState message='No message available'/>
             )}
           </div>
         </div>
