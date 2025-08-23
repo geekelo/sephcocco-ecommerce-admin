@@ -10,8 +10,6 @@ import '../styles/OrderSummary.css';
 import EditProductModal from './EditModal';
 import ProductDetails from './ProductDetails';
 import { useTrackOrder } from '../hooks/useTrackOrder';
-import LeafletMapTracker from './LeafletTracker';
-
 
 const ShippingSummary = ({
   shipping,
@@ -124,6 +122,28 @@ const ShippingSummary = ({
     setSelectedProductId('');
   };
 
+  // Helper function to format coordinates
+  const formatCoordinates = (coords) => {
+    if (!coords) return 'Not available';
+    
+    // If coordinates is an object with lat and lng properties
+    if (typeof coords === 'object' && coords.lat && coords.lng) {
+      return `Latitude: ${coords.lat}, Longitude: ${coords.lng}`;
+    }
+    
+    // If coordinates is an array [lat, lng]
+    if (Array.isArray(coords) && coords.length === 2) {
+      return `Latitude: ${coords[0]}, Longitude: ${coords[1]}`;
+    }
+    
+    // If coordinates is a string (comma-separated or other format)
+    if (typeof coords === 'string') {
+      return `Coordinates: ${coords}`;
+    }
+    
+    return 'Invalid coordinate format';
+  };
+
   return (
     <div className="modal-overlay-order-summary">
       <div className="add-product-modal">
@@ -163,17 +183,14 @@ const ShippingSummary = ({
                   <div className="tracking-input-container">
                     {!showMap ? (
                       <div className="tracking-button-container">
-               
                         <button
                           onClick={handleTrackOrder}
                           className="add-button tracking-button"
                           disabled={isTrackingLoading}
                         >
                           <MapPin size={16} />
-                          {isTrackingLoading ? 'Loading tracking data...' : 'Track Order'}
+                          {isTrackingLoading ? 'Loading tracking data...' : 'Show Location Details'}
                         </button>
-                        
-                   
                       </div>
                     ) : (
                       <div className="tracking-display">
@@ -189,18 +206,49 @@ const ShippingSummary = ({
                           </div>
                         ) : (
                           <>
-                            {/* Display Leaflet Map Tracker */}
-                            <LeafletMapTracker 
-                              coordinates={coordinates}
-                              address={customer_address}
-                              customerName={customer_name}
-                              trackingNumber={tracking_number}
-                              status={status}
-                              riderInfo={assigned_rider}
-                              trackingData={trackData}
-                            />
-                            
-                        
+                            {/* Display Location Information as Text */}
+                            <div className="location-info">
+                              <h4>Location Information</h4>
+                              <div className="location-details">
+                         
+                                <div className="address-info">
+                                  <p><strong>Delivery Address:</strong> {customer_address}</p>
+                                </div>
+                                <div className="customer-info">
+                                  <p><strong>Customer:</strong> {customer_name}</p>
+                                </div>
+                               
+                                {assigned_rider && (
+                                  <div className="rider-info">
+                                    <h5>Assigned Rider</h5>
+                                    <p><strong>Name:</strong> {assigned_rider.name || 'Not specified'}</p>
+                                    <p><strong>Phone:</strong> {assigned_rider.phone || 'Not specified'}</p>
+                              
+                                  </div>
+                                )}
+                                {trackData && trackData.locations && trackData.locations.length > 0 && (
+                                  <div className="live-tracking-info">
+                                    <h5>Current Rider Location</h5>
+                                    <div style={{ 
+                                      backgroundColor: '#f5f5f5', 
+                                      padding: '15px', 
+                                      borderRadius: '5px',
+                                      fontSize: '14px'
+                                    }}>
+                                      <p><strong>Latitude:</strong> {trackData.locations[0].latitude}</p>
+                                      <p><strong>Longitude:</strong> {trackData.locations[0].longitude}</p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => setShowMap(false)}
+                                className="add-button tracking-button"
+                                style={{ marginTop: '15px' }}
+                              >
+                                Back to Tracking
+                              </button>
+                            </div>
                           </>
                         )}
                       </div>
