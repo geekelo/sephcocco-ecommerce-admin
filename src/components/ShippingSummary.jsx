@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Mail, MapPin } from 'lucide-react';
 import InfoCard from './InfoCard';
-import GoogleMapTracker from './GoogleMapTracker';
+
 import ProductCard from './ProductCard';
 
 import { useViewProductId } from '../hooks/useGetProductById';
@@ -9,12 +9,12 @@ import { getActiveOutlet } from '../utils/getActiveOutlets';
 import '../styles/OrderSummary.css';
 import EditProductModal from './EditModal';
 import ProductDetails from './ProductDetails';
+import { useTrackOrder } from '../hooks/useTrackOrder';
 
 const ShippingSummary = ({
   shipping,
   onBack
 }) => {
-  const [trackingInput, setTrackingInput] = useState('');
   const [showMap, setShowMap] = useState(false);
   const [isViewModal, setIsViewModal] = useState(false);
   const [isEditModal, setIsEditModal] = useState(false);
@@ -37,18 +37,21 @@ const ShippingSummary = ({
     products,
     coordinates,
     total_amount,
-    created_at
+    created_at,
+    assigned_rider
   } = shipping;
 
-
+  // Get tracking data for the assigned rider
+  const { data: trackData, isLoading: isTrackingLoading, error: trackingError } = useTrackOrder(
+    assigned_rider?.id
+  );
 
   const leftCardItems = [
     { label: "Tracking Number:", value: tracking_number },
     { label: "Order ID:", value: sephcocco_pharmacy_order },
     { label: "Order Status:", value: order_status },
     { label: "Status:", value: status },
-    { label: "Dispatching:", value: dispatching },
-
+    { label: "Dispatching:", value: dispatching ? "Express" : "Standard" },
     { label: "Total Amount:", value: `₦${total_amount?.toLocaleString()}` }
   ];
 
@@ -65,22 +68,15 @@ const ShippingSummary = ({
       isPhone: true
     },
     { label: "Address:", value: customer_address },
-     { label: "Additional notes:", value: additional_notes },
+    { label: "Additional notes:", value: additional_notes },
     { 
       label: "Delivered:", 
       value: datetime_delivered ? new Date(datetime_delivered).toLocaleString() : 'Pending' 
     }
   ];
 
-  const handleTrackingSubmit = () => {
-    if (!trackingInput.trim()) return;
-    
-    if (trackingInput.toLowerCase() === tracking_number.toLowerCase()) {
-      setShowMap(true);
-      setTrackingInput('');
-    } else {
-      alert('Tracking number does not match this shipment');
-    }
+  const handleTrackOrder = () => {
+    setShowMap(true);
   };
 
   const handleSendEmail = () => {
@@ -126,27 +122,31 @@ const ShippingSummary = ({
     setSelectedProductId('');
   };
 
+  // Helper function to format coordinates
+  const formatCoordinates = (coords) => {
+    if (!coords) return 'Not available';
+    
+    // If coordinates is an object with lat and lng properties
+    if (typeof coords === 'object' && coords.lat && coords.lng) {
+      return `Latitude: ${coords.lat}, Longitude: ${coords.lng}`;
+    }
+    
+    // If coordinates is an array [lat, lng]
+    if (Array.isArray(coords) && coords.length === 2) {
+      return `Latitude: ${coords[0]}, Longitude: ${coords[1]}`;
+    }
+    
+    // If coordinates is a string (comma-separated or other format)
+    if (typeof coords === 'string') {
+      return `Coordinates: ${coords}`;
+    }
+    
+    return 'Invalid coordinate format';
+  };
+
   return (
     <div className="modal-overlay-order-summary">
       <div className="add-product-modal">
-        {/* Product View Modal */}
-        {/* {isViewModal && selectedProduct && isValidProductId(selectedProductId) && (
-          <ProductDetails
-            product={selectedProduct}
-            onEdit={() => {
-              setIsViewModal(false);
-              handleEdit(selectedProduct.id);
-            }}
-            onDelete={null} // Don't allow deletion from shipping view
-            onClose={() => {
-              setIsViewModal(false);
-              handleCloseModals();
-            }}
-          />
-        )} */}
-
-
-
         {/* Main content - only show when no modals are open */}
         {!isViewModal && !isEditModal && (
           <>
@@ -176,71 +176,96 @@ const ShippingSummary = ({
                 <InfoCard items={rightCardItems} />
               </div>
 
-              {/* Shipped Products Section */}
-              {/* {products && products.length > 0 && (
-                <div className="ordered-products-section">
-                  <h3>Shipped Products ({products.length} item{products.length !== 1 ? 's' : ''})</h3>
-                  <div className="shipped-products-grid">
-                    {products.map((product, index) => (
-                      <div key={index} className="shipped-product-item">
-                        <ProductCard
-                          product={{
-                            id: product.id || `shipped-${index}`, // Use actual product ID if available
-                            order_number: product.id || `shipped-${index}`,
-                            name: product.name || 'N/A',
-                            main_image_url: product.image || product.main_image_url || '/image.png',
-                            price: (product.price || 0).toLocaleString(),
-                            likes: product.likes || 0,
-                            amount_in_stock: product.quantity || 0,
-                            out_of_stock_status: product.out_of_stock_status || false,
-                            visible: product.visible !== undefined ? product.visible : true
-                          }}
-                          onEdit={null}
-                          onView={() => handleView(product.id)}
-                          onDelete={null} // Don't allow deletion of shipped products
-                          onVisibilityChange={null} // Don't allow visibility changes for shipped products
-                        />
-                      
+              {/* Tracking Section - Only show when dispatching is true */}
+              {dispatching && (
+                <div className="tracking-section">
+                  <h3>Order Tracking</h3>
+                  <div className="tracking-input-container">
+                    {!showMap ? (
+                      <div className="tracking-button-container">
+                        <button
+                          onClick={handleTrackOrder}
+                          className="add-button tracking-button"
+                          disabled={isTrackingLoading}
+                        >
+                          <MapPin size={16} />
+                          {isTrackingLoading ? 'Loading tracking data...' : 'Show Location Details'}
+                        </button>
                       </div>
-                    ))}
+                    ) : (
+                      <div className="tracking-display">
+                        {trackingError ? (
+                          <div className="tracking-error">
+                            <p>Unable to load tracking information at this time.</p>
+                            <button
+                              onClick={() => setShowMap(false)}
+                              className="back-to-tracking-btn"
+                            >
+                              Back
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Display Location Information as Text */}
+                            <div className="location-info">
+                              <h4>Location Information</h4>
+                              <div className="location-details">
+                         
+                                <div className="address-info">
+                                  <p><strong>Delivery Address:</strong> {customer_address}</p>
+                                </div>
+                                <div className="customer-info">
+                                  <p><strong>Customer:</strong> {customer_name}</p>
+                                </div>
+                               
+                                {assigned_rider && (
+                                  <div className="rider-info">
+                                    <h5>Assigned Rider</h5>
+                                    <p><strong>Name:</strong> {assigned_rider.name || 'Not specified'}</p>
+                                    <p><strong>Phone:</strong> {assigned_rider.phone || 'Not specified'}</p>
+                              
+                                  </div>
+                                )}
+                                {trackData && trackData.locations && trackData.locations.length > 0 && (
+                                  <div className="live-tracking-info">
+                                    <h5>Current Rider Location</h5>
+                                    <div style={{ 
+                                      backgroundColor: '#f5f5f5', 
+                                      padding: '15px', 
+                                      borderRadius: '5px',
+                                      fontSize: '14px'
+                                    }}>
+                                      <p><strong>Latitude:</strong> {trackData.locations[0].latitude}</p>
+                                      <p><strong>Longitude:</strong> {trackData.locations[0].longitude}</p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => setShowMap(false)}
+                                className="add-button tracking-button"
+                                style={{ marginTop: '15px' }}
+                              >
+                                Back to Tracking
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
-              )} */}
-
-              {/* Tracking Input Section */}
-              <div className="tracking-section">
-                <h3>Track Location</h3>
-                <div className="tracking-input-container">
-                  {!showMap ? (
-                    <div className="tracking-input-group">
-                      <input
-                        type="text"
-                        placeholder="Enter tracking number to view location"
-                        value={trackingInput}
-                        onChange={(e) => setTrackingInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleTrackingSubmit()}
-                        className="tracking-input"
-                      />
-                      <button
-                        onClick={handleTrackingSubmit}
-                        className="add-button tracking-button"
-                        disabled={!trackingInput.trim()}
-                      >
-                        <MapPin size={16} />
-                        Track
-                      </button>
-                    </div>
-                  ) : (
-                    <GoogleMapTracker 
-                      coordinates={coordinates}
-                      address={customer_address}
-                      customerName={customer_name}
-                      trackingNumber={tracking_number}
-                      status={status}
-                    />
-                  )}
+              )}
+              
+              {/* Show message when dispatching is false */}
+              {!dispatching && (
+                <div className="no-tracking-section">
+                  <h3>Tracking Status</h3>
+                  <p className="no-tracking-message">
+                    Order tracking will be available once the item is dispatched for delivery.
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
           </>
         )}

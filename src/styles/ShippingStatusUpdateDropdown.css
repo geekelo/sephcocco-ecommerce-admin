@@ -1,0 +1,206 @@
+
+
+/* Status Update Component Styles */
+.status-update-container {
+  position: relative;
+  display: inline-block;
+}
+
+.status-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-update-btn {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  color: #6b7280;
+}
+
+.status-update-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.status-update-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 180px;
+  margin-top: 4px;
+}
+
+.dropdown-header {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: left;
+  transition: all 0.2s ease;
+  color: #374151;
+}
+
+.dropdown-item:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.dropdown-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.complete-item:hover:not(:disabled) {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.cancel-item:hover:not(:disabled) {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.close-item {
+  border-top: 1px solid #e5e7eb;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.status-update-confirm {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.confirm-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.confirm-btn {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.complete-btn {
+  background: #16a34a;
+  color: white;
+  border-color: #16a34a;
+}
+
+.complete-btn:hover:not(:disabled) {
+  background: #15803d;
+  border-color: #15803d;
+}
+
+.cancel-btn {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .status-dropdown,
+  .status-update-confirm {
+    right: -20px;
+    left: auto;
+  }
+  
+  .confirm-actions {
+    flex-direction: column;
+  }
+  
+  .status-update-container {
+    position: static;
+  }
+  
+  .status-dropdown,
+  .status-update-confirm {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    right: auto;
+    margin-top: 0;
+  }
+}
+
+/* Ensure dropdowns appear above table content */
+.orders-table .status-update-container {
+  z-index: 10;
+}
+
+.orders-table td {
+  position: relative;
+}
+
+/* Loading state for status updates */
+.status-updating {
+  opacity: 0.7;
+  pointer-events: none;
+}
