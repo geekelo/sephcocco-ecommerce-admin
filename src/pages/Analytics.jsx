@@ -260,14 +260,14 @@ const AnalyticsPage = () => {
        
         </div>
 
-        <div className="stat-card">
+        {/* <div className="stat-card">
           <div className="stat-header">
             <h3>Total Chats</h3>
             <div className="stat-icon chats-icon">💬</div>
           </div>
           <div className="stat-value">{formatNumber(allAnalyticsData?.total_unresolved_chats || 0)}</div>
           <div className="stat-trend neutral">{allAnalyticsData?.total_unresolved_chats || 0} unresolved</div>
-        </div>
+        </div> */}
       </div>
 
       {/* Charts Section */}
