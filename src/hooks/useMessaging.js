@@ -126,23 +126,41 @@ export const useMessaging = (authToken, outletType = '') => {
     }
 
     const userId = selectedUser.user_id;
-    const userRole = localStorage.getItem('userRole') || 'user';
+    const userRole = localStorage.getItem('userRole') || 'admin';
+    console.log('dddgg',selectedUser);
+    
+    // CRITICAL BOUNCE FIX: Include complete admin user data
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const adminUserId = currentUser.id;
+    const adminUserName = currentUser.name || 'Support Team';
+    const adminUserEmail = currentUser.email;
 
     const messageData = {
-      action: 'receive', // ← This is crucial!
+      action: 'receive',
       message: {
-        user_id: userId,
+        user_id: userId, // This is the recipient
         content: content,
         outlet_type: outletTypeRef.current,
         message_type: messageType,
-        user_role: userRole
+        user_role: userRole,
+        // Add sender information (admin) to prevent "Unknown User" bounce
+        sender_id: adminUserId,
+        sender_name: adminUserName,
+        sender_email: adminUserEmail,
+        sender_role: 'admin',
+        from_admin: true
       },
       user_id: userId,
       outlet_type: outletTypeRef.current,
-      user_role: userRole
+      user_role: userRole,
+      // Also add admin info at root level
+      sender_id: adminUserId,
+      sender_name: adminUserName,
+      sender_email: adminUserEmail,
+      from_admin: true
     };
 
-    console.log('📤 Sending message via ActionCable:', messageData);
+    console.log('📤 Sending message via ActionCable with complete admin data:', messageData);
     subscriptionRef.current.perform('receive', messageData);
   }, [isConnected, selectedUser]);
 
@@ -261,27 +279,6 @@ export const useMessaging = (authToken, outletType = '') => {
                 }
               }, 3000);
               
-              // Test manual message send after 10 seconds
-              setTimeout(() => {
-                if (selectedUser && selectedUser.user_id) {
-                  console.log('🧪 Testing manual message send to verify WebSocket...');
-                  const testManualMessage = {
-                    action: 'receive',
-                    message: {
-                      content: 'Manual test message',
-                      message_type: 'text',
-                      user_id: selectedUser.user_id,
-                      user_role: 'admin'
-                    },
-                    outlet_type: outletTypeRef.current,
-                    user_id: selectedUser.user_id,
-                    user_role: 'admin'
-                  };
-                  console.log('🧪 Sending manual test message:', testManualMessage);
-                  subscriptionRef.current.perform('receive', testManualMessage);
-                }
-              }, 10000);
-              
               // Send a simple ping to test connection
               setTimeout(() => {
                 console.log('🏓 Sending ping to test WebSocket connection...');
@@ -327,8 +324,6 @@ export const useMessaging = (authToken, outletType = '') => {
             console.log('📨 Data keys:', Object.keys(data));
             console.log('📨 Timestamp:', new Date().toISOString());
             console.log('👤 Current user role:', localStorage.getItem('userRole'));
-            // Note: We can't access current state values in the received handler due to closure
-            // The state updates will be handled by the setState functions
             console.log('🔗 WebSocket connection state:', consumerRef.current?.connection?.getState());
             console.log('🔗 Subscription state:', subscriptionRef.current?.connection?.getState());
             
@@ -397,15 +392,28 @@ export const useMessaging = (authToken, outletType = '') => {
               if (data.last_message && data.user_id) {
                 console.log('🔄 Thread update includes new message, adding to current user messages');
                 
+                // Get current admin info for better name resolution
+                const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                const currentUserId = currentUser.id;
+                const isFromCurrentAdmin = data.user_id === currentUserId || data.user_role === 'admin';
+                
+                // Better user name resolution
+                let userName = currentUser.name
+                // let userName = data.user_name || 'Unknown User';
+                // if (userName === 'Unknown User' && isFromCurrentAdmin) {
+                //   userName = currentUser.name || 'Support Team';
+                // }
+                
                 // Create message object from thread update
                 const newMessage = {
                   id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                   content: data.last_message,
                   message_type: 'text',
                   user_id: data.user_id,
-                  user_name: data.user_name || 'Unknown User',
+                  user_name: userName,
                   user_email: data.user_email || '',
-                  user_role: data.user_role || 'user',
+                  user_role: data.user_role,
+                   from_admin: isFromCurrentAdmin,
                   timestamp: data.last_activity || new Date().toISOString(),
                   created_at: data.last_activity || new Date().toISOString(),
                   display_time: new Date(data.last_activity || new Date()).toLocaleString('en-US', {
@@ -466,25 +474,60 @@ export const useMessaging = (authToken, outletType = '') => {
               console.log('💬 Message type:', data.type);
               console.log('💬 Full message data:', JSON.stringify(data, null, 2));
               
-              // Extract message data with fallbacks
-              const messageUserId = data.user_id || data.user?.id || data.chat?.user_id;
+              // Get current admin info for better name resolution
+              const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+              const currentUserId = currentUser.id;
+              const currentUserName = currentUser.name;
+              
+              // Extract message data with fallbacks - IMPROVED SENDER DETECTION
+              const messageUserId = data.user_id || data.user?.id || data.chat?.user_id || data.sender_id;
               const messageContent = data.content || data.chat?.content;
+              const messageUserRole = data.user_role || data.chat?.user_role || data.sender_role;
               
               if (!messageUserId || !messageContent) {
                 console.warn('⚠️ Invalid message data - missing user_id or content');
                 return;
               }
               
-              // Create standardized message object with date and time
+              // ENHANCED ADMIN DETECTION - Check multiple sender fields
+              const isFromCurrentAdmin = 
+                messageUserId === currentUserId || 
+                messageUserRole === 'admin' ||
+                data.sender_id === currentUserId ||
+                data.sender_role === 'admin';
+              
+              // CRITICAL BOUNCE FIX: Better user name resolution with sender data priority
+              let userName = currentUser.name
+              // let userName = data.sender_name || data.user?.name || data.chat?.user_name;
+              
+              console.log('🔍 Name resolution debug:', {
+                sender_name: data.sender_name,
+                user_name: data.user?.name,
+                chat_user_name: data.chat?.user_name,
+                resolved_userName: userName,
+                isFromCurrentAdmin: isFromCurrentAdmin
+              });
+              
+              if (!userName) {
+                if (isFromCurrentAdmin) {
+                  userName = data.sender_name || currentUserName || 'Support Team';
+                  console.log('🚨 BOUNCE FIX: Resolved Unknown User to admin name:', userName);
+                } else {
+                  userName = 'Customer';
+                }
+              }
+              
+              // Create standardized message object with improved data
               const currentTimestamp = data.created_at || data.timestamp || data.chat?.timestamp || new Date().toISOString();
               const standardizedMessage = {
                 id: data.id || data.chat_id || data.chat?.id || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 content: messageContent,
                 message_type: data.message_type || data.chat?.message_type || 'text',
                 user_id: messageUserId,
-                user_name: data.user?.name || data.chat?.user_name || 'Unknown User',
-                user_email: data.user?.email || data.chat?.user_email || '',
-                user_role: data.user_role || data.chat?.user_role,
+                user_name: userName, // Now properly resolved with sender data priority
+                user_email: data.sender_email || data.user?.email || data.chat?.user_email || '',
+                user_role: messageUserRole,
+                  from_admin: isFromCurrentAdmin,
                 timestamp: currentTimestamp,
                 created_at: currentTimestamp,
                 display_time: new Date(currentTimestamp).toLocaleString('en-US', {
@@ -496,7 +539,7 @@ export const useMessaging = (authToken, outletType = '') => {
                 })
               };
               
-              console.log('📨 Processed standardized message:', standardizedMessage);
+              console.log('📨 Processed standardized message with sender data:', standardizedMessage);
               
               // Add to current user messages if it matches the selected user OR if no user is selected
               // Use thread_owner_id to determine which conversation this message belongs to
@@ -511,6 +554,8 @@ export const useMessaging = (authToken, outletType = '') => {
               console.log('🔍 Thread owner ID:', threadOwnerId);
               console.log('🔍 Selected user ID:', currentSelectedUser?.user_id);
               console.log('🔍 Should add message:', shouldAddMessage);
+              console.log('🔍 Final resolved user name:', userName);
+              console.log('🔍 Is from current admin:', isFromCurrentAdmin);
               
               if (shouldAddMessage) {
                 console.log('🚨 REAL-TIME: Adding message to current user messages immediately!');
@@ -553,7 +598,7 @@ export const useMessaging = (authToken, outletType = '') => {
                 )
               );
               
-              console.log('✅ REAL-TIME: Message processed and state updated immediately!');
+              console.log('✅ REAL-TIME: Message processed with enhanced sender data!');
               return;
             }
             
@@ -584,7 +629,7 @@ export const useMessaging = (authToken, outletType = '') => {
       connectionAttemptedRef.current = false;
       setConnectionError(errorMsg);
     }
-  }, []); // Remove selectedUser dependency to prevent circular dependency
+  }, []);
 
   const disconnect = useCallback(() => {
     console.log('🧹 Cleaning up connection...');
@@ -638,7 +683,7 @@ export const useMessaging = (authToken, outletType = '') => {
       disconnect();
       autoConnectAttemptedRef.current = false;
     };
-  }, [authToken, outletType]); // Remove connect and disconnect from dependencies
+  }, [authToken, outletType]);
 
   // Function to refresh user threads
   const refreshUserThreads = useCallback(async () => {

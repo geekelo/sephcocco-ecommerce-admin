@@ -77,6 +77,7 @@ const handleSubmit = async (e) => {
     const response = await login(payload);
     if (response?.message) {
       localStorage.setItem('token', response?.token);
+      localStorage.setItem('user', JSON.stringify(response?.user));
       localStorage.setItem('userRole', response?.user?.role);
       localStorage.setItem('userName', response?.user?.name );
       Cookies.set('outlets', JSON.stringify(response?.user?.outlets), { expires: 1 }); 

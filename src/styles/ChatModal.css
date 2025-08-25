@@ -411,22 +411,44 @@
 }
 
 /* Enhanced Message Styles */
+/* Add these styles to your ChatModal.css */
 .message.sending {
   opacity: 0.7;
 }
 
-.message.sending .message-bubble {
-  border: 1px dashed #94a3b8;
-  background: #f1f5f9;
+.message.error {
+  opacity: 0.8;
+}
+
+.message.error .message-bubble {
+  border-left: 3px solid #ff4444;
 }
 
 .sending-indicator {
-  font-style: italic;
-  font-size: 11px;
-  opacity: 0.7;
+  color: #666;
+  font-size: 0.8em;
   margin-left: 8px;
-  color: #6b7280;
 }
+
+.error-indicator {
+  color: #ff4444;
+  font-size: 0.8em;
+  margin-left: 8px;
+}
+
+.status-icon.sending {
+  color: #ffa500;
+}
+
+.status-icon.sent {
+  color: #28a745;
+}
+
+.status-icon.error {
+  color: #ff4444;
+}
+
+
 
 /* No Messages State */
 .no-messages-admin {
