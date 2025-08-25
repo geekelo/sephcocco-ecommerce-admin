@@ -7,6 +7,7 @@ import SearchBar from '../components/SearchBar';
 import Pagination from '../components/Pagination'; 
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import { EmptyState } from '../components/EmptyState';
+import '../styles/SearchBar.css';
 
 const itemsPerPage = 10;
 

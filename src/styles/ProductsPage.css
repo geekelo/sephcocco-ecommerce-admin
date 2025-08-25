@@ -24,15 +24,7 @@
     color: #333;
     margin: 0;
   }
-  
-  .search-filter-section {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 24px;
-    border-bottom: 1px solid #eee;
-  }
-  
+
   .search-box {
     position: relative;
     width: 220px;
