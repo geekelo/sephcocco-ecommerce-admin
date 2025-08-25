@@ -7,7 +7,7 @@ import { useMessaging } from "../hooks/useMessaging";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import ConversationList from "./ConversationList";
 
-const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
+const ChatModal = ({ isOpen, onClose,style, selectedMessage, selectedUser }) => {
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
@@ -270,7 +270,7 @@ const ChatModal = ({ isOpen, onClose, selectedMessage, selectedUser }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="chat-modal-overlay">
+    <div className="chat-modal-overlay" style={style}>
       <div className="chat-modal">
         {/* Header */}
         <div className="chat-modal-header">

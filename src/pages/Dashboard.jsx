@@ -322,7 +322,7 @@ const DashboardPage = () => {
           title="Unresolved Chats"
           value={analyticsStats.unresolvedChats.toString()}
           isOrange={analyticsStats.unresolvedChats > 0}
-          icon={<ProgressPie percentage={analyticsStats.unresolvedChats > 0 ? Math.floor((analyticsStats.unresolvedChats / analyticsStats.totalOrders) * 100) : 0} size={60} strokeWidth={6} />} 
+          icon={<ProgressPie percentage={analyticsStats.unresolvedChats > 0 ? Math.floor((analyticsStats.unresolvedChats / allAnalyticsData.unresolved_chats.length) * 100) : 0} size={60} strokeWidth={6} />} 
         />
       </div>
 
@@ -427,6 +427,7 @@ const DashboardPage = () => {
 
       {/* Chat Modal for individual chat replies */}
       <ChatModal
+      style={{ paddingLeft: '0px' }} 
         isOpen={isChatModalOpen}
         onClose={closeChatModal}
         selectedUser={selectedChat}
