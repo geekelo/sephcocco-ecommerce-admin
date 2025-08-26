@@ -106,11 +106,11 @@ console.log('oks',selectedOrder);
                 />
 
                 <Pagination
-                  currentPage={meta.current_page || 1}
-                  totalPages={meta.total_pages || 1}
+                  currentPage={+meta.current_page || 1}
+                  totalPages={+meta.total_pages || 1}
                   onPageChange={handlePageChange}
-                  totalItems={meta.total_count || 0}
-                  
+                  totalItems={+meta.total_count || 0}
+                  itemsPerPage={itemsPerPage}
                   showInfo={true}
                 />
               </>

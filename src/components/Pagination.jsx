@@ -57,7 +57,7 @@ const Pagination = ({
   // Calculate the range of items being shown
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-console.log('curp',itemsPerPage);
+console.log('curdddp',itemsPerPage);
 
   const handlePageClick = (page) => {
     if (page !== currentPage && page !== '...' && page >= 1 && page <= totalPages) {
