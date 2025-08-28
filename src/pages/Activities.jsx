@@ -32,7 +32,7 @@ export default function ActivitiesPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Query
-  const { data: activitiesData, isLoading } = useViewActivities(
+const { data: activitiesData, isLoading, refetch } = useViewActivities(
     active_outlet,
     filters,
     currentPage,

@@ -5,7 +5,11 @@ export const useViewActivities = (active_outlet, filters = {}, page = 1, per_pag
   return useQuery({
     queryKey: ['view-activities', active_outlet, filters, page, per_page],
     queryFn: () =>
-      getActivities(active_outlet,filters, page, per_page),
+      getActivities(active_outlet, {
+        ...filters,
+        page,
+        per_page,
+      }),
     enabled: !!active_outlet,
   });
 };
