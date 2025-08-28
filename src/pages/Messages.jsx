@@ -189,7 +189,7 @@ console.log('testing',filteredData);
             onChange={handleSearchChange}
             placeholder="Search for anything"
           />
-          <div className="filter-controls">
+          {/* <div className="filter-controls">
             <button className="filter-btn" onClick={handleFilter}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
@@ -207,7 +207,7 @@ console.log('testing',filteredData);
                   </div>
               <button className="apply-btn">Apply</button>
                 </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="table-section">

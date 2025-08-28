@@ -99,11 +99,17 @@
 .stock-status span {
   font-weight: 500;
 }
-
-.product-price {
-  font-size: 1.5rem;
+.discount-price {
+    font-size: 1.5rem;
   font-weight: 600;
   color: #111827;
+  margin: 0.75rem 0;
+}
+.product-price {
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-decoration: line-through;
+  color: red;
   margin: 0.75rem 0;
 }
 

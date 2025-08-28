@@ -15,9 +15,18 @@ import { useGetOrder } from "../hooks/useGetOrder";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import '../styles/OrderPage.css'
+
 const itemsPerPage = 10;
 
 const OrderPage = () => {
+  // Lift filter state to OrderPage level to persist across navigation
+  const [searchBarState, setSearchBarState] = useState({
+    search: "",
+    status: "All Status", 
+    startDate: "",
+    endDate: ""
+  });
+
   const [filters, setFilters] = useState({
     search_terms: "",
     status: "",
@@ -28,13 +37,21 @@ const OrderPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const activeOutlet = getActiveOutlet();
 
-  const { data, isLoading,refetch } = useGetOrder(activeOutlet, filters, 
-  currentPage,
-     itemsPerPage,
+  const { data, isLoading, refetch } = useGetOrder(activeOutlet, filters, 
+    currentPage,
+    itemsPerPage,
   );
 
+  // Sort orders by most recent first (descending order)
+  const orders = useMemo(() => {
+    const ordersData = data?.orders || [];
+    return ordersData.sort((a, b) => {
+      const dateA = new Date(a.created_at || a.updated_at).getTime();
+      const dateB = new Date(b.created_at || b.updated_at).getTime();
+      return dateB - dateA; // Most recent first
+    });
+  }, [data?.orders]);
 
-  const orders = data?.orders || [];
   const meta = data?.meta || {};
 
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -51,8 +68,28 @@ const OrderPage = () => {
   const [isDiscardPaymentModal, setIsDiscardPaymentModal] = useState(false);
 
   const handleApplyFilters = ({ status, search_terms, start_date, end_date }) => {
+    // Update both the API filters and the search bar state
     setFilters({ status, search_terms, start_date, end_date });
     setCurrentPage(1);
+    
+    // Update search bar state to maintain UI state
+    setSearchBarState({
+      search: search_terms || "",
+      status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
+      startDate: start_date || "",
+      endDate: end_date || ""
+    });
+  };
+
+  // Manual search handler - triggered when user types and presses Enter
+  const handleManualSearch = (searchTerm) => {
+    // Clear all filters and only keep the search term
+    handleApplyFilters({
+      status: "", // Clear status filter
+      search_terms: searchTerm,
+      start_date: "", // Clear start date filter
+      end_date: "" // Clear end date filter
+    });
   };
 
   const handlePageChange = (page) => {
@@ -73,7 +110,6 @@ const OrderPage = () => {
   };
 
   const orderColumns = useMemo(() => createOrderColumns(handleViewOrder), []);
-console.log('oks',selectedOrder);
 
   return (
     <div className="order-page">
@@ -81,9 +117,12 @@ console.log('oks',selectedOrder);
         <>
           <SearchBar
             onApply={handleApplyFilters}
-            filterOptions={["All Status", "Pending", "Paid","Delivering", "Completed"]}
+            onManualSearch={handleManualSearch} // Add manual search handler
+            filterOptions={["All Status", "Pending", "Paid", "Payment Confirmed","Delivering", "Completed", "Cancelled"]}
             placeholder="Search orders..."
             filterLabel="Filter by"
+            // Pass the persistent state as initial values
+            initialValues={searchBarState}
           />
 
           <div className="order-table-container">
@@ -106,6 +145,7 @@ console.log('oks',selectedOrder);
                 />
 
                 <Pagination
+                  name='Orders'
                   currentPage={+meta.current_page || 1}
                   totalPages={+meta.total_pages || 1}
                   onPageChange={handlePageChange}

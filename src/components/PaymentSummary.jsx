@@ -74,7 +74,7 @@ const PaymentSummary = ({
     <div className="modal-overlay-order-summary">
       <div className="add-product-modal">
         <div className="modal-header">
-          <h2>Payment Summary ({paymentId})</h2>
+          <h2>Payment Summary</h2>
           <div className="header-actions">
             {/* Email button */}
             <button

@@ -9,24 +9,11 @@ import { X } from 'lucide-react';
 
 
 const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
-  console.log('oklkl',product);
+console.log('pkk',product);
+
   
   const [selectedImage, setSelectedImage] = useState(product?.main_image_url);
-  // const [otherImages, setOtherImages] = useState([]);
 
-  // useEffect(() => {
-  //   // Set the main image as the selected image
-  //   if (product.main_image_url) {
-  //     setSelectedImage(product.main_image_url);
-  //   }
-    
-  //   // Set other images
-  //   if (Array.isArray(product.other_image_urls)) {
-  //     setOtherImages(product.other_image_urls);
-  //   }
-  // }, [product]);
-
-  console.log('testing',product);
   
   const shortDescription = product?.short_description
   const longDescription = product?.long_description 
@@ -68,10 +55,23 @@ const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
             {!product.out_of_stock_status
               ? `In stock : ${product.amount_in_stock} Items`
               : 'Out of stock'}
+           
           </p>
-          
-          <div className="product-price">₦{product.price}</div>
 
+          <p className="stock-status">
+  Categories: {
+    product?.categories?.length === 1
+      ? product?.categories[0]?.name
+      : product?.categories?.length === 2
+      ? `${product?.categories[0]?.name} and ${product?.categories[1]?.name}`
+      : product?.categories
+          .map(item => item.name)
+          .slice(0, -1)
+          .join(", ") + `, and ${product?.categories.at(-1).name}`
+  }
+</p>
+          <div className="discount-price"> ₦{product.discount_price} <span className='product-price'> ₦{product.price}</span></div>
+  
           <div className="product-description">
             <h3>Product Description</h3>
             <ExpandableDescription

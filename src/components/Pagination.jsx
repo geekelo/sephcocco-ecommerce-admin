@@ -7,6 +7,7 @@ const Pagination = ({
   totalPages, 
   totalItems, 
   itemsPerPage, 
+  name,
   onPageChange,
   showInfo = true,
   className = ''
@@ -74,7 +75,7 @@ console.log('curdddp',itemsPerPage);
       {showInfo && (
         <div className="pagination-info">
           <span className="pagination-text">
-            Showing {startItem}-{endItem} of {totalItems} products
+            Showing {startItem}-{endItem} of {totalItems} {name}
           </span>
         </div>
       )}

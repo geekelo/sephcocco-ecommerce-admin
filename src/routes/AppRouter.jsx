@@ -145,7 +145,7 @@ const AppRouter = () => {
                 <Route path="faq" element={<FAQPage />} />
                 <Route path="orders" element={<OrderPage />} />
                 <Route path="payments" element={<PaymentPage />} />
-                <Route path="shipping" element={<ShippingPage />} />
+                <Route path="logistics" element={<ShippingPage />} />
                 <Route path="activities" element={<ActivitiesPage />} />
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="messages" element={<MessagesPage />} />

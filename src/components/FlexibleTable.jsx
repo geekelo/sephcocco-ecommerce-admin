@@ -23,9 +23,7 @@ const FlexibleTable = ({
   mobileCardConfig = null, // Configuration for mobile card layout
   enableMobileCards = true // Enable/disable mobile card view
 }) => {
-  console.log('FlexibleTable received data:', data);
-  console.log('Data type:', typeof data);
-  console.log('Is array:', Array.isArray(data));
+
   
   // Default empty state
   const defaultEmptyState = (
@@ -156,8 +154,7 @@ const FlexibleTable = ({
   };
 
   const tableData = getTableData();
-  console.log('Final table data:', tableData);
-  console.log('Table data length:', tableData.length);
+
 
   // Enhanced mobile card configuration
   const getEnhancedMobileConfig = () => {
@@ -222,7 +219,7 @@ const FlexibleTable = ({
         <div className={`table-body ${bodyClassName}`}>
           {tableData.length > 0 ? (
             tableData.map((item, index) => {
-              console.log(`Rendering row ${index}:`, item);
+
               return (
                 <FlexibleTableRow
                   key={item[keyField] || index}

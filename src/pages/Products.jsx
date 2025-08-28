@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, Plus } from 'lucide-react';
 import '../styles/ProductsPage.css';
 import '../styles/ProductCategories.css'
@@ -9,43 +9,75 @@ import ProductDetails from '../components/ProductDetails';
 import EditProductModal from '../components/EditModal';
 import SearchBar from '../components/SearchBar';
 import ConfirmActionModal from '../components/ConfirmActionModal';
-import Pagination from '../components/Pagination'; // Import the new pagination component
+import Pagination from '../components/Pagination';
 
 import { toast } from "react-toastify";
-// import { mockCategories } from "../constants/data";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import { useViewAllProduct } from "../hooks/useGetAllProduct";
+import { useViewProductCategories } from "../hooks/useGetProductCategories"; // Import categories hook
 import { mockCategories } from '../constants/data';
-
-
 import { useDeleteProduct } from '../hooks/useDeleteProduct';
 import { useViewProductId } from '../hooks/useGetProductById';
 import { ErrorState } from '../components/ErrorState';
 import { EmptyState } from '../components/EmptyState';
-// import { getActiveOutlet } from '../utils/getActiveOutlets';
 
 const ProductsPage = () => {
   const activeOutlet = getActiveOutlet();
   const mainContentRef = useRef(null);
 
-  const [searchTerm, setSearchTerm] = useState('');
+  // State for filters and pagination
+  const [searchBarState, setSearchBarState] = useState({
+    search: "",
+    status: "All Status", 
+    category: "", // Add category to search bar state
+    startDate: "",
+    endDate: ""
+  });
+
+  const [filters, setFilters] = useState({
+    search_terms: "",
+    status: "",
+    category: "", // Add category to filters
+    start_date: "",
+    end_date: "",
+  });
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(20); // You can make this configurable if needed
+  const itemsPerPage = 9;
+  
+  // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModal, setIsEditModal] = useState(false);
   const [isViewModal, setIsViewModal] = useState(false);
   const [isDeleteModal, setIsDeleteModal] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState('');
 
-  // Pass currentPage and itemsPerPage to the API hook
+  // Fetch categories for the filter dropdown
+  const { data: categories = [] } = useViewProductCategories(activeOutlet);
+  
+  // Extract category names for the dropdown
+  const categoryOptions = useMemo(() => {
+    return categories.map(category => category.name).filter(Boolean);
+  }, [categories]);
+
+  // API call with filters
   const { data: responseData = { products: [], meta: {} }, isLoading, error, refetch } = useViewAllProduct(
     activeOutlet, 
+    filters, // Pass filters to the API call
     currentPage, 
     itemsPerPage
   );
   
-  // Extract products array and pagination info from the response
-  const products = Array.isArray(responseData.products) ? responseData.products : [];
+  // Sort products by most recent first (descending order)
+  const products = useMemo(() => {
+    const productsData = Array.isArray(responseData.products) ? responseData.products : [];
+    return productsData.sort((a, b) => {
+      const dateA = new Date(a.created_at || a.updated_at).getTime();
+      const dateB = new Date(b.created_at || b.updated_at).getTime();
+      return dateB - dateA; // Most recent first
+    });
+  }, [responseData.products]);
+
   const { 
     total_count = 0, 
     current_page = 1, 
@@ -53,15 +85,8 @@ const ProductsPage = () => {
     total_pages = 1 
   } = responseData.meta || {};
   
-  console.log('API Response:', responseData);
-  console.log('Products:', products);
-  console.log('Pagination Info:', { total_count, current_page, per_page, total_pages });
-  
   const deleteMutation = useDeleteProduct();
   
-  // Only fetch product by ID when:
-  // 1. Products are already loaded (!isLoading)
-  // 2. We have a valid selected product ID
   const { data: selectedProduct } = useViewProductId(
     activeOutlet,
     selectedProductId, 
@@ -75,10 +100,31 @@ const ProductsPage = () => {
     return productId && productId.trim() !== '' && productId !== null && productId !== undefined;
   };
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    // Reset to first page when searching
-    setCurrentPage(1);
+  // Handle filter application - this now handles both manual search and filters
+  const handleApplyFilters = ({ status, category, search_terms, start_date, end_date }) => {
+    setFilters({ status, category, search_terms, start_date, end_date });
+    setCurrentPage(1); // Reset to first page when filtering
+    
+    // Update search bar state to maintain UI state
+    setSearchBarState({
+      search: search_terms || "",
+      status: status ? (status.charAt(0).toUpperCase() + status.slice(1)) : "All Status",
+      category: category || "",
+      startDate: start_date || "",
+      endDate: end_date || ""
+    });
+  };
+
+  // Manual search handler - triggered when user types and presses Enter
+  const handleManualSearch = (searchTerm) => {
+    // Clear all filters and only keep the search term
+    handleApplyFilters({
+      status: "", // Clear status filter
+      category: "", // Clear category filter
+      search_terms: searchTerm,
+      start_date: "", // Clear start date filter
+      end_date: "" // Clear end date filter
+    });
   };
 
   const handlePageChange = (page) => {
@@ -131,55 +177,42 @@ const ProductsPage = () => {
     setIsDeleteModal(true);
   };
 
-const handleConfirmDelete = () => {
-  if (!isValidProductId(selectedProductId)) {
-    toast.error('No valid product selected for deletion');
-    return;
-  }
-
-  // Fix: Pass parameters as an object, and use the second parameter for options
-  deleteMutation.mutate(
-    { 
-      active_outlet: activeOutlet, 
-      productId: selectedProductId 
-    },
-    {
-      onSuccess: () => {
-        toast.success('Product deleted successfully');
-        setIsDeleteModal(false);
-        setSelectedProductId('');
-        
-        // If we're on a page with no items after deletion, go to previous page
-        if (products.length === 1 && currentPage > 1) {
-          setCurrentPage(currentPage - 1);
-        } else {
-          refetch();
-        }
-      },
-      onError: (error) => {
-        console.error('Delete error:', error);
-        toast.error('Failed to delete product');
-      },
+  const handleConfirmDelete = () => {
+    if (!isValidProductId(selectedProductId)) {
+      toast.error('No valid product selected for deletion');
+      return;
     }
-  );
-};
+
+    deleteMutation.mutate(
+      { 
+        active_outlet: activeOutlet, 
+        productId: selectedProductId 
+      },
+      {
+        onSuccess: () => {
+          toast.success('Product deleted successfully');
+          setIsDeleteModal(false);
+          setSelectedProductId('');
+          
+          // If we're on a page with no items after deletion, go to previous page
+          if (products.length === 1 && currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+          } else {
+            refetch();
+          }
+        },
+        onError: (error) => {
+          console.error('Delete error:', error);
+          toast.error('Failed to delete product');
+        },
+      }
+    );
+  };
 
   // Reset selected product when modals are closed
   const handleCloseModals = () => {
     setSelectedProductId('');
   };
-
-  // Filter products based on search term (client-side filtering)
-  // Note: For better performance with large datasets, consider moving search to server-side
-  const filteredProducts = products.filter(product =>
-    product.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Adjust pagination info for filtered results
-  const isSearching = searchTerm.trim() !== '';
-  const displayProducts = isSearching ? filteredProducts : products;
-  const displayTotalCount = isSearching ? filteredProducts.length : total_count;
-  const displayTotalPages = isSearching ? 1 : total_pages; // For client-side search, show all results on one page
 
   if (error) {
     return <ErrorState message="Failed to load products. Please try again later." />;
@@ -224,14 +257,23 @@ const handleConfirmDelete = () => {
             refetch();
           }}
           product={selectedProduct}
-        
         />
       )}
 
       {!isAddModalOpen && !isViewModal && !isEditModal && (
         <>
           <div className="search-filter-section">
-            <SearchBar onSearch={handleSearchChange} searchTerm={searchTerm} />
+         
+            <SearchBar
+              filterOptions={["All Status", "Public", "Private"]}
+              categoryOptions={categoryOptions}
+              onApply={handleApplyFilters}
+              onManualSearch={handleManualSearch} 
+              placeholder="Search products..."
+              filterLabel="Filter by"
+              categoryLabel="Category"
+              initialValues={searchBarState}
+            />
             <button className="add-product-button" onClick={handleAddProduct}>
               <Plus size={16} color="white" />
               <span>Add New Product</span>
@@ -241,17 +283,16 @@ const handleConfirmDelete = () => {
           <div className="products-container">
             <div className="page-title-section">
               <h2>
-                {displayTotalCount} Product{displayTotalCount !== 1 ? 's' : ''} 
-                {isSearching ? ' found' : ' in stock'}
+                {total_count} Product{total_count !== 1 ? 's' : ''} in stock
               </h2>
-              {isSearching && searchTerm && (
+              {filters.search_terms && (
                 <p className="search-results-info">
-                  Showing results for "{searchTerm}"
+                  Showing results for "{filters.search_terms}"
                 </p>
               )}
             </div>
             
-            {!isLoading && displayProducts.length === 0 && !isSearching && (
+            {!isLoading && products.length === 0 && !filters.search_terms && (
               <EmptyState 
                 message="No products found." 
                 btnText="Add New Product" 
@@ -259,24 +300,24 @@ const handleConfirmDelete = () => {
               />
             )}
 
-            {!isLoading && displayProducts.length === 0 && isSearching && (
+            {!isLoading && products.length === 0 && filters.search_terms && (
               <EmptyState 
-                message={`No products found matching "${searchTerm}"`} 
+                message={`No products found matching "${filters.search_terms}"`} 
                 btnText="Clear Search" 
-                handleAddCategory={() => setSearchTerm('')}
+                handleAddCategory={() => handleApplyFilters({ status: '', search_terms: '', start_date: '', end_date: '' })}
               />
             )}
             
             <div className="products-grid">
               {isLoading &&
-                Array.from({ length: 8 }).map((_, idx) => (
+                Array.from({ length: itemsPerPage }).map((_, idx) => (
                   <div className="product-grid-item" key={`skeleton-${idx}`}>
                     <ProductSkeleton />
                   </div>
                 ))
               }
 
-              {!isLoading && displayProducts.length > 0 && displayProducts.map(product => (
+              {!isLoading && products.length > 0 && products.map(product => (
                 <div className="product-grid-item" key={product.id}>
                   <ProductCard
                     product={product}
@@ -288,13 +329,14 @@ const handleConfirmDelete = () => {
               ))}
             </div>
 
-            {/* Pagination Component */}
-            {!isLoading && !isSearching && displayProducts.length > 0 && (
+            {/* Pagination Component - Show when there are products and pagination is needed */}
+            {!isLoading && products.length > 0 && total_pages > 1 && (
               <Pagination
-                currentPage={currentPage}
-                totalPages={displayTotalPages}
+                name="Products"
+                currentPage={current_page}
+                totalPages={total_pages}
                 onPageChange={handlePageChange}
-                totalItems={displayTotalCount}
+                totalItems={total_count}
                 itemsPerPage={itemsPerPage}
                 showInfo={true}
               />

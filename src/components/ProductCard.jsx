@@ -68,14 +68,20 @@ console.log('okk',product);
               <span className="rating-value">{likes}</span>
             </div>
           </div>
+{
+product.discount_price  ? <div className="discount-price"> ₦{product.discount_price } <span className='product-price'> ₦{product.price}</span></div> : <p className="discount-price">
+  ₦{product.price}
+</p>
+}
+          
 
-          <div className="product-price">₦{price}</div>
 
           <div className="product-stock">
             <div className="stock-info">
               {out_of_stock_status ? "Out of stock" : "In Stock"} · {amount_in_stock} items
             </div>
           </div>
+
 
           {/* Visibility Toggle Switch */}
           <div className="product-visibility">

@@ -59,6 +59,7 @@ const PaymentPage = () => {
       notes: order.notes,
       products: order.product, // This is a single object, not an array
       amount: payment.amount,
+      paymentDate: payment.created_at,
       transactionId: payment.transaction_id,
       paymentDate: payment.created_at,
       orderNumber: order.order_number,
@@ -67,7 +68,12 @@ const PaymentPage = () => {
     })) || []
   ) || [];
   
-  console.log('oddd', paymentData);
+const sortedPaymentData = [...paymentData].sort((a, b) => 
+  new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime() // DESC
+  // new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime() // ASC
+);
+
+console.log('oddd', sortedPaymentData);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditProductModal, setIsEditProductModal] = useState(false);
@@ -193,6 +199,8 @@ const PaymentPage = () => {
 
   // Handler for viewing a payment (clicking View button in table)
   const handleViewPayment = (payment) => {
+    console.log('view',payment);
+    
     setSelectedPayment(payment);
     setIsPaymentSummaryModal(true);
   };
@@ -261,7 +269,7 @@ const PaymentPage = () => {
         ) : paymentData?.length > 0 ? (
           <>
             <FlexibleTable
-              data={paymentData}
+              data={sortedPaymentData}
               columns={paymentColumns}
               actions={paymentActions}
               keyField="id"
@@ -282,10 +290,11 @@ const PaymentPage = () => {
               onPageChange={handlePageChange}
               totalItems={meta.total_count || 0}
               showInfo={true}
+              name='Payments'
             />
           </>
         ) : (
-          <EmptyState title="No orders found" searchTerm={filters.search_terms} />
+          <EmptyState title="No payment found" searchTerm={filters.search_terms} />
         )}
       </div>
 

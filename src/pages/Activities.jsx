@@ -30,10 +30,9 @@ export default function ActivitiesPage() {
 
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
-console.log('actt',filters);
 
   // Query
-  const { data: activitiesData, isLoading, refetch } = useViewActivities(
+  const { data: activitiesData, isLoading } = useViewActivities(
     active_outlet,
     filters,
     currentPage,
@@ -64,7 +63,7 @@ console.log('actt',filters);
     setCurrentPage(1);
   };
 
-  const handleApplyFilters = ({ activity_type, start_date,search_terms, end_date }) => {
+  const handleApplyFilters = ({ activity_type, start_date, search_terms, end_date }) => {
     setFilters((prev) => ({
       ...prev,
       activity_type,
@@ -79,6 +78,11 @@ console.log('actt',filters);
     setCurrentPage(page);
   };
 
+  // Always sort by created_at DESC (newest first)
+  const sortedActivities = [...activities].sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+  );
+
   return (
     <>
       <SearchBar
@@ -91,16 +95,15 @@ console.log('actt',filters);
 
       <div className="activities-products-grid mt-6">
         {isLoading ? (
-          
-            Array.from({ length: 5 }).map((_, idx) => (
-                  <div className="product-grid-item" key={`skeleton-${idx}`}>
-                    <LoadingSkeleton />
-                  </div>
-                ))
-        ) : activities.length === 0 ? (
-          <EmptyState message='No activities found'/>
+          Array.from({ length: 5 }).map((_, idx) => (
+            <div className="product-grid-item" key={`skeleton-${idx}`}>
+              <LoadingSkeleton />
+            </div>
+          ))
+        ) : sortedActivities.length === 0 ? (
+          <EmptyState message="No activities found" />
         ) : (
-          activities.map((item) => (
+          sortedActivities.map((item) => (
             <ActivitiesCard
               key={item.id}
               activity={item}
@@ -114,6 +117,8 @@ console.log('actt',filters);
       {/* Pagination */}
       <div className="mt-6">
         <Pagination
+          name="Activities"
+          itemsPerPage={itemsPerPage}
           currentPage={meta.current_page || 1}
           totalPages={meta.total_pages || 1}
           onPageChange={handlePageChange}

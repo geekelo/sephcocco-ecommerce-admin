@@ -13,8 +13,7 @@ const FlexibleTableRow = ({
   clickableRow = true,
   mobileCardConfig = null // New prop for mobile card configuration
 }) => {
-  console.log('FlexibleTableRow received data:', data);
-  console.log('FlexibleTableRow received columns:', columns);
+
   
   // Safety check for data
   if (!data) {
@@ -764,7 +763,7 @@ const FlexibleTableRow = ({
         const value = getCellValue(column, data);
         const columnKey = column.key || column.accessorKey || column.header || `column-${columnIndex}`;
 
-        console.log(`Column: ${columnKey}, Value:`, value);
+    
 
         return (
           <div

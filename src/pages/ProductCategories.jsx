@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import SearchBar from "../components/SearchBar";
 import FlexibleTable from "../components/FlexibleTable";
+import Pagination from "../components/Pagination";
 
 import "../styles/ProductCategories.css"
 import "../styles/OrderPage.css";
@@ -23,18 +24,28 @@ import { EmptyState } from "../components/EmptyState.jsx";
 import { getActiveOutlet } from "../utils/getActiveOutlets.js";
 
 const ProductCategoriesPage = () => {
- 
+  // State for categories data and pagination
+  const [searchBarState, setSearchBarState] = useState({
+    search: "",
+    status: "All Status", 
+    startDate: "",
+    endDate: ""
+  });
 
+  const [filters, setFilters] = useState({
+    search_terms: "",
+    status: "",
+    start_date: "",
+    end_date: "",
+  });
 
-  // State for categories data
-  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Categories per page
+
   const [isAddCategoryModal, setIsAddCategoryModal] = useState(false);
   const [isEditCategoryModal, setIsEditCategoryModal] = useState(false);
   const [isDeleteCategoryModal, setIsDeleteCategoryModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-
-
-
 
   // Get active outlet ID
   const active_outlet = getActiveOutlet();
@@ -48,30 +59,76 @@ const ProductCategoriesPage = () => {
     isLoading: isFetchingCategories, 
     error: fetchError,
     refetch: refetchCategories 
-  } = useViewProductCategories(active_outlet);
+  } = useViewProductCategories(active_outlet, filters,  currentPage,
+    itemsPerPage);
 
   // Mutations
   const addCategoryMutation = useAddProductCategores();
   const updateCategoryMutation = useUpdateProductCategores();
   const deleteCategoryMutation = useDeleteProductCategores();
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleFilter = () => {
-    console.log("Filter functionality to be implemented");
-  };
-
-  // Filter categories based on search term
-  const filteredCategories = categories.filter(category => {
-    const name = category.name || "";
-    const description = category.description || "";
-    const searchLower = searchTerm.toLowerCase();
+  // Handle filter application
+  const handleApplyFilters = ({ status, search_terms, start_date, end_date }) => {
+    setFilters({ status, search_terms, start_date, end_date });
+    setCurrentPage(1); // Reset to first page when filtering
     
-    return name.toLowerCase().includes(searchLower) ||
-           description.toLowerCase().includes(searchLower);
-  });
+    // Update search bar state to maintain UI state
+    setSearchBarState({
+      search: search_terms || "",
+      status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
+      startDate: start_date || "",
+      endDate: end_date || ""
+    });
+  };
+
+  // Manual search handler - triggered when user types and presses Enter
+  const handleManualSearch = (searchTerm) => {
+    handleApplyFilters({
+      status: "", 
+      search_terms: searchTerm,
+      start_date: "", 
+      end_date: "" 
+    });
+  };
+
+  // Sort and filter categories
+  const { paginatedCategories, totalCount, totalPages } = useMemo(() => {
+    // First, filter categories based on search terms
+    let filtered = categories.filter(category => {
+      const name = category.name || "";
+      const description = category.description || "";
+      const searchLower = filters.search_terms.toLowerCase();
+      
+      if (!searchLower) return true;
+      
+      return name.toLowerCase().includes(searchLower) ||
+             description.toLowerCase().includes(searchLower);
+    });
+
+    // Sort categories by most recent first (descending order)
+    filtered = filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at || a.updated_at).getTime();
+      const dateB = new Date(b.created_at || b.updated_at).getTime();
+      return dateB - dateA; // Most recent first
+    });
+
+    const totalCount = filtered.length;
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedCategories = filtered.slice(startIndex, endIndex);
+
+    return { paginatedCategories, totalCount, totalPages };
+  }, [categories, filters.search_terms, currentPage, itemsPerPage]);
+
+  // Handle page changes
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // Optional: scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Invalidate and refetch categories
   const invalidateCategories = () => {
@@ -137,6 +194,11 @@ const ProductCategoriesPage = () => {
       toast.success("Category deleted successfully!");
       setIsDeleteCategoryModal(false);
       setSelectedCategory(null);
+
+      // If we're on a page with no items after deletion, go to previous page
+      if (paginatedCategories.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
     } catch (error) {
       console.error("Error deleting category:", error);
       toast.error("Failed to delete category. Please try again.");
@@ -149,7 +211,6 @@ const ProductCategoriesPage = () => {
       toast.error("Please select an outlet first.");
       return;
     }
-
 
     try {
       if (selectedCategory) {
@@ -165,9 +226,6 @@ const ProductCategoriesPage = () => {
           productId: selectedCategory.id,
           payload
         });
-        console.log(selectedCategory.id, 'Update category payload:', payload);
-        
-        console.log(response);
         
         // Invalidate queries to refetch fresh data
         invalidateCategories();
@@ -182,13 +240,10 @@ const ProductCategoriesPage = () => {
           }
         };
         
-        console.log('Add category payload:', payload);
-        
         const response = await addCategoryMutation.mutateAsync({
           active_outlet,
           payload
         });
-   
         
         // Invalidate queries to refetch fresh data
         invalidateCategories();
@@ -209,10 +264,6 @@ const ProductCategoriesPage = () => {
                    updateCategoryMutation.isPending || 
                    deleteCategoryMutation.isPending;
 
- 
-
-
-
   return (
     <div className="order-page">
       <div className="page-header">
@@ -229,19 +280,38 @@ const ProductCategoriesPage = () => {
         </div>
       </div>
 
+      {/* Enhanced SearchBar with manual search support */}
       <SearchBar
-        onSearch={handleSearchChange}
-        onFilter={handleFilter}
-        searchTerm={searchTerm}
+        onApply={handleApplyFilters}
+        onManualSearch={handleManualSearch}
         placeholder="Search categories..."
+        filterLabel="Filter by"
+        initialValues={searchBarState}
       />
 
       <div className="order-table-container">
+        {/* Show total count */}
+        <div className="page-title-section" style={{ marginBottom: '16px' }}>
+          <h2>
+            {totalCount} Categor{totalCount !== 1 ? 'ies' : 'y'} found
+          </h2>
+          {filters.search_terms && (
+            <p className="search-results-info">
+              Showing results for "{filters.search_terms}"
+            </p>
+          )}
+        </div>
+
         {fetchError ? (
-          <ErrorState  title="Failed to load categories" message=" There was an error loading the categories. Please try again." refetchCategories={refetchCategories} isFetchingCategories={isFetchingCategories}/>
+          <ErrorState  
+            title="Failed to load categories" 
+            message=" There was an error loading the categories. Please try again." 
+            refetchCategories={refetchCategories} 
+            isFetchingCategories={isFetchingCategories}
+          />
         ) : (
           <FlexibleTable
-            data={filteredCategories}
+            data={paginatedCategories}
             columns={categoryColumns}
             actions={categoryActions}
             keyField="id"
@@ -249,7 +319,31 @@ const ProductCategoriesPage = () => {
             onActionClick={handleActionClick}
             className="categories-table"
             isLoading={isFetchingCategories}
-            emptyState={<EmptyState title="No categories found" btnText=" Add Your First Category" handleAddCategory={handleAddCategory} isLoading={isLoading} searchTerm={searchTerm}/>}
+            emptyState={
+              <EmptyState 
+                title={filters.search_terms ? `No categories found matching "${filters.search_terms}"` : "No categories found"} 
+                btnText={filters.search_terms ? "Clear Search" : "Add Your First Category"} 
+                handleAddCategory={filters.search_terms ? 
+                  () => handleApplyFilters({ status: '', search_terms: '', start_date: '', end_date: '' }) : 
+                  handleAddCategory
+                } 
+                isLoading={isLoading} 
+                searchTerm={filters.search_terms}
+              />
+            }
+          />
+        )}
+
+        {/* Pagination - Show when there are categories and pagination is needed */}
+        {!isFetchingCategories && paginatedCategories.length > 0 && totalPages > 1 && (
+          <Pagination
+            name="Categories"
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            totalItems={totalCount}
+            itemsPerPage={itemsPerPage}
+            showInfo={true}
           />
         )}
       </div>

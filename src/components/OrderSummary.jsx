@@ -41,31 +41,31 @@ console.log('prod',order);
   // Prepare info card data with email
   const leftCardItems = [
     { label: "Order ID:", value: order.order_number,isCopyable: true },
-    { label: "Customer Name:", value: order.customer.name },
+    { label: "Customer Name:", value: order?.customer?.name  || 'Not provided'},
     {
       label: "Customer Email:",
-      value: order.customer.email || "Not provided",
+      value: order?.customer?.email || "Not provided",
       isEmail: true
     },
     {
       label: "Phone Number:",
-      value: order.customer.whatsapp_number,
+      value: order?.customer?.whatsapp_number || 'Not provided',
       isPhone: true
     },
     {
       label: "Address:",
-      value: order.customer.address
+      value: order?.customer?.address || 'Not provided'
     },
-    { label: "Order Date:", value: formatDate(order.customer.created_at) }
+    { label: "Order Date:", value: formatDate(order?.created_at) || 'Not provided' }
   ];
   
 
   const rightCardItems = [
-    { label: "Order Status:", value: order.status,badge: true },
-    { label: "Stages:", value: order.stages, isStages: true },
+    { label: "Order Status:", value: order?.status,badge: true },
+    { label: "Stages:", value: order?.stages, isStages: true },
     { label: "Payment Method:", value: paymentMethod || '--/--' },
     { label: "Payment Status:", value: paymentStatus || '--/--', badge: true },
-    { label: "Order Notes:", value: order.additional_notes || '--/--' }
+    { label: "Order Notes:", value: order?.additional_notes || '--/--' }
   ];
 
   // Format payments for the order table

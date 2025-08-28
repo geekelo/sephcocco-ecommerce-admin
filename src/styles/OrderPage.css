@@ -1,7 +1,7 @@
 /* Order Page Layout - Fixed for proper table scrolling */
 .order-page {   
   background-color: #ffffff;      
-  overflow: hidden; /* Changed from hidden to auto */
+  overflow: hidden;
   max-width: 100%;   
   color: #000;   
   padding: 16px 20px;
