@@ -5,7 +5,7 @@
   max-width: 100%;   
   color: #000;   
   padding: 16px 20px;
-  height: 100vh; /* Add fixed height */
+  /* height: 100vh; */
   display: flex;
   flex-direction: column;
   box-sizing: border-box;

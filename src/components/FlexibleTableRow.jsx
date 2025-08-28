@@ -491,7 +491,7 @@ const FlexibleTableRow = ({
       return (
         <div className="date-cell">
           <Calendar size={14} className="date-icon" />
-          <span className="date-text">{formatDate(value)}</span>
+          <span className="date-text-row">{formatDate(value)}</span>
         </div>
       );
     }
@@ -768,7 +768,7 @@ const FlexibleTableRow = ({
         return (
           <div
             key={columnKey}
-            className={`table-cell ${column.className || ''}`}
+            className={`table-cell-row ${column.className || ''}`}
             style={{
               flex: column.flex || 1,
               minWidth: column.minWidth || 'auto',

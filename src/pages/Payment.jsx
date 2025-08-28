@@ -167,7 +167,7 @@ console.log('oddd', sortedPaymentData);
       
       const payload = {
         [`sephcocco_${activeOutlet}_payment`]: {
-          status: "Confirmed"
+          status: "payment confirmed"
         }
       };
 

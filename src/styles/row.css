@@ -21,7 +21,7 @@
 }
 
 /* ===== TABLE CELL ===== */
-.table-cell {
+.table-cell-row {
   padding: 12px 16px;
   display: flex;
   align-items: center;
@@ -35,12 +35,12 @@
 }
 
 /* Special handling for actions column */
-.table-cell.actions-column {
+.table-cell-row.actions-column {
   overflow: visible;
   z-index: 10;
 }
 
-.table-cell:last-child {
+.table-cell-row:last-child {
   border-right: none;
 }
 
@@ -216,7 +216,7 @@
   flex-shrink: 0;
 }
 
-.date-text {
+.date-text-row {
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
@@ -399,7 +399,7 @@
 }
 
 /* Higher z-index for table cells with actions */
-.table-cell.actions-column {
+.table-cell-row.actions-column {
   overflow: visible;
   z-index: 99998;
 }
@@ -584,7 +584,7 @@
     background: #ffffff;
   }
 
-  .table-cell {
+  .table-cell-row {
     padding: 6px 0;
     border-right: none;
     border-bottom: 1px solid #f3f4f6;
@@ -596,18 +596,18 @@
     padding-bottom: 8px;
   }
 
-  .table-cell.actions-column {
+  .table-cell-row.actions-column {
     padding-left: 0;
     justify-content: flex-end;
     overflow: visible;
     z-index: 100;
   }
 
-  .table-cell:last-child {
+  .table-cell-row:last-child {
     border-bottom: none;
   }
 
-  .table-cell::before {
+  .table-cell-row::before {
     content: attr(data-label);
     position: absolute;
     left: 0;
@@ -623,7 +623,7 @@
     text-overflow: ellipsis;
   }
 
-  .table-cell.actions-column::before {
+  .table-cell-row.actions-column::before {
     display: none;
   }
 
@@ -659,7 +659,7 @@
   }
 
   .currency-value,
-  .date-text {
+  .date-text-row {
     white-space: normal;
     word-wrap: break-word;
   }
@@ -695,7 +695,7 @@
     border-bottom-color: #000000;
   }
   
-  .table-cell {
+  .table-cell-row {
     border-right-color: #000000;
   }
   
@@ -841,7 +841,7 @@
   }
 
   /* ===== HIDE ORIGINAL TABLE CELLS ON MOBILE ===== */
-  .table-cell {
+  .table-cell-row {
     display: none;
   }
 
