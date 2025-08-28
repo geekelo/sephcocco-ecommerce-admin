@@ -229,7 +229,7 @@ const SearchBar = ({
 
       {showDate && (
         <>
-          <p className='date-text'>Start Date:</p>
+          <p className='date-text-search'>Start Date:</p>
           <input
             type="date"
             value={startDate}
@@ -237,7 +237,7 @@ const SearchBar = ({
             className="date-picker"
             placeholder="Start Date"
           />
-          <p className='date-text'>End Date:</p>
+          <p className='date-text-search'>End Date:</p>
           <input
             type="date"
             value={endDate}
