@@ -8,38 +8,96 @@ const SearchBar = ({
   showDate = true,
   showActions = true,
   filterOptions = [],
-  categoryOptions = [], // New prop for categories
+  categoryOptions = [], // Array of {label, value, name} objects
+  sortOptions = [], // New prop for sort options
   placeholder = "Search for anything",
   filterLabel = "Filter by",
-  categoryLabel = "Category", // New prop for category label
+  categoryLabel = "Category",
+  sortLabel = "Sort by", // New prop for sort label
   filterKey = 'status',
   initialValues = null,
 }) => {
   // Use initial values if provided, otherwise use defaults
   const [search, setSearch] = useState(initialValues?.search || '');
   const [status, setStatus] = useState(initialValues?.status || 'All Status');
-  const [category, setCategory] = useState(initialValues?.category || '');
+  const [category, setCategory] = useState(initialValues?.category || ''); // Display name
+  const [categoryId, setCategoryId] = useState(initialValues?.categoryId || ''); // Internal ID
+  const [sortByLikes, setSortByLikes] = useState(initialValues?.sort_by_likes || ''); // Sort by likes state
+  const [sortByStock, setSortByStock] = useState(initialValues?.sort_by_stock || ''); // Sort by stock state
   const [startDate, setStartDate] = useState(initialValues?.startDate || '');
   const [endDate, setEndDate] = useState(initialValues?.endDate || '');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false); // New sort dropdown state
   const dropdownRef = useRef(null);
   const categoryDropdownRef = useRef(null);
+  const sortDropdownRef = useRef(null); // New sort dropdown ref
   const searchTimeoutRef = useRef(null);
 
   const defaultFilterOptions = ['All Status', 'active', 'inactive', 'suspended'];
-  const currentFilterOptions = filterOptions.length > 0 ? filterOptions : defaultFilterOptions;
+  const currentFilterOptions =  filterOptions 
+  
+  const defaultSortOptions = ['Highest Likes', 'Most Recent', 'Alphabetical'];
+  const currentSortOptions =  sortOptions 
+
+  // Helper function to find category by name
+  const findCategoryByName = (categoryName) => {
+    if (!categoryName) return null;
+    return categoryOptions.find(cat => 
+      (typeof cat === 'string' ? cat : cat.name || cat.label) === categoryName
+    );
+  };
+
+  // Helper function to find category by ID
+  const findCategoryById = (categoryId) => {
+    if (!categoryId) return null;
+    return categoryOptions.find(cat => 
+      (typeof cat === 'object' ? cat.value : cat) === categoryId
+    );
+  };
+
+  // Get the currently active sort option
+  const getActiveSortOption = () => {
+    if (sortByLikes) return sortByLikes;
+    if (sortByStock) return sortByStock;
+    return '';
+  };
 
   // Update state when initialValues change (when navigating back)
   useEffect(() => {
     if (initialValues) {
       setSearch(initialValues.search || '');
       setStatus(initialValues.status || 'All Status');
-      setCategory(initialValues.category || '');
+      setSortByLikes(initialValues.sort_by_likes || ''); // Update sort by likes state
+      setSortByStock(initialValues.sort_by_stock || ''); // Update sort by stock state
+      
+      // Handle category - could be name or ID
+      const categoryName = initialValues.category || '';
+      const categoryIdValue = initialValues.categoryId || '';
+      
+      setCategory(categoryName);
+      setCategoryId(categoryIdValue);
+      
+      // If we have categoryId but no category name, find the name
+      if (categoryIdValue && !categoryName) {
+        const foundCategory = findCategoryById(categoryIdValue);
+        if (foundCategory) {
+          setCategory(foundCategory.name || foundCategory.label || foundCategory);
+        }
+      }
+      
+      // If we have category name but no ID, find the ID
+      if (categoryName && !categoryIdValue) {
+        const foundCategory = findCategoryByName(categoryName);
+        if (foundCategory && typeof foundCategory === 'object') {
+          setCategoryId(foundCategory.value || '');
+        }
+      }
+      
       setStartDate(initialValues.startDate || '');
       setEndDate(initialValues.endDate || '');
     }
-  }, [initialValues]);
+  }, [initialValues, categoryOptions]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -48,6 +106,9 @@ const SearchBar = ({
       }
       if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
         setIsCategoryOpen(false);
+      }
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
+        setIsSortOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -95,16 +156,52 @@ const SearchBar = ({
   const handleApply = () => {
     onApply({
       status: status === 'All Status' ? '' : status.toLowerCase(),
-      category: category || '', // Pass selected category
+      category: category || '', // Pass category name for display
+      categoryId: categoryId || '', // Pass category ID for backend
+      sort_by_likes: sortByLikes || '', // Pass sort_by_likes
+      sort_by_stock: sortByStock || '', // Pass sort_by_stock
       search_terms: search,
       start_date: startDate,
       end_date: endDate
     });
   };
 
+  const handleCategorySelect = (selectedOption) => {
+    if (selectedOption === null) {
+      // Handle "All Categories" selection
+      setCategory('');
+      setCategoryId('');
+    } else {
+      setCategory(selectedOption.name || selectedOption.label || '');
+      setCategoryId(selectedOption.value || '');
+    }
+    setIsCategoryOpen(false);
+  };
+
+  // Handle sort option selection
+  const handleSortSelect = (option) => {
+    // Clear both sort states first
+    setSortByLikes('');
+    setSortByStock('');
+    
+    // Set the appropriate sort state based on the option
+    if (option === 'Highest Likes') {
+      setSortByLikes(option);
+    } else if (option === 'Highest Stocks') {
+      setSortByStock(option);
+    }
+    // For other options like 'Most Recent', 'Alphabetical', you might want to handle them differently
+    // or add additional sort states as needed
+    
+    setIsSortOpen(false);
+  };
+
   const clearFilters = () => {
     setStatus('All Status');
     setCategory('');
+    setCategoryId('');
+    setSortByLikes(''); // Clear likes sort filter
+    setSortByStock(''); // Clear stock sort filter
     setStartDate('');
     setEndDate('');
     setSearch('');
@@ -117,6 +214,9 @@ const SearchBar = ({
     onApply({ 
       status: '', 
       category: '',
+      categoryId: '',
+      sort_by_likes: '', // Include likes sort in clear
+      sort_by_stock: '', // Include stock sort in clear
       search_terms: '', 
       start_date: '', 
       end_date: '' 
@@ -133,7 +233,24 @@ const SearchBar = ({
   }, []);
 
   // Check if any filters are active
-  const hasActiveFilters = search !== '' || status !== 'All Status' || category !== '' || startDate !== '' || endDate !== '';
+  const hasActiveFilters = search !== '' || status !== 'All Status' || category !== '' || sortByLikes !== '' || sortByStock !== '' || startDate !== '' || endDate !== '';
+
+  // Get display text for category button
+  const getCategoryDisplayText = () => {
+    if (category) {
+      return category;
+    }
+    return categoryLabel;
+  };
+
+  // Get display text for sort button
+  const getSortDisplayText = () => {
+    const activeSortOption = getActiveSortOption();
+    if (activeSortOption) {
+      return activeSortOption;
+    }
+    return sortLabel;
+  };
 
   return (
     <div className="search-filter-section">
@@ -192,7 +309,7 @@ const SearchBar = ({
             onClick={() => setIsCategoryOpen(!isCategoryOpen)}
           >
             <SlidersHorizontal size={16} />
-            <span>{category || categoryLabel}</span>
+            <span>{getCategoryDisplayText()}</span>
             {category !== '' && <span className="filter-count">1</span>}
             <ChevronDown size={14} className={`chevron ${isCategoryOpen ? 'rotated' : ''}`} />
           </button>
@@ -200,27 +317,83 @@ const SearchBar = ({
           {isCategoryOpen && (
             <div className="filter-dropdown">
               <div className="filter-options">
+                {/* All Categories option */}
                 <div
                   className={`filter-option ${category === '' ? 'active' : ''}`}
-                  onClick={() => {
-                    setCategory('');
-                    setIsCategoryOpen(false);
-                  }}
+                  onClick={() => handleCategorySelect(null)}
                 >
                   All Categories
                 </div>
-                {categoryOptions.map((option) => (
-                  <div
-                    key={option}
-                    className={`filter-option ${category === option ? 'active' : ''}`}
-                    onClick={() => {
-                      setCategory(option);
-                      setIsCategoryOpen(false);
-                    }}
-                  >
-                    {option}
-                  </div>
-                ))}
+                
+                {/* Category options */}
+                {categoryOptions.map((option) => {
+                  // Handle both string and object formats
+                  const displayName = typeof option === 'string' ? option : (option.name || option.label || option.value);
+                  const optionKey = typeof option === 'string' ? option : (option.value || option.name || option.label);
+                  const isActive = typeof option === 'string' ? 
+                    category === option : 
+                    (categoryId === option.value || category === (option.name || option.label));
+
+                  return (
+                    <div
+                      key={optionKey}
+                      className={`filter-option ${isActive ? 'active' : ''}`}
+                      onClick={() => handleCategorySelect(option)}
+                    >
+                      {displayName}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Sort Filter Dropdown */}
+      {currentSortOptions.length > 0 && (
+        <div className="filter-container" ref={sortDropdownRef}>
+          <button 
+            className={`filter-button ${(sortByLikes !== '' || sortByStock !== '') ? 'has-filters' : ''}`}
+            onClick={() => setIsSortOpen(!isSortOpen)}
+          >
+            <SlidersHorizontal size={16} />
+            <span>{getSortDisplayText()}</span>
+            {(sortByLikes !== '' || sortByStock !== '') && <span className="filter-count">1</span>}
+            <ChevronDown size={14} className={`chevron ${isSortOpen ? 'rotated' : ''}`} />
+          </button>
+
+          {isSortOpen && (
+            <div className="filter-dropdown">
+              <div className="filter-options">
+                {/* Default sort option */}
+                <div
+                  className={`filter-option ${sortByLikes === '' && sortByStock === '' ? 'active' : ''}`}
+                  onClick={() => {
+                    setSortByLikes('');
+                    setSortByStock('');
+                    setIsSortOpen(false);
+                  }}
+                >
+                  Default
+                </div>
+                
+                {/* Sort options */}
+                {currentSortOptions.map((option) => {
+                  const isActive = (option === 'Highest Likes' && sortByLikes === option) || 
+                                   (option === 'Highest Stocks' && sortByStock === option) ||
+                                   (option !== 'Highest Likes' && option !== 'Highest Stocks' && (sortByLikes === option || sortByStock === option));
+                  
+                  return (
+                    <div
+                      key={option}
+                      className={`filter-option ${isActive ? 'active' : ''}`}
+                      onClick={() => handleSortSelect(option)}
+                    >
+                      {option}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

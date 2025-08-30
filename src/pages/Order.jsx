@@ -67,8 +67,17 @@ const OrderPage = () => {
   const [isDiscardOrderModal, setIsDiscardOrderModal] = useState(false);
   const [isDiscardPaymentModal, setIsDiscardPaymentModal] = useState(false);
 
-  const handleApplyFilters = ({ status, search_terms, start_date, end_date }) => {
+  // Updated to handle the new sort parameters from SearchBar
+  const handleApplyFilters = ({ 
+    status, 
+    search_terms, 
+    start_date, 
+    end_date, 
+    sort_by_likes, // Accept but ignore sort parameters for orders
+    sort_by_stock  // Accept but ignore sort parameters for orders
+  }) => {
     // Update both the API filters and the search bar state
+    // Note: We ignore sort parameters since orders don't use them
     setFilters({ status, search_terms, start_date, end_date });
     setCurrentPage(1);
     
@@ -88,7 +97,9 @@ const OrderPage = () => {
       status: "", // Clear status filter
       search_terms: searchTerm,
       start_date: "", // Clear start date filter
-      end_date: "" // Clear end date filter
+      end_date: "", // Clear end date filter
+      sort_by_likes: "", // Clear sort filters
+      sort_by_stock: ""  // Clear sort filters
     });
   };
 
@@ -119,8 +130,11 @@ const OrderPage = () => {
             onApply={handleApplyFilters}
             onManualSearch={handleManualSearch} // Add manual search handler
             filterOptions={["All Status", "Pending", "Paid", "Payment Confirmed","Delivering", "Completed", "Cancelled"]}
+            categoryOptions={[]} // Explicitly pass empty array to disable category filtering
+            sortOptions={[]} // Explicitly pass empty array to disable sort options
             placeholder="Search orders..."
             filterLabel="Filter by"
+            showDate={true} // Explicitly enable date filtering
             // Pass the persistent state as initial values
             initialValues={searchBarState}
           />

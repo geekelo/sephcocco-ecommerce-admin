@@ -126,7 +126,8 @@
   border-radius: 6px;
   background: #fff;
   color: #374151;
-  min-width: 140px;
+  width: 180px;
+    color-scheme: light;
 }
 
 /* === Apply and Clear Buttons === */

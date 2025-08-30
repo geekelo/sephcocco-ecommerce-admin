@@ -104,8 +104,16 @@ const AdminFaqPage = () => {
     error: deleteError,
   } = useDeleteFaq();
 
-  // Handle filter application
-  const handleApplyFilters = ({ status, search_terms, start_date, end_date }) => {
+  // Handle filter application - Updated to accept sort parameters
+  const handleApplyFilters = ({ 
+    status, 
+    search_terms, 
+    start_date, 
+    end_date, 
+    sort_by_likes, // Accept but ignore sort parameters for FAQs
+    sort_by_stock  // Accept but ignore sort parameters for FAQs
+  }) => {
+    // Only use the parameters that FAQs need
     setFilters({ status, search_terms, start_date, end_date });
     setCurrentPage(1); // Reset to first page when filtering
     
@@ -118,13 +126,15 @@ const AdminFaqPage = () => {
     });
   };
 
-  // Manual search handler - triggered when user types and presses Enter
+  // Manual search handler - Updated to include sort parameters
   const handleManualSearch = (searchTerm) => {
     handleApplyFilters({
       status: "", 
       search_terms: searchTerm,
       start_date: "", 
-      end_date: "" 
+      end_date: "",
+      sort_by_likes: "", // Clear sort filters
+      sort_by_stock: ""  // Clear sort filters
     });
   };
 
@@ -307,6 +317,8 @@ const AdminFaqPage = () => {
             onApply={handleApplyFilters}
             onManualSearch={handleManualSearch}
             filterOptions={[]} // No status filter for FAQs
+            categoryOptions={[]} // No category filter for FAQs
+            sortOptions={[]} // No sort options for FAQs
             placeholder="Search FAQs..."
             filterLabel="Filter by"
             showDate={false} // FAQs don't need date filters
@@ -335,7 +347,7 @@ const AdminFaqPage = () => {
             <EmptyState
               message={`No FAQs found matching "${filters.search_terms}"`}
               btnText="Clear Search"
-              handleAddCategory={() => handleApplyFilters({ status: '', search_terms: '', start_date: '', end_date: '' })}
+              handleAddCategory={() => handleApplyFilters({ status: '', search_terms: '', start_date: '', end_date: '', sort_by_likes: '', sort_by_stock: '' })}
             />
           ) : (
             <FaqAccordion

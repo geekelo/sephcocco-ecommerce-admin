@@ -23,6 +23,14 @@ import { useUpdatePaymentStatus } from "../hooks/useUpdatePaymentStatus";
 const itemsPerPage = 10;
 
 const PaymentPage = () => {
+  // Add searchBarState for consistent UI state management
+  const [searchBarState, setSearchBarState] = useState({
+    search: "",
+    status: "All Status", 
+    startDate: "",
+    endDate: ""
+  });
+
   const [filters, setFilters] = useState({
     search_terms: "",
     status: "",
@@ -246,9 +254,38 @@ console.log('oddd', sortedPaymentData);
     }
   };
 
-  const handleApplyFilters = ({ status, search_terms, start_date, end_date }) => {
+  // Updated to handle the new sort parameters from SearchBar
+  const handleApplyFilters = ({ 
+    status, 
+    search_terms, 
+    start_date, 
+    end_date, 
+    sort_by_likes, // Accept but ignore sort parameters for payments
+    sort_by_stock  // Accept but ignore sort parameters for payments
+  }) => {
+    // Only use the parameters that payments need
     setFilters({ status, search_terms, start_date, end_date });
     setCurrentPage(1);
+    
+    // Update search bar state to maintain UI state
+    setSearchBarState({
+      search: search_terms || "",
+      status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
+      startDate: start_date || "",
+      endDate: end_date || ""
+    });
+  };
+
+  // Manual search handler - triggered when user types and presses Enter
+  const handleManualSearch = (searchTerm) => {
+    handleApplyFilters({
+      status: "",
+      search_terms: searchTerm,
+      start_date: "",
+      end_date: "",
+      sort_by_likes: "", // Clear sort filters
+      sort_by_stock: ""  // Clear sort filters
+    });
   };
 
   const handlePageChange = (page) => {
@@ -259,9 +296,14 @@ console.log('oddd', sortedPaymentData);
     <div className="order-page">
       <SearchBar
         onApply={handleApplyFilters}
+        onManualSearch={handleManualSearch} // Add manual search handler
         filterOptions={["All Status", "Pending", "Paid", "Confirmed", "Cancelled", "Declined"]}
+        categoryOptions={[]} // Explicitly disable category filtering
+        sortOptions={[]} // Explicitly disable sort options
         placeholder="Search..."
         filterLabel="Filter by"
+        showDate={true} // Enable date filtering for payments
+        initialValues={searchBarState} // Pass persistent state
       />
       <div className="order-table-container">
         {isLoading ? (
@@ -278,7 +320,7 @@ console.log('oddd', sortedPaymentData);
               emptyState={
                 <EmptyState 
                   title="No payments records found" 
-                  searchTerm={searchTerm} 
+                  searchTerm={filters.search_terms} 
                 />
               }
             />
