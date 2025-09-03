@@ -14,7 +14,7 @@ import Pagination from '../components/Pagination';
 import { toast } from "react-toastify";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import { useViewAllProduct } from "../hooks/useGetAllProduct";
-import { useViewProductCategories } from "../hooks/useGetProductCategories"; // Import categories hook
+import { useViewProductCategories } from "../hooks/useGetProductCategories";
 import { mockCategories } from '../constants/data';
 import { useDeleteProduct } from '../hooks/useDeleteProduct';
 import { useViewProductId } from '../hooks/useGetProductById';
@@ -29,7 +29,10 @@ const ProductsPage = () => {
   const [searchBarState, setSearchBarState] = useState({
     search: "",
     status: "All Status", 
-    category: "", // Add category to search bar state
+    category: "", // This will store category name for UI display
+    categoryId: "", // Add categoryId for internal tracking
+    sort_by_likes: '',
+    sort_by_stock: '',
     startDate: "",
     endDate: ""
   });
@@ -37,7 +40,9 @@ const ProductsPage = () => {
   const [filters, setFilters] = useState({
     search_terms: "",
     status: "",
-    category: "", // Add category to filters
+    category_id: "", // Change from category to category_id
+    sort_by_likes: "",
+    sort_by_stock: "",
     start_date: "",
     end_date: "",
   });
@@ -55,15 +60,35 @@ const ProductsPage = () => {
   // Fetch categories for the filter dropdown
   const { data: categories = [] } = useViewProductCategories(activeOutlet);
   
-  // Extract category names for the dropdown
+  // Create category options with both name and id for SearchBar
   const categoryOptions = useMemo(() => {
-    return categories.map(category => category.name).filter(Boolean);
+    return categories
+      .filter(category => category.name && category.id)
+      .map(category => ({
+        label: category.name,    // Display name in dropdown
+        value: category.id,      // ID to send to backend  
+        name: category.name      // Name for internal reference
+      }));
   }, [categories]);
 
-  // API call with filters
+  // Helper function to get category name by ID
+  const getCategoryNameById = (categoryId) => {
+    if (!categoryId) return "";
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.name : "";
+  };
+
+  // Helper function to get category ID by name
+  const getCategoryIdByName = (categoryName) => {
+    if (!categoryName) return "";
+    const category = categories.find(cat => cat.name === categoryName);
+    return category ? category.id : "";
+  };
+
+  // API call with filters (now using category_id)
   const { data: responseData = { products: [], meta: {} }, isLoading, error, refetch } = useViewAllProduct(
     activeOutlet, 
-    filters, // Pass filters to the API call
+    filters, // Pass filters with category_id to the API call
     currentPage, 
     itemsPerPage
   );
@@ -71,11 +96,12 @@ const ProductsPage = () => {
   // Sort products by most recent first (descending order)
   const products = useMemo(() => {
     const productsData = Array.isArray(responseData.products) ? responseData.products : [];
-    return productsData.sort((a, b) => {
-      const dateA = new Date(a.created_at || a.updated_at).getTime();
-      const dateB = new Date(b.created_at || b.updated_at).getTime();
-      return dateB - dateA; // Most recent first
-    });
+    return productsData
+    // return productsData.sort((a, b) => {
+    //   const dateA = new Date(a.created_at || a.updated_at).getTime();
+    //   const dateB = new Date(b.created_at || b.updated_at).getTime();
+    //   return dateB - dateA; // Most recent first
+    // });
   }, [responseData.products]);
 
   const { 
@@ -100,20 +126,39 @@ const ProductsPage = () => {
     return productId && productId.trim() !== '' && productId !== null && productId !== undefined;
   };
 
-  // Handle filter application - this now handles both manual search and filters
-  const handleApplyFilters = ({ status, category, search_terms, start_date, end_date }) => {
-    setFilters({ status, category, search_terms, start_date, end_date });
-    setCurrentPage(1); // Reset to first page when filtering
-    
-    // Update search bar state to maintain UI state
-    setSearchBarState({
-      search: search_terms || "",
-      status: status ? (status.charAt(0).toUpperCase() + status.slice(1)) : "All Status",
-      category: category || "",
-      startDate: start_date || "",
-      endDate: end_date || ""
-    });
-  };
+
+const handleApplyFilters = ({ status, category, categoryId, sort_by_likes, sort_by_stock,search_terms, start_date, end_date }) => {
+  // Use categoryId directly from SearchBar, fallback to converting category name if needed
+  const finalCategoryId = categoryId || (category ? getCategoryIdByName(category) : "");
+  
+  // Convert "Highest Likes" string to boolean, everything else to empty string
+  const sortByLikesBoolean = sort_by_likes === "Highest Likes" ? true : "";
+    const sortByStocksBoolean = sort_by_stock === "Highest Stocks" ? true : "";
+
+  
+  setFilters({ 
+    status, 
+    category_id: finalCategoryId, // Send category_id to backend
+    search_terms, 
+    sort_by_likes: sortByLikesBoolean, // Now sends boolean true or empty string
+    sort_by_stock: sortByStocksBoolean,
+    start_date, 
+    end_date 
+  });
+  setCurrentPage(1); // Reset to first page when filtering
+  
+  // Update search bar state to maintain UI state
+  setSearchBarState({
+    search: search_terms || "",
+    status: status ? (status.charAt(0).toUpperCase() + status.slice(1)) : "All Status",
+    category: category || "", // Keep category name for UI display
+    categoryId: finalCategoryId, // Track category ID internally
+    sort_by_likes: sort_by_likes, // Keep original string for UI display
+    sort_by_stock: sort_by_stock,
+    startDate: start_date || "",
+    endDate: end_date || ""
+  });
+};
 
   // Manual search handler - triggered when user types and presses Enter
   const handleManualSearch = (searchTerm) => {
@@ -121,6 +166,9 @@ const ProductsPage = () => {
     handleApplyFilters({
       status: "", // Clear status filter
       category: "", // Clear category filter
+      categoryId: "", // Clear category ID filter
+      sort_by_likes: "",
+      sort_by_stock: '',
       search_terms: searchTerm,
       start_date: "", // Clear start date filter
       end_date: "" // Clear end date filter
@@ -263,15 +311,16 @@ const ProductsPage = () => {
       {!isAddModalOpen && !isViewModal && !isEditModal && (
         <>
           <div className="search-filter-section">
-         
             <SearchBar
               filterOptions={["All Status", "Public", "Private"]}
-              categoryOptions={categoryOptions}
-              onApply={handleApplyFilters}
+                sortOptions={["Highest Likes", "Highest Stocks"]}
+              categoryOptions={categoryOptions} // Contains {label, value, name} objects
+              onApply={handleApplyFilters} // Now receives both category and categoryId
               onManualSearch={handleManualSearch} 
               placeholder="Search products..."
               filterLabel="Filter by"
               categoryLabel="Category"
+              sortLabel="Sort by"
               initialValues={searchBarState}
             />
             <button className="add-product-button" onClick={handleAddProduct}>
@@ -290,6 +339,11 @@ const ProductsPage = () => {
                   Showing results for "{filters.search_terms}"
                 </p>
               )}
+              {searchBarState.category && (
+                <p className="search-results-info">
+                  Filtered by category: "{searchBarState.category}"
+                </p>
+              )}
             </div>
             
             {!isLoading && products.length === 0 && !filters.search_terms && (
@@ -304,7 +358,7 @@ const ProductsPage = () => {
               <EmptyState 
                 message={`No products found matching "${filters.search_terms}"`} 
                 btnText="Clear Search" 
-                handleAddCategory={() => handleApplyFilters({ status: '', search_terms: '', start_date: '', end_date: '' })}
+                handleAddCategory={() => handleApplyFilters({ status: '', category: '', categoryId: '', search_terms: '', start_date: '', end_date: '' })}
               />
             )}
             

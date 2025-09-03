@@ -67,8 +67,16 @@ const ProductCategoriesPage = () => {
   const updateCategoryMutation = useUpdateProductCategores();
   const deleteCategoryMutation = useDeleteProductCategores();
 
-  // Handle filter application
-  const handleApplyFilters = ({ status, search_terms, start_date, end_date }) => {
+  // Handle filter application - Updated to accept sort parameters
+  const handleApplyFilters = ({ 
+    status, 
+    search_terms, 
+    start_date, 
+    end_date, 
+    sort_by_likes, // Accept but ignore sort parameters for categories
+    sort_by_stock  // Accept but ignore sort parameters for categories
+  }) => {
+    // Only use the parameters that categories need
     setFilters({ status, search_terms, start_date, end_date });
     setCurrentPage(1); // Reset to first page when filtering
     
@@ -81,13 +89,15 @@ const ProductCategoriesPage = () => {
     });
   };
 
-  // Manual search handler - triggered when user types and presses Enter
+  // Manual search handler - Updated to include sort parameters
   const handleManualSearch = (searchTerm) => {
     handleApplyFilters({
       status: "", 
       search_terms: searchTerm,
       start_date: "", 
-      end_date: "" 
+      end_date: "",
+      sort_by_likes: "", // Clear sort filters
+      sort_by_stock: ""  // Clear sort filters
     });
   };
 
@@ -284,8 +294,12 @@ const ProductCategoriesPage = () => {
       <SearchBar
         onApply={handleApplyFilters}
         onManualSearch={handleManualSearch}
+        filterOptions={[]} // No status filter for categories
+        categoryOptions={[]} // No category filter for categories page
+        sortOptions={[]} // No sort options for categories
         placeholder="Search categories..."
         filterLabel="Filter by"
+        showDate={false} // Categories don't need date filtering
         initialValues={searchBarState}
       />
 
@@ -324,7 +338,7 @@ const ProductCategoriesPage = () => {
                 title={filters.search_terms ? `No categories found matching "${filters.search_terms}"` : "No categories found"} 
                 btnText={filters.search_terms ? "Clear Search" : "Add Your First Category"} 
                 handleAddCategory={filters.search_terms ? 
-                  () => handleApplyFilters({ status: '', search_terms: '', start_date: '', end_date: '' }) : 
+                  () => handleApplyFilters({ status: '', search_terms: '', start_date: '', end_date: '', sort_by_likes: '', sort_by_stock: '' }) : 
                   handleAddCategory
                 } 
                 isLoading={isLoading} 

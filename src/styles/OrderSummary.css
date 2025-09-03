@@ -8,8 +8,10 @@
   background-color: #fff;
   z-index: 100;
   overflow-y: auto;
-  margin-top: 60px;
-  padding-left: 240px;
+  /* margin-top: 60px; */
+  /* padding-left: 240px; */
+  width: 100%;
+ 
 }
 .status-badge {
   display: inline-flex;
@@ -105,6 +107,7 @@
 .add-product-modal {
   width: 100%;
   padding: 20px;
+
 }
 
 .confirm-action-modal {

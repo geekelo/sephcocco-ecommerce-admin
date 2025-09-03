@@ -30,11 +30,11 @@ const DashboardPage = () => {
   const activeOutlet = getActiveOutlet();
   
   // API hooks
-  const { data: productsResponse, isLoading: isLoadingProducts, error: productsError, refetch: refetchProducts } = useViewAllProduct(
-    activeOutlet, 
-    1, // first page
-    6  // limit to 6 products for dashboard
-  );
+const { 
+  data: productsResponse, 
+  isLoading: isLoadingProducts, 
+  error: productsError 
+} = useViewAllProduct(activeOutlet, {}, 1, 6);
   
   const {
     allAnalyticsData,
@@ -46,10 +46,17 @@ const DashboardPage = () => {
   } = useAnalytics({ active_outlet: activeOutlet, year: new Date().getFullYear() });
   
   const deleteMutation = useDeleteProduct();
-  console.log(overallPerformanceData);
+
   
   // Extract products from API response
   const topSellingProducts = productsResponse?.products || [];
+const topSellers = useMemo(() => {
+  if (!Array.isArray(topSellingProducts) || topSellingProducts.length === 0) return [];
+
+  return [...topSellingProducts]
+    .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+    .slice(0, 6); 
+}, [topSellingProducts]);
   
   // Modal states
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -135,7 +142,7 @@ const DashboardPage = () => {
   };
 
   const handleProductEdit = (product) => {
-    console.log('Edit product:', product);
+
     if (!isValidProductId(product.id)) {
       toast.error('Invalid product selected for editing');
       return;
@@ -145,7 +152,7 @@ const DashboardPage = () => {
   };
 
   const handleProductDelete = (product) => {
-    console.log('Delete product:', product);
+
     if (!isValidProductId(product.id)) {
       toast.error('Invalid product selected for deletion');
       return;
@@ -155,7 +162,7 @@ const DashboardPage = () => {
   };
 
   const handleProductView = (product) => {
-    console.log('View product:', product);
+
     if (!isValidProductId(product.id)) {
       toast.error('Invalid product selected for viewing');
       return;
@@ -166,7 +173,7 @@ const DashboardPage = () => {
 
   // Updated chat reply handler to open chat modal
   const handleChatReply = (chat) => {
-    console.log('Reply to chat:', chat);
+
     setSelectedChat(chat);
     setIsChatModalOpen(true);
   };
@@ -209,14 +216,35 @@ const DashboardPage = () => {
   };
 
   const handleVerifyConfirm = () => {
-    console.log("Payment verified successfully");
+
     setIsVerifyModal(false);
     setIsSuccessModal(true);
   };
 
-  const handleConfirmStatusUpdate = (newStatus) => {
-    console.log("Updating order status to:", newStatus, "for order:", selectedOrder?.id);
+  const handleConfirmStatusUpdate = async (newStatus) => {
+    try {
+      const payload = {
+        [`sephcocco_${activeOutlet}_payment`]: {
+          status: newStatus
+        }
+      };
+
+      await updatePaymentStatus({
+        active_outlet: activeOutlet,
+        paymentId: selectedPayment?.id,
+        payload
+      });
+
+      setIsUpdateStatusModal(false);
+      
+      // Refetch data to update the UI
+      refetch();
+    } catch (error) {
+
+      // You might want to show an error toast here
+    }
   };
+
 
   const handleEdit = () => {
     setIsViewModal(false);
@@ -231,18 +259,18 @@ const DashboardPage = () => {
   };
 
   const handleConfirmDiscardOrder = () => {
-    console.log("Discarding order:", selectedOrder?.id);
+ 
     setIsDiscardOrderModal(false);
   };
 
   const handleConfirmDiscardPayment = () => {
-    console.log("Discarding payment");
+
     setIsDiscardPaymentModal(false);
   };
 
   // Handle outlet change
   const handleOutletChange = (newOutlet) => {
-    console.log('Outlet changed to:', newOutlet);
+
     // Refetch data when outlet changes
     refetchProducts();
   };
@@ -290,6 +318,7 @@ const DashboardPage = () => {
     return <DashboardSkeleton />;
   }
 
+
   return (
     <div className="dashboard">
       {/* Dashboard Header with Outlet Switcher */}
@@ -322,7 +351,7 @@ const DashboardPage = () => {
           title="Unresolved Chats"
           value={analyticsStats.unresolvedChats.toString()}
           isOrange={analyticsStats.unresolvedChats > 0}
-          icon={<ProgressPie percentage={analyticsStats.unresolvedChats > 0 ? Math.floor((analyticsStats.unresolvedChats / allAnalyticsData.unresolved_chats.length) * 100) : 0} size={60} strokeWidth={6} />} 
+  
         />
       </div>
 
@@ -409,8 +438,8 @@ const DashboardPage = () => {
           <h2>Top selling Products</h2>
         </div>
         <div className="products-grid">
-          {topSellingProducts.length > 0 ? (
-            topSellingProducts.map(product => (
+          {topSellers.length > 0 ? (
+            topSellers.map(product => (
               <ProductCard
                 key={product.id}
                 product={product}

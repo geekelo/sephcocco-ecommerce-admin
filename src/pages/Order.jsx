@@ -67,8 +67,17 @@ const OrderPage = () => {
   const [isDiscardOrderModal, setIsDiscardOrderModal] = useState(false);
   const [isDiscardPaymentModal, setIsDiscardPaymentModal] = useState(false);
 
-  const handleApplyFilters = ({ status, search_terms, start_date, end_date }) => {
+  // Updated to handle the new sort parameters from SearchBar
+  const handleApplyFilters = ({ 
+    status, 
+    search_terms, 
+    start_date, 
+    end_date, 
+    sort_by_likes, // Accept but ignore sort parameters for orders
+    sort_by_stock  // Accept but ignore sort parameters for orders
+  }) => {
     // Update both the API filters and the search bar state
+    // Note: We ignore sort parameters since orders don't use them
     setFilters({ status, search_terms, start_date, end_date });
     setCurrentPage(1);
     
@@ -88,7 +97,9 @@ const OrderPage = () => {
       status: "", // Clear status filter
       search_terms: searchTerm,
       start_date: "", // Clear start date filter
-      end_date: "" // Clear end date filter
+      end_date: "", // Clear end date filter
+      sort_by_likes: "", // Clear sort filters
+      sort_by_stock: ""  // Clear sort filters
     });
   };
 
@@ -111,16 +122,20 @@ const OrderPage = () => {
 
   const orderColumns = useMemo(() => createOrderColumns(handleViewOrder), []);
 
+
   return (
-    <div className="order-page">
+    <div className="order-page" style={{position: 'initial'}}>
       {!showOrderSummary ? (
         <>
           <SearchBar
             onApply={handleApplyFilters}
             onManualSearch={handleManualSearch} // Add manual search handler
             filterOptions={["All Status", "Pending", "Paid", "Payment Confirmed","Delivering", "Completed", "Cancelled"]}
+            categoryOptions={[]} // Explicitly pass empty array to disable category filtering
+            sortOptions={[]} // Explicitly pass empty array to disable sort options
             placeholder="Search orders..."
             filterLabel="Filter by"
+            showDate={true} // Explicitly enable date filtering
             // Pass the persistent state as initial values
             initialValues={searchBarState}
           />
@@ -135,7 +150,9 @@ const OrderPage = () => {
                   columns={orderColumns}
                   actions={orderActions}
                   keyField="id"
-                  onRowClick={handleViewOrder}
+                   onRowClick={(order) => { 
+    handleViewOrder(order)  
+  }}
                   onActionClick={(actionKey, data) => {
                     if (actionKey === "view") {
                       handleViewOrder(data);
@@ -146,7 +163,7 @@ const OrderPage = () => {
 
                 <Pagination
                   name='Orders'
-                  currentPage={+meta.current_page || 1}
+                   currentPage={currentPage}
                   totalPages={+meta.total_pages || 1}
                   onPageChange={handlePageChange}
                   totalItems={+meta.total_count || 0}
@@ -168,14 +185,20 @@ const OrderPage = () => {
           onEdit={() => setIsEditModal(true)}
           onDelete={() => setIsDeleteModal(true)}
           onView={() => setIsViewModal(true)}
-          onViewPayment={() => setIsViewPaymentModal(true)}
+          onViewPayment={() =>
+          {
+            console.log('click me')
+            
+             setIsViewPaymentModal(true)
+            }
+          }
         />
       )}
 
       {/* Modals */}
       {isViewPaymentModal && (
         <PaymentSummary
-          order={selectedOrder}
+         order={selectedOrder?.[`sephcocco_${activeOutlet}_payment`]}
           onBack={() => setIsViewPaymentModal(false)}
           onViewOrder={() => {
             setIsViewPaymentModal(false);
@@ -190,7 +213,11 @@ const OrderPage = () => {
       )}
 
       {isViewModal && (
-        <ProductDetails product={selectedOrder?.product} onClose={() => setIsViewModal(false)} />
+      
+             <ProductDetails style={{paddingLeft: '240px'}} product={selectedOrder?.product} onClose={() => setIsViewModal(false)} />
+        
+
+     
       )}
 
       {isEditModal && (
@@ -245,7 +272,7 @@ const OrderPage = () => {
           type="discard"
           title="Confirm Discard Order"
           message={
-            <>Are you sure you want to discard order <strong>#{selectedOrder?.name}</strong>? This action cannot be undone.</>
+            <>Are you sure you want to discard order <strong>#{selectedOrder?.product?.name}</strong>? This action cannot be undone.</>
           }
         />
       )}
@@ -279,7 +306,7 @@ const OrderPage = () => {
           type="verify"
           title="Confirm Verification"
           message={
-            <>Are you sure you want to verify this payment made by <strong>{selectedOrder?.customerName}</strong> with Payment ID <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>?</>
+            <>Are you sure you want to verify this payment made by <strong>{selectedOrder?.customer?.name}</strong> with Payment ID <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>?</>
           }
         />
       )}
@@ -291,7 +318,7 @@ const OrderPage = () => {
           type="success"
           title="Verification Successful"
           message={
-            <>You have successfully verified this payment made by <strong>{selectedOrder?.customerName}</strong> with Payment ID <strong>"{selectedOrder?.payments?.[0]?.id}"</strong></>
+            <>You have successfully verified this payment made by <strong>{selectedOrder?.customer?.name}</strong> with Payment ID <strong>"{selectedOrder?.payment_details?.id}"</strong></>
           }
         />
       )}

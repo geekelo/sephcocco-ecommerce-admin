@@ -3,6 +3,7 @@ import { ArrowLeft, Mail } from 'lucide-react';
 import ProductCard from './ProductCard';
 import '../styles/OrderSummary.css';
 import InfoCard from './InfoCard';
+import { formatDate } from '../utils/formatDate';
 
 const PaymentSummary = ({
   order,
@@ -10,51 +11,113 @@ const PaymentSummary = ({
   onViewOrder,
   onVerify,
   onDiscard,
-  isVerifying = false, // Specific loading state for verify action
+  isVerifying = false,
   onEdit,
   onDelete,
   onView,
   onSendEmail
 }) => {
-  // For payment page, 'order' is actually a payment object with additional order info
+  console.log('payment order', order);
+  
+  // Check if this is the new sephcocco_pharmacy_payment format or the old format
+  const isNewFormat = order.paid_orders && order.transaction_id;
+  
+  let paymentData;
+  
+  if (isNewFormat) {
+    // Handle sephcocco_pharmacy_payment format
+    const paymentInfo = order; // This is the payment object
+    const orderInfo = paymentInfo?.paid_orders?.[0]; // Get the first order
+    const customer = orderInfo?.customer;
+    const product = orderInfo?.product;
+    
+    // Format amount properly
+    const formatAmount = (amount) => {
+      if (!amount) return '0.00';
+      const numericAmount = parseFloat(amount);
+      return isNaN(numericAmount) ? '0.00' : numericAmount.toLocaleString();
+    };
+    
+    paymentData = {
+      transactionId: paymentInfo.transaction_id,
+      paymentId: paymentInfo.id,
+      amount: formatAmount(paymentInfo.amount),
+      paymentMethod: paymentInfo.payment_method,
+      paymentStatus: paymentInfo.status,
+      paymentDate: paymentInfo.created_at,
+      customerName: customer?.name,
+      customerEmail: customer?.email,
+      phoneNumber: customer?.phone_number,
+      orderId: orderInfo?.id,
+      orderNumber: orderInfo?.order_number,
+      orderStatus: orderInfo?.status,
+      orderDate: orderInfo?.created_at,
+      products: product,
+      notes: null
+    };
+  } else {
+    // Handle original format
+    paymentData = {
+      transactionId: order.transactionId,
+      paymentId: order.id,
+      amount: order.amount,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.status || order.paymentStatus,
+      paymentDate: order.paymentDate,
+      customerName: order.customerName,
+      customerEmail: order.customerEmail,
+      phoneNumber: order.phoneNumber,
+      orderNumber: order.orderNumber,
+      orderStatus: order.orderStatus,
+      orderDate: order.orderDate,
+      products: order.products,
+      notes: order.notes
+    };
+  }
+
+  // Destructure the standardized data
   const {
-    transactionId: paymentId,
+    transactionId,
+    paymentId,
     amount,
     paymentMethod,
-    status: paymentStatus,
+    paymentStatus,
     paymentDate,
     customerName,
     customerEmail,
-    orderId,
     phoneNumber,
-    orderDate,
+    orderId,
+    orderNumber,
     orderStatus,
-    notes,
-    products
-  } = order;
-
+    orderDate,
+    products,
+    notes
+  } = paymentData;
+console.log('proddd',products);
+console.log('proddpaymed',paymentData);
   // Convert single product object to array format expected by ProductCard
-  // Since products is a single object, we need to wrap it in an array
   const formattedProducts = products ? [{
+    id: products.id,
     name: products.name,
-    image: products.main_image_url || '/default-product-image.jpg', // Use main_image_url from your data
+    image: products.main_image_url,
     price: products.price,
-    rating: 5, // You can set a default or get from somewhere else
+    rating: 5,
     stockCount: products.amount_in_stock,
     stockStatus: products.out_of_stock_status ? "Out of stock" : "In stock",
-    description: products.short_description,
+    description: products.short_description || products.long_description,
     categories: products.categories?.map(cat => cat.name).join(', ') || 'No category'
   }] : [];
 
   const leftCardItems = [
-    { label: "Payment ID:", value: paymentId },
+    { label: "Payment ID:", value: paymentId || 'N/A', isCopyable: true },
+    { label: "Transaction ID:", value: transactionId || 'N/A', isCopyable: true },
     { label: "Payment Method:", value: paymentMethod || "Not specified" },
-    { label: "Payment Date:", value: new Date(paymentDate).toLocaleDateString() },
+    { label: "Payment Date:", value: paymentDate ? formatDate(paymentDate) : new Date(paymentDate).toLocaleDateString() },
     { label: "Total Amount:", value: `₦${amount}` }
   ];
 
   const rightCardItems = [
-    { label: "Customer Name:", value: customerName },
+    { label: "Customer Name:", value: customerName || 'N/A' },
     {
       label: "Customer Email:",
       value: customerEmail || "Not provided",
@@ -65,9 +128,10 @@ const PaymentSummary = ({
       value: phoneNumber || "Not provided",
       isPhone: true
     },
-    { label: "Order ID:", value: orderId },
-    { label: "Payment Status:", value: paymentStatus },
-    { label: "Order Status:", value: orderStatus }
+    // { label: "Order ID:", value: orderId || 'N/A', isCopyable: true },
+    ...(orderNumber ? [{ label: "Order Number:", value: orderNumber, isCopyable: true }] : []),
+    { label: "Payment Status:", value: paymentStatus || 'N/A', badge: true },
+    { label: "Order Status:", value: orderStatus || 'N/A', badge: true }
   ];
 
   return (
@@ -119,11 +183,10 @@ const PaymentSummary = ({
               <div className="products-grid">
                 {formattedProducts.map((product, index) => (
                   <ProductCard
-                    key={index}
+                    key={product.id || index}
                     product={product}
                     onView={onView}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
+                 
                   />
                 ))}
               </div>
@@ -134,6 +197,7 @@ const PaymentSummary = ({
             <button className="update-button add-button" onClick={onViewOrder}>
              View Order
             </button>
+          
             <button 
               className="discard-button cancel-button" 
               onClick={onDiscard}

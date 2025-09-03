@@ -193,9 +193,9 @@ const FlexibleTable = ({
     <div className={`flexible-table ${isLoading ? 'loading' : ''} ${className}`}>
       {/* Table Header - Always show when loading to maintain structure on desktop */}
       <div className={`table-header ${headerClassName}`}>
-        {columns.map((column) => (
+        {columns.map((column, index) => (
           <div
-            key={column.key || column.header || column.accessorKey}
+            key={index}
             className={`table-header-cell ${column.className || ''}`}
             style={{
               flex: column.flex || 1,

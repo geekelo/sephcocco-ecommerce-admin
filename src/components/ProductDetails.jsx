@@ -8,7 +8,7 @@ import '../styles/ProductDetails.css';
 import { X } from 'lucide-react';
 
 
-const ProductDetails = ({ product, onEdit, onDelete, onClose }) => {
+const ProductDetails = ({ product, style,onEdit, onDelete, onClose }) => {
 console.log('pkk',product);
 
   
@@ -24,7 +24,7 @@ console.log('pkk',product);
 
 
   return (
-    <div className="modal-overlay-product-details">
+    <div className="modal-overlay-product-details" style={style}>
     <div className="product-container">
     <button onClick={onClose} type="button" className="close-button-product" >
             <X size={24} />
@@ -65,9 +65,9 @@ console.log('pkk',product);
       : product?.categories?.length === 2
       ? `${product?.categories[0]?.name} and ${product?.categories[1]?.name}`
       : product?.categories
-          .map(item => item.name)
-          .slice(0, -1)
-          .join(", ") + `, and ${product?.categories.at(-1).name}`
+          ?.map(item => item.name)
+          ?.slice(0, -1)
+          ?.join(", ") + `, and ${product?.categories?.at(-1).name}`
   }
 </p>
           <div className="discount-price"> ₦{product.discount_price} <span className='product-price'> ₦{product.price}</span></div>

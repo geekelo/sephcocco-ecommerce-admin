@@ -24,6 +24,14 @@ import { useTrackOrder } from '../hooks/useTrackOrder';
 const itemsPerPage = 10;
 
 const ShippingPage = () => {
+  // Add searchBarState for consistent UI state management
+  const [searchBarState, setSearchBarState] = useState({
+    search: "",
+    status: "All Status", 
+    startDate: "",
+    endDate: ""
+  });
+
   const [filters, setFilters] = useState({
     search_terms: "",
     status: "",
@@ -294,9 +302,38 @@ const handleCancelDelivery = async (shippingId) => {
     setShowDetailsModal(true);
   };
 
-  const handleApplyFilters = ({ status, search_terms, start_date, end_date }) => {
+  // Updated to handle the new sort parameters from SearchBar
+  const handleApplyFilters = ({ 
+    status, 
+    search_terms, 
+    start_date, 
+    end_date, 
+    sort_by_likes, // Accept but ignore sort parameters for shipping
+    sort_by_stock  // Accept but ignore sort parameters for shipping
+  }) => {
+    // Only use the parameters that shipping needs
     setFilters({ status, search_terms, start_date, end_date });
     setCurrentPage(1);
+    
+    // Update search bar state to maintain UI state
+    setSearchBarState({
+      search: search_terms || "",
+      status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
+      startDate: start_date || "",
+      endDate: end_date || ""
+    });
+  };
+
+  // Manual search handler - triggered when user types and presses Enter
+  const handleManualSearch = (searchTerm) => {
+    handleApplyFilters({
+      status: "",
+      search_terms: searchTerm,
+      start_date: "",
+      end_date: "",
+      sort_by_likes: "", // Clear sort filters
+      sort_by_stock: ""  // Clear sort filters
+    });
   };
 
   const handlePageChange = (page) => {
@@ -345,9 +382,14 @@ const handleCancelDelivery = async (shippingId) => {
 
       <SearchBar
         onApply={handleApplyFilters}
+        onManualSearch={handleManualSearch} // Add manual search handler
         filterOptions={["All Status", "pending", "processing", "dispatched", "delivered", "cancelled"]}
+        categoryOptions={[]} // Explicitly disable category filtering
+        sortOptions={[]} // Explicitly disable sort options
         placeholder="Search by tracking number, customer name, or order ID..."
         filterLabel="Filter by Status"
+        showDate={true} // Enable date filtering for shipping
+        initialValues={searchBarState} // Pass persistent state
       />
 
       {/* Rider Statistics */}
@@ -382,6 +424,7 @@ const handleCancelDelivery = async (shippingId) => {
               totalItems={meta.total_count}
               itemsPerPage={meta.per_page}
               showInfo={true}
+              name="Shipping"
             />
           </>
         ) : (
