@@ -359,9 +359,8 @@ console.log('oddd', sortedPaymentData);
       {/* Product Details Modal */}
       {isViewProductModal && (
         <ProductDetails
+        style={{marginTop: '0px'}}
           product={selectedPayment?.products}
-          onEdit={handleEditProduct}
-          onDelete={handleDeleteProduct}
           onClose={() => setIsViewProductModal(false)}
         />
       )}

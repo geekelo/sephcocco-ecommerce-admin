@@ -186,8 +186,7 @@ console.log('proddpaymed',paymentData);
                     key={product.id || index}
                     product={product}
                     onView={onView}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
+                 
                   />
                 ))}
               </div>

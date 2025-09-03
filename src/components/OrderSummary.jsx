@@ -140,7 +140,7 @@ if (order?.payment_details) {
 
   return (
     <>
-      <div className="modal-overlay-order-summary">
+      <div className="modal-overlay-order-summary" style={{paddingLeft: '240px', marginTop: '60px'}}>
         <div className="add-product-modal">
           <div className="modal-header">
             <h2>Order Summary</h2>

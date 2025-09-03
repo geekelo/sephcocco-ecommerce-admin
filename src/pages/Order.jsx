@@ -124,7 +124,7 @@ const OrderPage = () => {
 
 
   return (
-    <div className="order-page">
+    <div className="order-page" style={{position: 'initial'}}>
       {!showOrderSummary ? (
         <>
           <SearchBar
@@ -213,7 +213,11 @@ const OrderPage = () => {
       )}
 
       {isViewModal && (
-        <ProductDetails product={selectedOrder?.product} onClose={() => setIsViewModal(false)} />
+      
+             <ProductDetails style={{paddingLeft: '240px'}} product={selectedOrder?.product} onClose={() => setIsViewModal(false)} />
+        
+
+     
       )}
 
       {isEditModal && (
