@@ -8,9 +8,6 @@ import EmailModal from './EmailModal';
 import { formatDate } from '../utils/formatDate';
 import FlexibleTable from './FlexibleTable';
 
-
-
-
 const OrderSummary = ({ 
   order, 
   onBack, 
@@ -22,26 +19,25 @@ const OrderSummary = ({
   onView 
 }) => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+console.log('dg',order);
 
-  const {
-    order_number,
-    customerName,
-    customerEmail, // Added customer email
-    phoneNumber,
-    orderDate,
-    status,
-    paymentMethod,
-    paymentStatus,
-    notes,
-    product,
-    payments
-  } = order;
-console.log('prod',order);
+  // const {
+   
+  //   customerName,
+  //   customerEmail,
+
+  //   paymentMethod,
+  //   paymentStatus,
+
+  //   payment_details // New payment_details field
+  // } = order;
+
+  console.log('order with payment details:', order);
 
   // Prepare info card data with email
   const leftCardItems = [
-    { label: "Order ID:", value: order.order_number,isCopyable: true },
-    { label: "Customer Name:", value: order?.customer?.name  || 'Not provided'},
+    { label: "Order ID:", value: order?.order_number, isCopyable: true },
+    { label: "Customer Name:", value: order?.customer?.name || 'Not provided' },
     {
       label: "Customer Email:",
       value: order?.customer?.email || "Not provided",
@@ -58,44 +54,89 @@ console.log('prod',order);
     },
     { label: "Order Date:", value: formatDate(order?.created_at) || 'Not provided' }
   ];
-  
 
+  // Enhanced right card items with payment details integration
   const rightCardItems = [
-    { label: "Order Status:", value: order?.status,badge: true },
+    { label: "Order Status:", value: order?.status, badge: true },
     { label: "Stages:", value: order?.stages, isStages: true },
-    { label: "Payment Method:", value: paymentMethod || '--/--' },
-    { label: "Payment Status:", value: paymentStatus || '--/--', badge: true },
+    { 
+      label: "Payment Method:", 
+      value: order?.payment_details?.payment_method  || '--/--' 
+    },
+    { 
+      label: "Payment Status:", 
+      value: order?.payment_details?.status  || '--/--', 
+      badge: true 
+    },
     { label: "Order Notes:", value: order?.additional_notes || '--/--' }
   ];
 
-  // Format payments for the order table
-  const formattedPayments = payments?.map(payment => ({
-    id: payment.id,
-    customer: '', // Not showing customer in payment table
-    amount: payment.amount,
-    status: payment.status,
-    date: payment.date,
-    method: payment.method,
-    action: 'View'
-  }));
+const formatPaymentData = () => {
 
-  // Define custom columns for the payment table
+if (order?.payment_details) {
+    const paymentDetails = order.payment_details; // Properly declare the variable
+      const formatAmount = (amount) => {
+      if (!amount) return '0.00';
+      const numericAmount = parseFloat(amount);
+      return isNaN(numericAmount) ? '0.00' : numericAmount.toLocaleString();
+    };
+    const formatted = [{
+      id: paymentDetails.id,
+      amount: `₦${formatAmount(paymentDetails.amount)}`,
+      status: paymentDetails.status,
+      date: formatDate(paymentDetails.created_at),
+      method: paymentDetails.payment_method,
+      transaction_id: paymentDetails.transaction_id,
+      action: 'View'
+    }];
+
+    
+    return formatted;
+  }
+  
+  console.log('No payment_details found');
+  return [];
+};
+
+  const formattedPayments = formatPaymentData();
+
+
+  // Enhanced payment columns to include transaction ID
   const paymentColumns = [
-    { id: 'id', label: 'Payment ID', className: 'payment-id' },
-    { id: 'amount', label: 'Amount', className: 'amount' },
-    { id: 'method', label: 'Method', className: 'method' },
-    { id: 'status', label: 'Status', className: 'status' },
-    { id: 'date', label: 'Date', className: 'date' },
-    { id: 'action', label: 'Action', className: 'action' }
+    { key: 'id', label: 'Payment ID', className: 'payment-id' },
+    { key: 'transaction_id', label: 'Transaction ID', className: 'transaction-id' },
+    { key: 'amount', label: 'Amount', className: 'amount' },
+    { key: 'method', label: 'Method', className: 'method' },
+    { key: 'status', label: 'Status', className: 'status' },
+    { key: 'date', label: 'Date', className: 'date' },
+    { key: 'action', label: 'Action', className: 'action' }
   ];
 
   const handleSendEmail = () => {
-    if (customerEmail) {
+    const email = order?.customer?.email
+    if (email) {
       setIsEmailModalOpen(true);
     } else {
       alert('Customer email is not available for this order.');
     }
   };
+
+  // Helper function to get payment status badge class
+  const getPaymentStatusBadgeClass = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return 'status-paid';
+      case 'pending':
+        return 'status-pending';
+      case 'failed':
+        return 'status-failed';
+      case 'cancelled':
+        return 'status-cancelled';
+      default:
+        return 'status-default';
+    }
+  };
+
 
   return (
     <>
@@ -108,8 +149,8 @@ console.log('prod',order);
               <button 
                 className="email-button" 
                 onClick={handleSendEmail}
-                disabled={!customerEmail}
-                title={!customerEmail ? "Customer email not available" : "Send email to customer"}
+                disabled={!order?.customer?.email}
+                title={!order?.customer?.email ? "Customer email not available" : "Send email to customer"}
               >
                 <Mail size={16} />
                 Send Email
@@ -130,26 +171,25 @@ console.log('prod',order);
             <div className="ordered-products-section">
               <h3>Ordered Products</h3>
               <div className="ordered-products-grid">
-               
-                  <ProductCard
-                   
-                    product={order.product}
-                    onView={onView}
-                  
-                  />
-                
+                <ProductCard
+                  product={order?.product}
+                  onView={onView}
+                />
               </div>
             </div>
 
-            <div className="linked-payment-section">
-              <h3>Linked Payment</h3>
-              <FlexibleTable
-                orders={formattedPayments}
-                columns={paymentColumns}
-                keyField="id"
-                onViewOrder={onViewPayment}
-              />
-            </div>
+            {/* Show payment table only if we have payment data */}
+            {formattedPayments && formattedPayments.length > 0  && (
+              <div className="linked-payment-section">
+                <h3>Payment Details</h3>
+                <FlexibleTable
+                   data={formattedPayments}
+                  columns={paymentColumns}
+                  keyField="id"
+                  onRowClick={onViewPayment} 
+                />
+              </div>
+            )}
 
             <div className="form-actions">
               <button className="update-button add-button" onClick={onUpdateStatus}>
@@ -167,8 +207,8 @@ console.log('prod',order);
       <EmailModal
         isOpen={isEmailModalOpen}
         onClose={() => setIsEmailModalOpen(false)}
-        customerName={customerName}
-        customerEmail={customerEmail}
+        customerName={order?.customer?.name}
+        customerEmail={order?.customer?.email}
       />
     </>
   );

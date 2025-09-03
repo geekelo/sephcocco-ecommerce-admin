@@ -18,7 +18,8 @@ export default function ActivitiesPage() {
   // Add searchBarState for consistent UI state management
   const [searchBarState, setSearchBarState] = useState({
     search: "",
-    status: "All Status", 
+    activity_type: "All Status", 
+    status: "",
     startDate: "",
     endDate: ""
   });
@@ -27,6 +28,7 @@ export default function ActivitiesPage() {
   const [filters, setFilters] = useState({
     search_terms: '',
     activity_type: '',
+    status: '',
     start_date: '',
     end_date: '',
   });
@@ -73,30 +75,54 @@ const { data: activitiesData, isLoading, refetch } = useViewActivities(
   };
 
   // Updated to handle the new sort parameters from SearchBar
-  const handleApplyFilters = ({ 
+  // const handleApplyFilters = ({ 
+  //   activity_type, 
+  //   start_date, 
+  //   search_terms, 
+  //   end_date, 
+  //   status, // Accept status parameter (might be passed by SearchBar)
+  //   sort_by_likes, // Accept but ignore sort parameters for activities
+  //   sort_by_stock  // Accept but ignore sort parameters for activities
+  // }) => {
+  //   // Only use the parameters that activities need
+  //   setFilters((prev) => ({
+  //     ...prev,
+  //     activity_type,
+  //     search_terms,
+  //     start_date,
+  //     end_date,
+  //   }));
+  //   setCurrentPage(1);
+    
+  //   // Update search bar state to maintain UI state
+  //   setSearchBarState({
+  //     search: search_terms || "",
+  //     status: activity_type ? activity_type.charAt(0).toUpperCase() + activity_type.slice(1) : "All Status",
+  //     startDate: start_date || "",
+  //     endDate: end_date || ""
+  //   });
+  // };
+
+    const handleApplyFilters = ({ 
     activity_type, 
-    start_date, 
+    status,
     search_terms, 
+    start_date, 
     end_date, 
-    status, // Accept status parameter (might be passed by SearchBar)
-    sort_by_likes, // Accept but ignore sort parameters for activities
-    sort_by_stock  // Accept but ignore sort parameters for activities
+    sort_by_likes, // Accept but ignore sort parameters for orders
+    sort_by_stock  // Accept but ignore sort parameters for orders
   }) => {
-    // Only use the parameters that activities need
-    setFilters((prev) => ({
-      ...prev,
-      activity_type,
-      search_terms,
-      start_date,
-      end_date,
-    }));
+    // Update both the API filters and the search bar state
+    // Note: We ignore sort parameters since orders don't use them
+    setFilters({ activity_type, status,search_terms, start_date, end_date });
     setCurrentPage(1);
     
     // Update search bar state to maintain UI state
     setSearchBarState({
       search: search_terms || "",
-      status: activity_type ? activity_type.charAt(0).toUpperCase() + activity_type.slice(1) : "All Status",
+      activity_type: activity_type ? activity_type.charAt(0).toUpperCase() + activity_type.slice(1) : "All Status",
       startDate: start_date || "",
+      status: "",
       endDate: end_date || ""
     });
   };
@@ -108,13 +134,14 @@ const { data: activitiesData, isLoading, refetch } = useViewActivities(
       search_terms: searchTerm,
       start_date: "",
       end_date: "",
-      status: "", // Clear status filter
       sort_by_likes: "", // Clear sort filters
       sort_by_stock: ""  // Clear sort filters
     });
   };
 
   const handlePageChange = (page) => {
+    console.log('click me');
+    
     setCurrentPage(page);
   };
 
@@ -172,10 +199,10 @@ const { data: activitiesData, isLoading, refetch } = useViewActivities(
         <Pagination
           name="Activities"
           itemsPerPage={itemsPerPage}
-          currentPage={meta.current_page || 1}
-          totalPages={meta.total_pages || 1}
+       currentPage={currentPage}
+          totalPages={+meta.total_pages || 1}
           onPageChange={handlePageChange}
-          totalItems={meta.total_count || 0}
+          totalItems={+meta.total_count || 0}
           showInfo={true}
         />
       </div>

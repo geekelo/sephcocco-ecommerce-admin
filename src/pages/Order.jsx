@@ -122,6 +122,7 @@ const OrderPage = () => {
 
   const orderColumns = useMemo(() => createOrderColumns(handleViewOrder), []);
 
+
   return (
     <div className="order-page">
       {!showOrderSummary ? (
@@ -149,7 +150,9 @@ const OrderPage = () => {
                   columns={orderColumns}
                   actions={orderActions}
                   keyField="id"
-                  onRowClick={handleViewOrder}
+                   onRowClick={(order) => { 
+    handleViewOrder(order)  
+  }}
                   onActionClick={(actionKey, data) => {
                     if (actionKey === "view") {
                       handleViewOrder(data);
@@ -160,7 +163,7 @@ const OrderPage = () => {
 
                 <Pagination
                   name='Orders'
-                  currentPage={+meta.current_page || 1}
+                   currentPage={currentPage}
                   totalPages={+meta.total_pages || 1}
                   onPageChange={handlePageChange}
                   totalItems={+meta.total_count || 0}
@@ -182,14 +185,20 @@ const OrderPage = () => {
           onEdit={() => setIsEditModal(true)}
           onDelete={() => setIsDeleteModal(true)}
           onView={() => setIsViewModal(true)}
-          onViewPayment={() => setIsViewPaymentModal(true)}
+          onViewPayment={() =>
+          {
+            console.log('click me')
+            
+             setIsViewPaymentModal(true)
+            }
+          }
         />
       )}
 
       {/* Modals */}
       {isViewPaymentModal && (
         <PaymentSummary
-          order={selectedOrder}
+         order={selectedOrder?.[`sephcocco_${activeOutlet}_payment`]}
           onBack={() => setIsViewPaymentModal(false)}
           onViewOrder={() => {
             setIsViewPaymentModal(false);
@@ -259,7 +268,7 @@ const OrderPage = () => {
           type="discard"
           title="Confirm Discard Order"
           message={
-            <>Are you sure you want to discard order <strong>#{selectedOrder?.name}</strong>? This action cannot be undone.</>
+            <>Are you sure you want to discard order <strong>#{selectedOrder?.product?.name}</strong>? This action cannot be undone.</>
           }
         />
       )}
@@ -293,7 +302,7 @@ const OrderPage = () => {
           type="verify"
           title="Confirm Verification"
           message={
-            <>Are you sure you want to verify this payment made by <strong>{selectedOrder?.customerName}</strong> with Payment ID <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>?</>
+            <>Are you sure you want to verify this payment made by <strong>{selectedOrder?.customer?.name}</strong> with Payment ID <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>?</>
           }
         />
       )}
@@ -305,7 +314,7 @@ const OrderPage = () => {
           type="success"
           title="Verification Successful"
           message={
-            <>You have successfully verified this payment made by <strong>{selectedOrder?.customerName}</strong> with Payment ID <strong>"{selectedOrder?.payments?.[0]?.id}"</strong></>
+            <>You have successfully verified this payment made by <strong>{selectedOrder?.customer?.name}</strong> with Payment ID <strong>"{selectedOrder?.payment_details?.id}"</strong></>
           }
         />
       )}

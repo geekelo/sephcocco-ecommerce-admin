@@ -5,26 +5,26 @@ import '../styles/ProductCard.css';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 
 const ProductCard = ({ product, onView, onEdit, onDelete, onVisibilityChange }) => {
-  const {
-    order_number: productId,
-    name,
-    main_image_url,
-    price,
-    likes,
-    amount_in_stock,
-    out_of_stock_status,
-    visible
-  } = product;
+  // const {
+  //   // order_number: productId,
+  //   name,
+  //   main_image_url,
+  //   price,
+  //   likes,
+  //   amount_in_stock,
+  //   out_of_stock_status,
+  //   visible
+  // } = product;
 const active_outlet = getActiveOutlet()
-  const [isVisible, setIsVisible] = useState(visible);
+  const [isVisible, setIsVisible] = useState(product?.visible);
   const switchVisibilityMutation = useSwitchProductVisibility();
 console.log('okk',product);
-
+const orderNumber = product?.order_number
   const handleVisibilityToggle = async () => {
     try {
     const res =  await switchVisibilityMutation.mutateAsync({
         active_outlet,
-        productId
+      orderNumber
       });
       console.log(res);
       
@@ -34,7 +34,7 @@ console.log('okk',product);
       
       // Call parent callback if provided
       if (onVisibilityChange) {
-        onVisibilityChange(productId, newVisibility);
+        onVisibilityChange(product?.order_number, newVisibility);
       }
     } catch (error) {
       console.error('Failed to toggle product visibility:', error);
@@ -51,26 +51,26 @@ console.log('okk',product);
         </div>
 
         <div className="product-image">
-          <img src={main_image_url} alt={name} />
+          <img src={product?.main_image_url} alt={name} />
          
         </div>
 
         <div className="product-details">
           <div className="product-header">
-            <h3 className="product-name">{name}</h3>
+            <h3 className="product-name">{product?.name}</h3>
             <div className="product-rating">
               <Heart 
-                fill={likes > 0 ? '#e74c3c' : 'none'}
-                color={likes > 0 ? '#e74c3c' : '#666'}
+                fill={product?.likes > 0 ? '#e74c3c' : 'none'}
+                color={product?.likes > 0 ? '#e74c3c' : '#666'}
                 size={14} 
                 className="heart-icon"  
               />
-              <span className="rating-value">{likes}</span>
+              <span className="rating-value">{product?.likes}</span>
             </div>
           </div>
 {
-product.discount_price  ? <div className="discount-price"> ₦{product.discount_price } <span className='product-price'> ₦{product.price}</span></div> : <p className="discount-price">
-  ₦{product.price}
+product?.discount_price  ? <div className="discount-price"> ₦{product?.discount_price } <span className='product-price'> ₦{product?.price}</span></div> : <p className="discount-price">
+  ₦{product?.price}
 </p>
 }
           
@@ -78,7 +78,7 @@ product.discount_price  ? <div className="discount-price"> ₦{product.discount_
 
           <div className="product-stock">
             <div className="stock-info">
-              {out_of_stock_status ? "Out of stock" : "In Stock"} · {amount_in_stock} items
+              {product?.out_of_stock_status ? "Out of stock" : "In Stock"} · {product?.amount_in_stock} items
             </div>
           </div>
 
@@ -92,13 +92,13 @@ product.discount_price  ? <div className="discount-price"> ₦{product.discount_
               <div className="switch-container">
                 <input
                   type="checkbox"
-                  id={`visibility-${productId}`}
+                  id={`visibility-${product?.order_number}`}
                   className="visibility-switch"
                   checked={isVisible}
                   onChange={handleVisibilityToggle}
                   disabled={switchVisibilityMutation.isPending}
                 />
-                <label htmlFor={`visibility-${productId}`} className="switch-label">
+                <label htmlFor={`visibility-${product?.order_number}`} className="switch-label">
                   <span className="switch-slider">
                     
                   </span>

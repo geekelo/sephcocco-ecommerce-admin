@@ -155,7 +155,7 @@ const SearchBar = ({
 
   const handleApply = () => {
     onApply({
-      status: status === 'All Status' ? '' : status.toLowerCase(),
+       [filterKey]: status === 'All Status' ? '' : status.toLowerCase(),
       category: category || '', // Pass category name for display
       categoryId: categoryId || '', // Pass category ID for backend
       sort_by_likes: sortByLikes || '', // Pass sort_by_likes

@@ -297,7 +297,7 @@ console.log('oddd', sortedPaymentData);
       <SearchBar
         onApply={handleApplyFilters}
         onManualSearch={handleManualSearch} // Add manual search handler
-        filterOptions={["All Status", "Pending", "Paid", "Confirmed", "Cancelled", "Declined"]}
+        filterOptions={["All Status", "Pending", "Paid", "Payment Confirmed", "Cancelled", "Declined"]}
         categoryOptions={[]} // Explicitly disable category filtering
         sortOptions={[]} // Explicitly disable sort options
         placeholder="Search..."
@@ -320,23 +320,23 @@ console.log('oddd', sortedPaymentData);
               emptyState={
                 <EmptyState 
                   title="No payments records found" 
-                  searchTerm={filters.search_terms} 
+                  searchTerm={filters?.search_terms} 
                 />
               }
             />
 
             <Pagination
-              currentPage={Number(meta.current_page || 1)}
+            currentPage={currentPage}
               itemsPerPage={itemsPerPage}
-              totalPages={Number(meta.total_pages || 1)}
+              totalPages={Number(meta?.total_pages || 1)}
               onPageChange={handlePageChange}
-              totalItems={meta.total_count || 0}
+              totalItems={+meta?.total_count || 0}
               showInfo={true}
               name='Payments'
             />
           </>
         ) : (
-          <EmptyState title="No payment found" searchTerm={filters.search_terms} />
+          <EmptyState title="No payment found" searchTerm={filters?.search_terms} />
         )}
       </div>
 
@@ -359,7 +359,7 @@ console.log('oddd', sortedPaymentData);
       {/* Product Details Modal */}
       {isViewProductModal && (
         <ProductDetails
-          product={selectedPayment.products}
+          product={selectedPayment?.products}
           onEdit={handleEditProduct}
           onDelete={handleDeleteProduct}
           onClose={() => setIsViewProductModal(false)}
@@ -371,7 +371,7 @@ console.log('oddd', sortedPaymentData);
         <EditProductModal
           isOpen={isEditProductModal}
           onClose={() => setIsEditProductModal(false)}
-          product={selectedPayment.products}
+          product={selectedPayment?.products}
           categories={mockCategories}
         />
       )}

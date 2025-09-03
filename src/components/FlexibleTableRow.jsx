@@ -99,14 +99,25 @@ const FlexibleTableRow = ({
   }, [showActions]);
 
   // Utility functions
-  const formatCurrency = (value) => {
-    if (value === null || value === undefined) return '-';
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN'
-    }).format(value);
-  };
-  
+const formatCurrency = (value) => {
+  if (value === null || value === undefined || value === '') return '-';
+
+  // If it's a string, clean it
+  const cleaned = typeof value === 'string'
+    ? value.replace(/[^0-9.-]+/g, '') // remove anything that's not a number, dot, or minus
+    : value;
+
+  const num = Number(cleaned);
+
+  if (isNaN(num)) return '-';
+
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN'
+  }).format(num);
+};
+
+
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('en-US', {

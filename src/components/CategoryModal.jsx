@@ -146,6 +146,7 @@ const CategoryModal = ({ isOpen, onClose, category, onSubmit, title = "Edit Cate
                 Category Name <span className="required">*</span>
               </label>
               <input
+              style={{color: '#000'}}
                 type="text"
                 id="name"
                 name="name"
