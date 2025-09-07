@@ -111,6 +111,7 @@ const InfoCard = ({ items }) => {
               cursor: (item.isEmail || item.isPhone) ? 'pointer' : 'default',
               display: 'flex',
               alignItems: 'center',
+              textTransform: 'capitalize',
               gap: '6px'
             }}
           >
@@ -121,7 +122,7 @@ const InfoCard = ({ items }) => {
             {item.isStages ? (
               renderStages(item.value)
             ) : item.badge ? (
-              <span className={getStatusBadgeClass(item.value)}>
+              <span  className={getStatusBadgeClass(item.value)}>
                 {String(item?.value || '').toUpperCase()}
               </span>
             ) : (

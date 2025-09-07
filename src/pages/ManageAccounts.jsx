@@ -12,11 +12,26 @@ import { useSwitchRole } from '../hooks/useSwitchUser';
 import { useSuspendUser } from '../hooks/useSuspendUser';
 import { useUnsuspendUser } from '../hooks/useUnsuspendUser';
 import ManageAccountsSkeleton from '../components/ManageAccountSkeleton';
+import Pagination from '../components/Pagination';
 
 const itemsPerPage = 10;
 
 const ManageAccounts = () => {
-  const { data: usersResponse, isLoading, error, refetch } = useGetAllUsers();
+    const [searchBarState, setSearchBarState] = useState({
+    search: "",
+    status: "All Status", 
+    startDate: "",
+    endDate: ""
+  });
+    const [filters, setFilters] = useState({
+    search_terms: "",
+    status: "",
+    start_date: "",
+    end_date: "",
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const { data: usersResponse, isLoading, error, refetch } = useGetAllUsers( filters,   currentPage, 
+    itemsPerPage);
   
   // Extract users array from API response
   const apiUsers = usersResponse?.users;
@@ -25,10 +40,16 @@ const ManageAccounts = () => {
   const [activeTab, setActiveTab] = useState('users');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
-  const { mutateAsync: updateUser } = useUpdateUsers();
+  const { mutateAsync: updateUser, isPending } = useUpdateUsers();
   const { mutateAsync: switchRole } = useSwitchRole();
   const { mutateAsync: suspendUser } = useSuspendUser();
   const { mutateAsync: unSuspendUser } = useUnsuspendUser();
+  const meta = {
+    current_page: currentPage,
+    total_pages: Math.ceil(apiUsers?.length / itemsPerPage),
+    total_count: apiUsers?.length,
+    per_page: itemsPerPage
+  };
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -59,41 +80,41 @@ const ManageAccounts = () => {
 
   const [formErrors, setFormErrors] = useState({});
 
-  // Function to generate mock delivery data for riders
-  const generateMockDeliveryData = (riderId) => {
-    // Generate consistent mock data based on rider ID
-    const seed = riderId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const random = (seed * 9301 + 49297) % 233280;
+  // // Function to generate mock delivery data for riders
+  // const generateMockDeliveryData = (riderId) => {
+  //   // Generate consistent mock data based on rider ID
+  //   const seed = riderId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  //   const random = (seed * 9301 + 49297) % 233280;
     
-    const totalDeliveries = Math.floor((random / 233280) * 300) + 50; // 50-350 deliveries
-    const deliveredToday = Math.floor((random / 233280) * 15); // 0-15 deliveries today
-    const averageRating = 3.5 + ((random / 233280) * 1.5); // 3.5-5.0 rating
-    const totalEarnings = totalDeliveries * (150 + (random / 233280) * 200); // Variable earnings per delivery
+  //   const totalDeliveries = Math.floor((random / 233280) * 300) + 50; // 50-350 deliveries
+  //   const deliveredToday = Math.floor((random / 233280) * 15); // 0-15 deliveries today
+  //   const averageRating = 3.5 + ((random / 233280) * 1.5); // 3.5-5.0 rating
+  //   const totalEarnings = totalDeliveries * (150 + (random / 233280) * 200); // Variable earnings per delivery
     
-    const statuses = ['available', 'busy', 'offline'];
-    const currentStatus = statuses[Math.floor((random / 233280) * 3)];
+  //   const statuses = ['available', 'busy', 'offline'];
+  //   const currentStatus = statuses[Math.floor((random / 233280) * 3)];
     
-    const vehicleTypes = ['Motorcycle', 'Bicycle', 'Van', 'Car'];
-    const vehicleType = vehicleTypes[Math.floor((random / 233280) * 4)];
+  //   const vehicleTypes = ['Motorcycle', 'Bicycle', 'Van', 'Car'];
+  //   const vehicleType = vehicleTypes[Math.floor((random / 233280) * 4)];
     
-    const locations = ['Victoria Island, Lagos', 'Ikeja, Lagos', 'Lekki, Lagos', 'Surulere, Lagos', 'Yaba, Lagos'];
-    const currentLocation = locations[Math.floor((random / 233280) * 5)];
+  //   const locations = ['Victoria Island, Lagos', 'Ikeja, Lagos', 'Lekki, Lagos', 'Surulere, Lagos', 'Yaba, Lagos'];
+  //   const currentLocation = locations[Math.floor((random / 233280) * 5)];
     
-    return {
-      total_deliveries: totalDeliveries,
-      delivered_today: deliveredToday,
-      average_rating: Math.round(averageRating * 10) / 10,
-      current_status: currentStatus,
-      total_earnings: Math.round(totalEarnings),
-      vehicle_type: vehicleType,
-      vehicle_plate: vehicleType === 'Bicycle' ? 'N/A' : `${String.fromCharCode(65 + Math.floor((random / 233280) * 26))}${String.fromCharCode(65 + Math.floor(((random * 2) / 233280) * 26))}${String.fromCharCode(65 + Math.floor(((random * 3) / 233280) * 26))}-${Math.floor((random / 233280) * 900) + 100}-${String.fromCharCode(88 + Math.floor((random / 233280) * 3))}${String.fromCharCode(88 + Math.floor(((random * 2) / 233280) * 3))}`,
-      license_number: `LIC${Math.floor((random / 233280) * 900000) + 100000}`,
-      emergency_contact: 'Emergency Contact',
-      emergency_phone: '+234' + Math.floor((random / 233280) * 9000000000) + 1000000000,
-      current_location: currentLocation,
-      last_delivery: currentStatus !== 'offline' ? new Date(Date.now() - (random / 233280) * 86400000).toISOString() : new Date(Date.now() - 86400000 - (random / 233280) * 172800000).toISOString()
-    };
-  };
+  //   return {
+  //     total_deliveries: totalDeliveries,
+  //     delivered_today: deliveredToday,
+  //     average_rating: Math.round(averageRating * 10) / 10,
+  //     current_status: currentStatus,
+  //     total_earnings: Math.round(totalEarnings),
+  //     vehicle_type: vehicleType,
+  //     vehicle_plate: vehicleType === 'Bicycle' ? 'N/A' : `${String.fromCharCode(65 + Math.floor((random / 233280) * 26))}${String.fromCharCode(65 + Math.floor(((random * 2) / 233280) * 26))}${String.fromCharCode(65 + Math.floor(((random * 3) / 233280) * 26))}-${Math.floor((random / 233280) * 900) + 100}-${String.fromCharCode(88 + Math.floor((random / 233280) * 3))}${String.fromCharCode(88 + Math.floor(((random * 2) / 233280) * 3))}`,
+  //     license_number: `LIC${Math.floor((random / 233280) * 900000) + 100000}`,
+  //     emergency_contact: 'Emergency Contact',
+  //     emergency_phone: '+234' + Math.floor((random / 233280) * 9000000000) + 1000000000,
+  //     current_location: currentLocation,
+  //     last_delivery: currentStatus !== 'offline' ? new Date(Date.now() - (random / 233280) * 86400000).toISOString() : new Date(Date.now() - 86400000 - (random / 233280) * 172800000).toISOString()
+  //   };
+  // };
 
   // Transform API users to match component expectations
   const transformedUsers = useMemo(() => {
@@ -113,8 +134,8 @@ const ManageAccounts = () => {
       joinDate: user.created_at,
       lastLogin: user.last_login_at || new Date().toISOString(),
       orders: user.total_orders,
-      // Add mock delivery data for riders
-      ...(user.role === 'rider' ? generateMockDeliveryData(user.id) : {})
+      shippings: user.total_shippings
+
     }));
   }, [apiUsers]);
 
@@ -142,7 +163,42 @@ const ManageAccounts = () => {
 
     return filtered;
   }, [users, searchTerm, filterStatus]);
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+    // Updated to handle the new sort parameters from SearchBar
+  const handleApplyFilters = ({ 
+    status, 
+    search_terms, 
+    start_date, 
+    end_date, 
+    sort_by_likes, // Accept but ignore sort parameters for shipping
+    sort_by_stock  // Accept but ignore sort parameters for shipping
+  }) => {
+    // Only use the parameters that shipping needs
+    setFilters({ status, search_terms, start_date, end_date });
+    setCurrentPage(1);
+    
+    // Update search bar state to maintain UI state
+    setSearchBarState({
+      search: search_terms || "",
+      status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
+      startDate: start_date || "",
+      endDate: end_date || ""
+    });
+  };
 
+  // Manual search handler - triggered when user types and presses Enter
+  const handleManualSearch = (searchTerm) => {
+    handleApplyFilters({
+      status: "",
+      search_terms: searchTerm,
+      start_date: "",
+      end_date: "",
+      sort_by_likes: "", // Clear sort filters
+      sort_by_stock: ""  // Clear sort filters
+    });
+  };
   const filteredAdmins = useMemo(() => {
     let filtered = admins;
 
@@ -414,59 +470,59 @@ const ManageAccounts = () => {
         </div>
       )
     },
-   
+       {
+      key: 'total_orders',
+      label: 'Total Orders',
+      flex: 1,
+      minWidth: '120px',
+      format: (value, data) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+
+            <div style={{ fontWeight: '600' }}>{data.orders}</div>
+
+      
+        </div>
+      )
+    },
     {
-      key: 'total_deliveries',
+      key: 'total_shippings',
       label: 'Total Deliveries',
       flex: 1,
       minWidth: '120px',
       format: (value, data) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Package size={14} style={{ color: '#6b7280', flexShrink: 0 }} />
-          <div>
-            <div style={{ fontWeight: '600' }}>{value || 0}</div>
-            <div style={{ fontSize: '12px', color: '#9ca3af' }}>Today: {data.delivered_today || 0}</div>
-          </div>
+
+            <div style={{ fontWeight: '600' }}>{data.shippings}</div>
+
+      
         </div>
       )
     },
 
-    {
-      key: 'current_status',
+     {
+      key: 'status',
       label: 'Status',
       flex: 1,
       minWidth: '120px',
       type: 'status',
       statusConfig: {
         classMap: {
-          'available': 'status-active',
-          'busy': 'status-warning',
-          'offline': 'status-inactive'
+          'unsuspended': 'status-active',
+          'inactive': 'status-inactive',
+          'suspended': 'status-suspended'
         },
         textMap: {
-          'available': 'Available',
-          'busy': 'Busy',
-          'offline': 'Offline'
+          'unsuspended': 'Unsuspended',
+          'inactive': 'Inactive',
+          'suspended': 'Suspended'
         },
         showIcon: true,
         iconMap: {
-          'available': '🟢',
-          'busy': '🟡',
-          'offline': '⭕'
+          'unsuspended': '🟢',
+          'inactive': '⭕',
+          'suspended': '🚫'
         }
       }
-    },
-    {
-      key: 'last_delivery',
-      label: 'Last Delivery',
-      flex: 1,
-      minWidth: '120px',
-      format: (value) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6b7280' }}>
-          <Clock size={14} style={{ color: '#9ca3af', flexShrink: 0 }} />
-          <span>{value ? new Date(value).toLocaleString() : 'Never'}</span>
-        </div>
-      )
     },
     {
       key: 'actions',
@@ -582,7 +638,11 @@ const ManageAccounts = () => {
       console.log('Updating user details:', userDetailsPayload);
       
       // Update user details
-      await updateUser({userId: selectedAccount.id, payload: userDetailsPayload});
+  await updateUser({
+  userId: selectedAccount.id,
+  payload: userDetailsPayload
+});
+
 
       // If outlets are provided and different, update outlets separately
       if (submissionData.outlets && submissionData.outlets.length > 0) {
@@ -593,7 +653,10 @@ const ManageAccounts = () => {
         };
         
         console.log('Updating user outlets:', outletsPayload);
-        await updateUser(selectedAccount.id, outletsPayload);
+       await updateUser({
+    userId: selectedAccount.id,
+    payload: outletsPayload
+  });
       }
 
       // Refetch data to update the UI
@@ -899,9 +962,7 @@ const ManageAccounts = () => {
 
   // Get filter options based on active tab
   const getFilterOptions = () => {
-    if (activeTab === 'riders') {
-      return ['All Status', 'available', 'busy', 'offline', 'suspended'];
-    }
+
     return ['All Status', 'unsuspended', 'suspended'];
   };
 
@@ -1006,12 +1067,17 @@ const ManageAccounts = () => {
       {/* Search and Filter */}
       <div className="accounts-controls">
         <SearchBar
-          onSearch={handleSearch}
-          onFilter={handleFilter}
-          searchTerm={searchTerm}
-          placeholder={`Search ${activeTab}...`}
+    
           filterOptions={getFilterOptions()}
-          filterLabel="Filter by status"
+             onApply={handleApplyFilters}
+        onManualSearch={handleManualSearch} // Add manual search handler
+
+        categoryOptions={[]} // Explicitly disable category filtering
+        sortOptions={[]} // Explicitly disable sort options
+        placeholder={`Search ${activeTab}...`}
+        filterLabel="Filter by Status"
+        showDate={true} // Enable date filtering for shipping
+        initialValues={searchBarState} // Pass persistent state
         />
       </div>
 
@@ -1043,6 +1109,16 @@ const ManageAccounts = () => {
           }
           className="accounts-table"
         />
+        <Pagination
+
+       currentPage={currentPage}
+              totalPages={meta.total_pages}
+              onPageChange={handlePageChange}
+              totalItems={meta.total_count}
+              itemsPerPage={itemsPerPage}
+              showInfo={true}
+  name="Shipping"
+/>
       </div>
 
       {/* View Account Modal */}
@@ -1062,6 +1138,7 @@ const ManageAccounts = () => {
           onSubmit={handleFormSubmit}
           formValues={formData}
           formErrors={formErrors}
+          isLoading={isPending}
           onChange={handleFormChange}
           closeAllModals={closeAllModals}
         />

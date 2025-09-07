@@ -187,7 +187,7 @@ const OrderPage = () => {
           onView={() => setIsViewModal(true)}
           onViewPayment={() =>
           {
-            console.log('click me')
+            
             
              setIsViewPaymentModal(true)
             }

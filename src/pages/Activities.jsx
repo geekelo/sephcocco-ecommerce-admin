@@ -15,22 +15,20 @@ const itemsPerPage = 10;
 export default function ActivitiesPage() {
   const active_outlet = getActiveOutlet();
 
-  // Add searchBarState for consistent UI state management
+  // Add searchBarState for consistent UI state management (following Payment pattern)
   const [searchBarState, setSearchBarState] = useState({
     search: "",
-    activity_type: "All Status", 
-    status: "",
+    status: "All Status", // Changed from activity_type to status to match Payment
     startDate: "",
     endDate: ""
   });
 
-  // Filters
+  // Filters - following Payment pattern exactly
   const [filters, setFilters] = useState({
-    search_terms: '',
-    activity_type: '',
-    status: '',
-    start_date: '',
-    end_date: '',
+    search_terms: "",
+    status: "", // Changed from activity_type to status
+    start_date: "",
+    end_date: "",
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -43,7 +41,7 @@ export default function ActivitiesPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Query
-const { data: activitiesData, isLoading, refetch } = useViewActivities(
+  const { data: activitiesData, isLoading, refetch } = useViewActivities(
     active_outlet,
     filters,
     currentPage,
@@ -74,63 +72,32 @@ const { data: activitiesData, isLoading, refetch } = useViewActivities(
     setCurrentPage(1);
   };
 
-  // Updated to handle the new sort parameters from SearchBar
-  // const handleApplyFilters = ({ 
-  //   activity_type, 
-  //   start_date, 
-  //   search_terms, 
-  //   end_date, 
-  //   status, // Accept status parameter (might be passed by SearchBar)
-  //   sort_by_likes, // Accept but ignore sort parameters for activities
-  //   sort_by_stock  // Accept but ignore sort parameters for activities
-  // }) => {
-  //   // Only use the parameters that activities need
-  //   setFilters((prev) => ({
-  //     ...prev,
-  //     activity_type,
-  //     search_terms,
-  //     start_date,
-  //     end_date,
-  //   }));
-  //   setCurrentPage(1);
-    
-  //   // Update search bar state to maintain UI state
-  //   setSearchBarState({
-  //     search: search_terms || "",
-  //     status: activity_type ? activity_type.charAt(0).toUpperCase() + activity_type.slice(1) : "All Status",
-  //     startDate: start_date || "",
-  //     endDate: end_date || ""
-  //   });
-  // };
-
-    const handleApplyFilters = ({ 
-    activity_type, 
-    status,
+  // Updated to follow Payment pattern exactly
+  const handleApplyFilters = ({ 
+    status, // Changed from activity_type to status to match Payment
     search_terms, 
     start_date, 
     end_date, 
-    sort_by_likes, // Accept but ignore sort parameters for orders
-    sort_by_stock  // Accept but ignore sort parameters for orders
+    sort_by_likes, // Accept but ignore sort parameters for activities
+    sort_by_stock  // Accept but ignore sort parameters for activities
   }) => {
-    // Update both the API filters and the search bar state
-    // Note: We ignore sort parameters since orders don't use them
-    setFilters({ activity_type, status,search_terms, start_date, end_date });
+    // Only use the parameters that activities need - following Payment pattern exactly
+    setFilters({ status, search_terms, start_date, end_date });
     setCurrentPage(1);
     
-    // Update search bar state to maintain UI state
+    // Update search bar state to maintain UI state - following Payment pattern
     setSearchBarState({
       search: search_terms || "",
-      activity_type: activity_type ? activity_type.charAt(0).toUpperCase() + activity_type.slice(1) : "All Status",
+      status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
       startDate: start_date || "",
-      status: "",
       endDate: end_date || ""
     });
   };
 
-  // Manual search handler - triggered when user types and presses Enter
+  // Manual search handler - following Payment pattern exactly
   const handleManualSearch = (searchTerm) => {
     handleApplyFilters({
-      activity_type: "",
+      status: "", // Changed from activity_type to status
       search_terms: searchTerm,
       start_date: "",
       end_date: "",
@@ -141,7 +108,6 @@ const { data: activitiesData, isLoading, refetch } = useViewActivities(
 
   const handlePageChange = (page) => {
     console.log('click me');
-    
     setCurrentPage(page);
   };
 
@@ -153,14 +119,11 @@ const { data: activitiesData, isLoading, refetch } = useViewActivities(
   return (
     <div className="order-page">
       <SearchBar
-        onSearch={handleSearchChange} // Keep existing onSearch for backward compatibility
         onApply={handleApplyFilters}
         onManualSearch={handleManualSearch} // Add manual search handler
-        searchTerm={searchTerm}
-        filterOptions={['All Status', 'Create', 'Update', 'Delete']} // Map activity types to filter options
+        filterOptions={["All Status", "Create", "Update", "Delete"]} // Map activity types to filter options
         categoryOptions={[]} // Explicitly disable category filtering
         sortOptions={[]} // Explicitly disable sort options
-        filterKey="activity_type"
         placeholder="Search activities..."
         filterLabel="Filter by Activity Type"
         showDate={true} // Enable date filtering for activities
@@ -199,7 +162,7 @@ const { data: activitiesData, isLoading, refetch } = useViewActivities(
         <Pagination
           name="Activities"
           itemsPerPage={itemsPerPage}
-       currentPage={currentPage}
+          currentPage={currentPage}
           totalPages={+meta.total_pages || 1}
           onPageChange={handlePageChange}
           totalItems={+meta.total_count || 0}

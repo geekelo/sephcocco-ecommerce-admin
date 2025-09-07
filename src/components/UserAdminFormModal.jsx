@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 const UserAdminFormModal = ({
   isEdit,
   activeTab,
+  isLoading,
   onSubmit,
   formValues,
   formErrors,
@@ -16,7 +17,7 @@ const UserAdminFormModal = ({
   closeAllModals,
 }) => {
   const [validationErrors, setValidationErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -48,7 +49,7 @@ const UserAdminFormModal = ({
   // Validation functions
   const validateName = (name) => name.trim().length >= 2;
   const validatePhone = (phone) => /^\+?[\d\s\-\(\)]{10,}$/.test(phone.trim());
-  const validateAddress = (address) => address.trim().length >= 5;
+  const validateAddress = (address) => address.trim().length >= 3;
 
   // Check if password is required for current tab
   const isPasswordRequired = () => {
@@ -141,7 +142,7 @@ const UserAdminFormModal = ({
         if (!value.trim()) {
           newErrors.address = "Address is required";
         } else if (!validateAddress(value)) {
-          newErrors.address = "Address must be at least 5 characters";
+          newErrors.address = "Address must be at least 3 characters";
         } else {
           delete newErrors.address;
         }
@@ -206,7 +207,7 @@ const UserAdminFormModal = ({
   };
 
   const handleFormSubmit = async () => {
-    setIsSubmitting(true);
+
     setApiError("");
     
     try {
@@ -216,13 +217,13 @@ const UserAdminFormModal = ({
           ...prev,
           outlets: "Please select at least one outlet"
         }));
-        setIsSubmitting(false);
+     
         return;
       }
 
       // Check for validation errors
       if (Object.keys(validationErrors).length > 0) {
-        setIsSubmitting(false);
+    
         return;
       }
 
@@ -288,7 +289,7 @@ const UserAdminFormModal = ({
       console.error('Form submission failed:', error);
       setApiError(error.message || 'An error occurred while processing your request');
     } finally {
-      setIsSubmitting(false);
+    
     }
   };
 
@@ -533,9 +534,9 @@ const UserAdminFormModal = ({
                 type="button"
                 className="btn-form btn-primary-form"
                 onClick={handleFormSubmit}
-                disabled={isSubmitting}
+                disabled={isLoading}
               >
-                {isSubmitting ? (
+                {isLoading ? (
                   `${isEdit ? 'Updating...' : 'Adding...'}`
                 ) : (
                   `${isEdit ? 'Update' : 'Add'} ${activeTab === 'users' ? 'User' : activeTab === 'riders' ? 'Rider' : 'Admin'}`

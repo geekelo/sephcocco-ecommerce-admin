@@ -69,7 +69,7 @@ const ConfirmActionModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay-confirm">
+    <div className="modal-overlay-confirm-modal">
       <div className="confirm-action-modal">
         <div className="modal-header-confirm">
           <div className="logo-container-confirm">
