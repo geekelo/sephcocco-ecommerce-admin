@@ -69,9 +69,7 @@ const orderNumber = product?.order_number
             </div>
           </div>
 {
-product?.discount_price  ? <div className="discount-price"> ₦{product?.discount_price } <span className='product-price'> ₦{product?.price}</span></div> : <p className="discount-price">
-  ₦{product?.price}
-</p>
+<div className="discount-price"> ₦{product?.price } <span className='product-price'> ₦{product?.discount_price}</span></div>
 }
           
 
