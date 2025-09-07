@@ -405,10 +405,10 @@ console.log('oddd', sortedPaymentData);
           type="delete"
           title="Confirm Delete"
           message={
-            <>
+            <p>
               Are you sure you want to delete{" "}
               <strong>{mockProduct.name}</strong>?
-            </>
+            </p>
           }
         />
       )}
@@ -422,10 +422,11 @@ console.log('oddd', sortedPaymentData);
           type="discardPayment"
           title="Confirm Discard Payment"
           message={
-            <>
+            <p>
               Are you sure you want to discard payment{" "}
-              <strong>{selectedPayment?.id}</strong>? This action cannot be undone.
-            </>
+              <strong>{selectedPayment?.id}</strong>?
+               This action cannot be undone.
+            </p>
           }
           isLoading={isUpdatingStatus}
         />
@@ -440,11 +441,11 @@ console.log('oddd', sortedPaymentData);
           type="verify"
           title="Confirm Verification"
           message={
-            <>
+            <p>
               Are you sure you want to verify this payment made by{" "}
               <strong>{selectedPayment?.customerName}</strong> with Payment ID{" "}
               <strong>"{selectedPayment?.id}"</strong>?
-            </>
+            </p>
           }
           isLoading={isUpdatingStatus}
         />
@@ -458,11 +459,11 @@ console.log('oddd', sortedPaymentData);
           type="success"
           title="Verification Successful"
           message={
-            <>
+            <p>
               You have successfully verified this payment made by{" "}
               <strong>{selectedPayment?.customerName}</strong> with Payment ID{" "}
               <strong>"{selectedPayment?.id}"</strong>
-            </>
+            </p>
           }
         />
       )}

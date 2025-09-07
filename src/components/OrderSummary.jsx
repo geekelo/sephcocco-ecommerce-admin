@@ -58,7 +58,7 @@ console.log('dg',order);
   // Enhanced right card items with payment details integration
   const rightCardItems = [
     { label: "Order Status:", value: order?.status, badge: true },
-    { label: "Stages:", value: order?.stages, isStages: true },
+    { label: "Stages:", value: order?.stages , isStages: true },
     { 
       label: "Payment Method:", 
       value: order?.payment_details?.payment_method  || '--/--' 

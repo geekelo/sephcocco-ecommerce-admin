@@ -8,7 +8,8 @@ import {
   BarChart,
   LogOut,
   Users,
-  TableOfContents 
+  TableOfContents, 
+  Bike
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/Sidebar.css';
@@ -21,12 +22,14 @@ const Sidebar = ({ isOpen }) => {
   // Define sidebar navigation items
   const navItems = [
     { name: 'Dashboard Overview', icon: <LayoutDashboard size={20} />, path: '/' },
-    { name: 'Orders', icon: <ShoppingBag size={20} />, path: '/orders' },
+  
     { name: 'Products', icon: <ShoppingBag size={20} />, path: '/products' },
+      { name: 'Orders', icon: <ShoppingBag size={20} />, path: '/orders' },
+        { name: 'Payments', icon: <CreditCard size={20} />, path: '/payments' },
+    { name: 'Logistics', icon: <Bike  size={20} />, path: '/logistics' },
     { name: 'Product Categories', icon: <ShoppingBag size={20} />, path: '/products-categories' },
     { name: 'Manage FAQ', icon: <TableOfContents size={20} />, path: '/faq' },
-    { name: 'Payments', icon: <CreditCard size={20} />, path: '/payments' },
-    { name: 'Logistics', icon: <CreditCard size={20} />, path: '/logistics' },
+
     { name: 'Messages', icon: <MessageSquare size={20} />, path: '/messages' },
     { name: 'Activities', icon: <Activity size={20} />, path: '/activities' },
     { name: 'Analytics', icon: <BarChart size={20} />, path: '/analytics' },

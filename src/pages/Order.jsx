@@ -254,7 +254,7 @@ const OrderPage = () => {
           type="delete"
           title="Confirm Delete"
           message={
-            <>Are you sure you want to delete <strong>{selectedOrder?.product?.name}</strong>?</>
+            <p>Are you sure you want to delete <strong>{selectedOrder?.product?.name}</strong>?</p>
           }
         />
       )}
@@ -272,7 +272,7 @@ const OrderPage = () => {
           type="discard"
           title="Confirm Discard Order"
           message={
-            <>Are you sure you want to discard order <strong>#{selectedOrder?.product?.name}</strong>? This action cannot be undone.</>
+            <p>Are you sure you want to discard order <strong>#{selectedOrder?.product?.name}</strong>? This action cannot be undone.</p>
           }
         />
       )}
@@ -289,7 +289,7 @@ const OrderPage = () => {
           type="discardPayment"
           title="Confirm Discard Payment"
           message={
-            <>Are you sure you want to discard this payment? This action cannot be undone.</>
+            <p>Are you sure you want to discard this payment? This action cannot be undone.</p>
           }
         />
       )}
@@ -306,7 +306,7 @@ const OrderPage = () => {
           type="verify"
           title="Confirm Verification"
           message={
-            <>Are you sure you want to verify this payment made by <strong>{selectedOrder?.customer?.name}</strong> with Payment ID <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>?</>
+            <p>Are you sure you want to verify this payment made by <strong>{selectedOrder?.customer?.name}</strong> with Payment ID <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>?</p>
           }
         />
       )}
@@ -318,7 +318,7 @@ const OrderPage = () => {
           type="success"
           title="Verification Successful"
           message={
-            <>You have successfully verified this payment made by <strong>{selectedOrder?.customer?.name}</strong> with Payment ID <strong>"{selectedOrder?.payment_details?.id}"</strong></>
+            <p>You have successfully verified this payment made by <strong>{selectedOrder?.customer?.name}</strong> with Payment ID <strong>"{selectedOrder?.payment_details?.id}"</strong></p>
           }
         />
       )}
