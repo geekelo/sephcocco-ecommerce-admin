@@ -272,7 +272,7 @@ const OrderPage = () => {
           type="discard"
           title="Confirm Discard Order"
           message={
-            <p>Are you sure you want to discard order <strong>#{selectedOrder?.product?.name}</strong>? This action cannot be undone.</p>
+            <p>Are you sure you want to discard order <strong>#{selectedOrder?.id}</strong>? This action cannot be undone.</p>
           }
         />
       )}
