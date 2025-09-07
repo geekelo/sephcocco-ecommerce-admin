@@ -70,7 +70,7 @@ console.log('pkk',product);
           ?.join(", ") + `, and ${product?.categories?.at(-1).name}`
   }
 </p>
-          <div className="discount-price"> ₦{product.discount_price} <span className='product-price'> ₦{product.price}</span></div>
+          <div className="discount-price"> ₦{product.price} <span className='product-price'> ₦{product.discount_price}</span></div>
   
           <div className="product-description">
             <h3>Product Description</h3>
