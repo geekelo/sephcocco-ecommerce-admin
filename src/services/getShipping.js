@@ -1,14 +1,31 @@
 import { apiClient } from "./axios";
 
-export const getShipping = async (active_outlet,page = 1, per_page = 20) => {
+export const getShipping = async (
+  active_outlet,
+  filters = {},
+  page,
+  per_page
+) => {
   try {
-    const data = await apiClient().get(`/api/v1/${active_outlet}/sephcocco_${active_outlet}_shippings`, {
-      params: {
-        page,
-        per_page
-      }
-    } );
-    return data.data;
+    const filter = {};
+
+    if (filters.search_terms) filter.search_terms = filters.search_terms;
+    if (filters.status) filter.status = filters.status;
+    if (filters.start_date) filter.start_date = filters.start_date;
+    if (filters.end_date) filter.end_date = filters.end_date;
+
+    const params = {
+      filter,
+      page,
+      per_page,
+    };
+
+    const response = await apiClient().get(
+      `/api/v1/${active_outlet}/sephcocco_${active_outlet}_shippings`,
+      { params }
+    );
+
+    return response.data;
   } catch (err) {
     console.error(err);
     throw err;

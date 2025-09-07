@@ -1,14 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import  { useState } from 'react';
 import { ArrowLeft, Mail, MapPin } from 'lucide-react';
 import InfoCard from './InfoCard';
 
-import ProductCard from './ProductCard';
 
-import { useViewProductId } from '../hooks/useGetProductById';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 import '../styles/OrderSummary.css';
-import EditProductModal from './EditModal';
-import ProductDetails from './ProductDetails';
 import { useTrackOrder } from '../hooks/useTrackOrder';
 
 const ShippingSummary = ({
@@ -47,8 +43,8 @@ const ShippingSummary = ({
   );
 
   const leftCardItems = [
-    { label: "Tracking Number:", value: tracking_number },
-    { label: "Order ID:", value: sephcocco_pharmacy_order },
+    { label: "Tracking Number:", value: tracking_number, isCopyable: true },
+    { label: "Order ID:", value: sephcocco_pharmacy_order,isCopyable: true  },
     { label: "Order Status:", value: order_status },
     { label: "Status:", value: status },
     { label: "Dispatching:", value: dispatching ? "Express" : "Standard" },

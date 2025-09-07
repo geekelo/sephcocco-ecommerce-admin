@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import SearchBar from "../components/SearchBar";
 import FlexibleTable from "../components/FlexibleTable";
 import { EmptyState } from "../components/EmptyState";
@@ -12,14 +12,14 @@ import "../styles/RidersDropdown.css"
 import "../styles/RidersStats.css"
 import { RiderStatistics } from '../components/RidersStats';
 import { RiderDropdown } from '../components/RidersDropdown';
-import { ridersData } from '../utils/ridersData';
+
 import { useShippings } from '../hooks/useShippings';
-import { useGetAllUsers } from '../hooks/useGetAllUser';
+
 import { useRiders } from '../hooks/useRiders';
 import { useCancelDelivery } from '../hooks/useCancelDelivery';
 import { useCompleteDelivery } from '../hooks/useCompleteDelivery';
 import { ShippingStatusUpdateDropdown } from '../components/ShippingStatus';
-import { useTrackOrder } from '../hooks/useTrackOrder';
+
 
 const itemsPerPage = 10;
 
@@ -46,7 +46,7 @@ const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [riderAssignments, setRiderAssignments] = useState({});
 
   const activeOutlet = getActiveOutlet();
-  const { data, isLoading, error } = useShippings(activeOutlet,    currentPage, 
+  const { data, isLoading, error,refetch } = useShippings(activeOutlet, filters,   currentPage, 
     itemsPerPage);
 
 
@@ -151,14 +151,14 @@ const handleCancelDelivery = async (shippingId) => {
   // Paginate filtered data
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredData.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredData, currentPage]);
+    return shippingData.slice(startIndex, startIndex + itemsPerPage);
+  }, [shippingData, currentPage]);
 
   // Get meta data from API or calculate from filtered data
   const meta = {
     current_page: currentPage,
-    total_pages: Math.ceil(filteredData.length / itemsPerPage),
-    total_count: filteredData.length,
+    total_pages: Math.ceil(shippingData.length / itemsPerPage),
+    total_count: shippingData.length,
     per_page: itemsPerPage
   };
 
@@ -358,7 +358,7 @@ const handleCancelDelivery = async (shippingId) => {
           <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Shipping Data</h3>
           <p className="text-gray-600 mb-4">{error.message || 'Something went wrong'}</p>
           <button 
-            onClick={() => window.location.reload()}
+            onClick={() => refetch()}
             className="add-button"
           >
             Retry
@@ -383,7 +383,7 @@ const handleCancelDelivery = async (shippingId) => {
       <SearchBar
         onApply={handleApplyFilters}
         onManualSearch={handleManualSearch} // Add manual search handler
-        filterOptions={["All Status", "pending", "processing", "dispatched", "delivered", "cancelled"]}
+        filterOptions={["All Status", "Pending","Assigned", "In-Transit",  "Cancelled"]}
         categoryOptions={[]} // Explicitly disable category filtering
         sortOptions={[]} // Explicitly disable sort options
         placeholder="Search by tracking number, customer name, or order ID..."
@@ -418,11 +418,11 @@ const handleCancelDelivery = async (shippingId) => {
             />
 
             <Pagination
-              currentPage={meta.current_page}
+              currentPage={currentPage}
               totalPages={meta.total_pages}
               onPageChange={handlePageChange}
               totalItems={meta.total_count}
-              itemsPerPage={meta.per_page}
+              itemsPerPage={itemsPerPage}
               showInfo={true}
               name="Shipping"
             />
