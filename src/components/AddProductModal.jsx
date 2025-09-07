@@ -229,12 +229,12 @@ const AddProductModal = ({ isOpen, onClose }) => {
   formDataToSend.append('product[short_description]', formData.short_description.trim());
   formDataToSend.append('product[long_description]', formData.long_description.trim());
   formDataToSend.append('product[amount_in_stock]', formData.quantity.toString());
-  formDataToSend.append('product[price]', formData.price.toString());
+  formDataToSend.append('product[price]', formData.discountPrice.toString());
   formDataToSend.append('product[visible]', formData.visible.toString());
   
   // Add discount_price only if it exists and is greater than 0
   if (formData.discountPrice && formData.discountPrice > 0) {
-    formDataToSend.append('product[discount_price]', formData.discountPrice.toString());
+    formDataToSend.append('product[discount_price]', formData.price.toString());
   }
   
   // Add category IDs as array elements within product
