@@ -292,7 +292,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       // Scroll to the first error
-      const firstErrorField = document.querySelector(".form-group.error");
+      const firstErrorField = document.querySelector(".form-group-add.error");
       if (firstErrorField) {
         firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
       }
@@ -471,7 +471,7 @@ const removeImage = (index) => {
             )}
 
             {/* Product Name */}
-            <div className={`form-group ${errors.name ? "error" : ""}`}>
+            <div className={`form-group-add ${errors.name ? "error" : ""}`}>
               <label htmlFor="name">Product Name</label>
               <input
                 type="text"
@@ -490,9 +490,9 @@ const removeImage = (index) => {
             {/* Two column layout */}
             <div className="form-row">
               {/* Product Category */}
-              <div className={`form-group ${errors.category_ids ? "error" : ""}`}>
+              <div className={`form-group-add ${errors.category_ids ? "error" : ""}`}>
                 <label htmlFor="category">Product Categories</label>
-                <div className="form-group">
+                <div className="form-group-add">
                   <div className="selected-categories">
                     {formData.category_ids.map((catId) => {
                       const category = categories.find(cat => cat.id === catId);
@@ -574,7 +574,7 @@ const removeImage = (index) => {
               </div>
 
               {/* Stock Quantity */}
-              <div className={`form-group ${errors.quantity ? "error" : ""}`}>
+              <div className={`form-group-add ${errors.quantity ? "error" : ""}`}>
                 <label htmlFor="quantity">Stock Quantity</label>
                 <input
                   type="number"
@@ -595,7 +595,7 @@ const removeImage = (index) => {
             {/* Two column layout */}
             <div className="form-row">
               {/* Product Price */}
-              <div className={`form-group ${errors.price ? "error" : ""}`}>
+              <div className={`form-group-add ${errors.price ? "error" : ""}`}>
                 <label htmlFor="price">Product Price</label>
                 <input
                   type="number"
@@ -615,7 +615,7 @@ const removeImage = (index) => {
 
               {/* Discount Price */}
               <div
-                className={`form-group ${errors.discountPrice ? "error" : ""}`}
+                className={`form-group-add ${errors.discountPrice ? "error" : ""}`}
               >
                 <label htmlFor="discountPrice">Discount Price</label>
                 <input
@@ -636,7 +636,7 @@ const removeImage = (index) => {
             </div>
 
             {/* Product Short Description */}
-            <div className={`form-group ${errors.short_description ? "error" : ""}`}>
+            <div className={`form-group-add ${errors.short_description ? "error" : ""}`}>
               <label htmlFor="short_description">Product Short Description</label>
               <textarea
                 id="short_description"
@@ -653,7 +653,7 @@ const removeImage = (index) => {
             </div>
 
             {/* Product Long Description */}
-            <div className={`form-group ${errors.long_description ? "error" : ""}`}>
+            <div className={`form-group-add ${errors.long_description ? "error" : ""}`}>
               <label htmlFor="long_description">Product Long Description</label>
               <textarea
                 id="long_description"
@@ -670,7 +670,7 @@ const removeImage = (index) => {
             </div>
 
             {/* Main Product Image Upload */}
-            <div className={`form-group ${errors.mainImage ? "error" : ""}`}>
+            <div className={`form-group-add ${errors.mainImage ? "error" : ""}`}>
               <label>
                 Main Product Image <span className="required">*</span>
               </label>
@@ -730,7 +730,7 @@ const removeImage = (index) => {
             </div>
 
             {/* Additional Images Upload */}
-            <div className={`form-group ${errors.images ? "error" : ""}`}>
+            <div className={`form-group-add ${errors.images ? "error" : ""}`}>
               <label>Additional Product Images (Max 4)</label>
 
               {/* Hidden file input for additional images */}
@@ -809,7 +809,7 @@ const removeImage = (index) => {
             </div>
 
             {/* Product Visibility Section */}
-            <div className="form-group">
+            <div className="form-group-add">
               <label>Product Visibility</label>
               <div className="visibility-section">
                 <table className="visibility-table">

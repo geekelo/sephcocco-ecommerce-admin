@@ -372,7 +372,7 @@ const handleCancelDelivery = async (shippingId) => {
     <div className="order-page">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Shipping Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Logistics Management</h1>
         <div className="mb-4">
           <p className="text-sm text-gray-600 mb-2">
             Manage and track all shipping deliveries 

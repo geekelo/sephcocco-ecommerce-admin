@@ -69,7 +69,6 @@ const PaymentPage = () => {
       amount: payment.amount,
       paymentDate: payment.created_at,
       transactionId: payment.transaction_id,
-      paymentDate: payment.created_at,
       orderNumber: order.order_number,
       // Add any other fields you need
       totalPrice: order.total_price

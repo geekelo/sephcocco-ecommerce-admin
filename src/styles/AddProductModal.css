@@ -54,26 +54,27 @@
   gap: 20px;
 }
 
-.form-group {
+.form-group-add {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.form-group label {
+.form-group-add label {
   font-weight: 500;
   color: #333;
 }
 
-.form-group input,
-.form-group textarea {
+.form-group-add input,
+.form-group-add textarea {
   padding: 12px;
   border: 1px solid #ddd;
+  color: #333;
   border-radius: 4px;
   font-size: 14px;
 }
 
-.form-group textarea {
+.form-group-add textarea {
   min-height: 100px;
   resize: vertical;
 }
@@ -241,7 +242,7 @@
     width: 100%;
     padding: 20px;
   }
-    .form-group {
+    .form-group-add {
       display: flex;
       flex-direction: column;
     }
@@ -315,14 +316,14 @@
     margin-bottom: 30px;
   }
   
-  .form-group {
+  .form-group-add {
     margin-bottom: 20px;
   }
   
-  .form-group.error input,
-  .form-group.error select,
-  .form-group.error textarea,
-  .form-group.error .image-upload-area {
+  .form-group-add.error input,
+  .form-group-add.error select,
+  .form-group-add.error textarea,
+  .form-group-add.error .image-upload-area {
     border-color: #e53935;
   }
   
@@ -332,7 +333,7 @@
     margin-bottom: 0;
   }
   
-  .form-row .form-group {
+  .form-row .form-group-add {
     flex: 1;
   }
   
@@ -542,7 +543,7 @@
 }
 
 /* Adjust spacing between main image and additional images sections */
-.form-group + .form-group {
+.form-group-add + .form-group-add {
   margin-top: 20px;
 }
 .image-preview-grid {
