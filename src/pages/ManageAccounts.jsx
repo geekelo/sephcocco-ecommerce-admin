@@ -35,7 +35,7 @@ const ManageAccounts = () => {
   
   // Extract users array from API response
   const apiUsers = usersResponse?.users;
-  console.log('API Users:', usersResponse);
+
   
   const [activeTab, setActiveTab] = useState('users');
   const [searchTerm, setSearchTerm] = useState('');
@@ -995,7 +995,7 @@ const filteredUsers = useMemo(() => {
         <div className="error-container">
           <h3>Error loading accounts</h3>
           <p>{error.message || 'Something went wrong'}</p>
-          <button onClick={() => window.location.reload()}>Retry</button>
+          <button onClick={() => refetch()}>Retry</button>
         </div>
       </div>
     );
