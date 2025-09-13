@@ -21,7 +21,7 @@ const UserAdminFormModal = ({
   const [apiError, setApiError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { mutateAsync: register } = useRegister();
+  const { mutateAsync: register, isPending } = useRegister();
   const [outletOptions, setOutletOptions] = useState([]);
 
   useEffect(() => {
@@ -534,9 +534,9 @@ const UserAdminFormModal = ({
                 type="button"
                 className="btn-form btn-primary-form"
                 onClick={handleFormSubmit}
-                disabled={isLoading}
+                disabled={isLoading || isPending}
               >
-                {isLoading ? (
+                {isLoading || isPending ? (
                   `${isEdit ? 'Updating...' : 'Adding...'}`
                 ) : (
                   `${isEdit ? 'Update' : 'Add'} ${activeTab === 'users' ? 'User' : activeTab === 'riders' ? 'Rider' : 'Admin'}`

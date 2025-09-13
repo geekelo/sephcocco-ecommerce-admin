@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { validateEmail, validatePassword } from "../schema/LoginSchema";
 import { useLogin } from "../hooks/useLogin";
 import Cookies from 'js-cookie'; 
+import { useResendOtp } from "../hooks/useResendOtp";
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,7 +15,10 @@ const LoginPage = () => {
   const [passwordError, setPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
-
+ const {
+    mutateAsync: resendOtp,
+    isPending: isResending,
+  } = useResendOtp();
   const [showPassword, setShowPassword] = useState(false);
   const {mutateAsync: login} = useLogin()
   const navigate = useNavigate();
@@ -75,29 +79,41 @@ const handleSubmit = async (e) => {
 
     
     const response = await login(payload);
-    if (response?.message) {
-      localStorage.setItem('token', response?.token);
-      localStorage.setItem('user', JSON.stringify(response?.user));
-      localStorage.setItem('userRole', response?.user?.role);
-      localStorage.setItem('userName', response?.user?.name );
-      Cookies.set('outlets', JSON.stringify(response?.user?.outlets), { expires: 1 }); 
-      
-      // Set activeOutlet to the first available outlet or a default value
-      const outlets = response?.user?.outlets || [];
-      if (outlets.length > 0) {
-        Cookies.set('activeOutlet', outlets[0], { expires: 1 });
+ if (response?.user?.email_confirmed) {
+        // User is verified, proceed with normal login
+        if (response?.message) {
+          localStorage.setItem('token', response?.token);
+          localStorage.setItem('user', JSON.stringify(response?.user));
+          localStorage.setItem('userRole', response?.user?.role);
+          localStorage.setItem('userName', response?.user?.name);
+          Cookies.set('outlets', JSON.stringify(response?.user?.outlets), { expires: 1 }); 
+          
+          // Set activeOutlet to the first available outlet or a default value
+          const outlets = response?.user?.outlets || [];
+          if (outlets.length > 0) {
+            Cookies.set('activeOutlet', outlets[0], { expires: 1 });
+          } else {
+            // Set a default outlet if none are available
+            Cookies.set('activeOutlet', '', { expires: 1 });
+          }
+          
+          console.log("Login success:", response);
+          navigate("/store");
+        }
       } else {
-        // Set a default outlet if none are available
-        Cookies.set('activeOutlet', '', { expires: 1 });
+        // User needs email verification, send OTP and navigate to OTP page
+        try {
+          await resendOtp(email);
+          navigate('/verify-email', { 
+            state: { 
+              email: email 
+            } 
+          });
+        } catch (otpError) {
+          console.error("Failed to send OTP:", otpError);
+          setApiError("Failed to send verification code. Please try again.");
+        }
       }
-      
-      console.log("Login success:", response);
-      console.log("User role saved:", response?.user?.role);
-      console.log("Full user object:", JSON.stringify(response?.user, null, 2));
-      console.log("User role object:", JSON.stringify(response?.user?.role, null, 2));
-      navigate("/store");
-    }
-
   } catch (error) {
     console.error("Login failed:", error);
     setApiError(error?.response?.data?.error || "Login failed. Please try again.");

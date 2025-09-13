@@ -11,6 +11,7 @@ import {
   ManageAccountPage, 
   MessagesPage, 
   OrderPage, 
+  OtpPage, 
   PaymentPage, 
   ProductCategoresPage, 
   RegisterPage, 
@@ -124,7 +125,14 @@ const AppRouter = () => {
                   </PublicRoute>
                 } 
               />
-
+  <Route 
+                path="/verify-email" 
+                element={
+                  <PublicRoute>
+                    <OtpPage />
+                  </PublicRoute>
+                } 
+              />
            
         
                         <Route path="/store" element={ <ProtectedRoute><StoresPage /></ProtectedRoute>} />
