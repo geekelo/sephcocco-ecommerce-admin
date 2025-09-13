@@ -53,12 +53,12 @@ const FlexibleTableRow = ({
   useEffect(() => {
     if (showActions && triggerRef.current && actionsRef.current) {
       const triggerRect = triggerRef.current.getBoundingClientRect();
-      const dropdown = actionsRef.current.querySelector('.actions-menu-table');
+      const dropdown = actionsRef.current.querySelector('.actions-menu-table-row');
       
       if (dropdown) {
         // Reset classes and inline styles
         dropdown.classList.remove('align-left', 'align-up');
-        dropdown.style.position = 'fixed';
+        // dropdown.style.position = 'absolute';
         
         const dropdownWidth = 160;
         const dropdownHeight = 200; // Approximate dropdown height
@@ -416,7 +416,7 @@ const formatCurrency = (value) => {
           </button>
           
           {showActions && (
-            <div className="actions-menu-table">
+            <div className="actions-menu-table-row">
               {actions.map((action) => (
                 <button
                   key={action.key}
@@ -713,7 +713,7 @@ const formatCurrency = (value) => {
           </button>
           
           {showActions && (
-            <div className="actions-menu-table">
+            <div className="actions-menu-table-row">
               {actions.map((action) => (
                 <button
                   key={action.key}

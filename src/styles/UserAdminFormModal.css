@@ -45,7 +45,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 24px 20px;
+  padding: 14px 14px 10px;
   border-bottom: 1px solid #e5e7eb;
   background: #f9fafb;
 }
@@ -357,4 +357,44 @@
   .selected-outlets-badges:empty::before {
     color: #6b7280;
   }
+}
+.modal-footer-form {
+  padding: 4px 4px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid #e5e7eb; /* subtle divider */
+  background-color: #f9fafb; /* light background to separate from content */
+}
+.btn-cancel-form {
+  background-color: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 8px 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-cancel-form:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.btn-submit-form {
+  background-color: #3b82f6;
+  color: white;
+  border: 1px solid #3b82f6;
+  padding: 8px 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-submit-form:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
 }

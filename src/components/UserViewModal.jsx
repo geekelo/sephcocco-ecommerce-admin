@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Eye, 
   User, 
@@ -12,7 +12,6 @@ import {
   CreditCard, 
   Building2, 
   MessageSquare,
-  AlertCircle,
   CheckCircle,
   XCircle,
   Users
@@ -22,6 +21,33 @@ import { formatDate } from '../utils/formatDate';
 import '../styles/UserViewModal.css';
 
 const UserViewModal = ({ isOpen, onClose, account }) => {
+  // Add useEffect to manage body class and dropdown state for modal
+  useEffect(() => {
+    if (isOpen) {
+      // Add class to body when modal opens
+      document.body.classList.add('modal-open');
+      
+      // Close any open dropdowns
+      const openDropdowns = document.querySelectorAll('.actions-dropdown-table.show-menu-table');
+      openDropdowns.forEach(dropdown => {
+        dropdown.classList.remove('show-menu-table');
+      });
+      
+      // Prevent body scroll
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Remove class when modal closes
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup function
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen || !account) return null;
 
   // Helper function to format phone numbers
@@ -33,23 +59,32 @@ const UserViewModal = ({ isOpen, onClose, account }) => {
   // Helper function to get status icon
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'active':
+      case 'unsuspended':
         return <CheckCircle size={16} className="status-icon-active" />;
-      case 'inactive':
-        return <Clock size={16} className="status-icon-inactive" />;
       case 'suspended':
         return <XCircle size={16} className="status-icon-suspended" />;
       default:
-        return <AlertCircle size={16} className="status-icon-default" />;
+        return <Clock size={16} className="status-icon-inactive" />;
     }
   };
 
   // Helper function to get role icon and styling
   const getRoleDisplay = (role) => {
-    const isAdmin = role === 'admin';
+    const roleMap = {
+      'admin': { icon: <Shield size={16} />, class: 'role-admin' },
+      'rider': { icon: <Users size={16} />, class: 'role-rider' },
+      'user': { icon: <User size={16} />, class: 'role-user' },
+      'superadmin': { icon: <Shield size={16} />, class: 'role-superadmin' },
+      'manager': { icon: <Shield size={16} />, class: 'role-manager' },
+      'frontdesk': { icon: <Shield size={16} />, class: 'role-frontdesk' },
+      'support': { icon: <Shield size={16} />, class: 'role-support' }
+    };
+    
+    const roleInfo = roleMap[role] || roleMap['user'];
+    
     return (
-      <div className={`role-display ${isAdmin ? 'role-admin' : 'role-user'}`}>
-        {isAdmin ? <Shield size={16} /> : <User size={16} />}
+      <div className={`role-display ${roleInfo.class}`}>
+        {roleInfo.icon}
         <span className="role-text">{role.charAt(0).toUpperCase() + role.slice(1)}</span>
       </div>
     );
@@ -57,38 +92,20 @@ const UserViewModal = ({ isOpen, onClose, account }) => {
 
   // Format outlets for display
   const formatOutlets = (outlets) => {
-    if (!outlets || outlets.length === 0) return 'No outlets assigned';
-    return outlets.join(', ');
+    if (!outlets || outlets.length === 0) return [];
+    return outlets;
   };
 
-  // Calculate account age
-  const getAccountAge = (joinDate) => {
-    if (!joinDate) return 'Unknown';
-    const now = new Date();
-    const join = new Date(joinDate);
-    const diffTime = Math.abs(now - join);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 30) return `${diffDays} days`;
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months`;
-    return `${Math.floor(diffDays / 365)} years`;
+  // Format subroles for display
+  const formatSubroles = (subroles) => {
+    if (!subroles || subroles.length === 0) return [];
+    return subroles;
   };
 
-  // Get last activity status
-  const getLastActivityStatus = (lastLogin) => {
-    if (!lastLogin) return { text: 'Never logged in', className: 'activity-never' };
-    
-    const now = new Date();
-    const lastLoginDate = new Date(lastLogin);
-    const diffHours = Math.abs(now - lastLoginDate) / (1000 * 60 * 60);
-    
-    if (diffHours < 24) return { text: 'Active today', className: 'activity-today' };
-    if (diffHours < 168) return { text: 'Active this week', className: 'activity-week' };
-    if (diffHours < 720) return { text: 'Active this month', className: 'activity-month' };
-    return { text: 'Inactive', className: 'activity-inactive' };
+  // Check if user is admin-type role
+  const isAdminRole = (role) => {
+    return ['admin', 'superadmin', 'manager', 'frontdesk', 'support'].includes(role);
   };
-
-  const lastActivity = getLastActivityStatus(account.lastLogin);
 
   return (
     <div className="modal-overlay-view" onClick={onClose}>
@@ -108,7 +125,8 @@ const UserViewModal = ({ isOpen, onClose, account }) => {
           <div className="user-profile-view">
             <div className="user-avatar-section">
               <div className="user-avatar-placeholder">
-                {account.role === 'admin' ? <Shield size={24} /> : <Users size={24} />}
+                {isAdminRole(account.role) ? <Shield size={28} /> : 
+                 account.role === 'rider' ? <Users size={28} /> : <User size={28} />}
               </div>
               <div className="user-profile-info-view">
                 <h3 className="user-profile-name-view">{account.name || 'Unknown User'}</h3>
@@ -117,41 +135,12 @@ const UserViewModal = ({ isOpen, onClose, account }) => {
                   {getRoleDisplay(account.role)}
                   <div className="status-badge-container">
                     {getStatusIcon(account.status)}
-                    {getStatusBadge(account.status)}
+                    <span className={`status-text status-${account.status}`}>
+                      {account.status === 'unsuspended' ? 'Active' : 'Suspended'}
+                    </span>
                   </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Quick Stats */}
-            <div className="user-quick-stats">
-              <div className="quick-stat-item">
-                <Calendar size={16} />
-                <div className="quick-stat-info">
-                  <span className="quick-stat-label">Account Age</span>
-                  <span className="quick-stat-value">{getAccountAge(account.joinDate)}</span>
-                </div>
-              </div>
-              
-              <div className="quick-stat-item">
-                <Activity size={16} />
-                <div className="quick-stat-info">
-                  <span className="quick-stat-label">Activity</span>
-                  <span className={`quick-stat-value ${lastActivity.className}`}>
-                    {lastActivity.text}
-                  </span>
-                </div>
-              </div>
-              
-              {account.orders !== undefined && (
-                <div className="quick-stat-item">
-                  <CreditCard size={16} />
-                  <div className="quick-stat-info">
-                    <span className="quick-stat-label">Total Orders</span>
-                    <span className="quick-stat-value">{account.orders}</span>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -205,14 +194,12 @@ const UserViewModal = ({ isOpen, onClose, account }) => {
                 Account Information
               </h4>
               <div className="user-details-grid-view">
-              
-                
                 <div className="detail-item-view">
                   <span className="detail-label-view">
                     <Shield size={14} />
                     Role
                   </span>
-                  <span className="detail-value-view">{account.role}</span>
+                  <span className="detail-value-view">{account.role.charAt(0).toUpperCase() + account.role.slice(1)}</span>
                 </div>
                 
                 <div className="detail-item-view">
@@ -220,23 +207,35 @@ const UserViewModal = ({ isOpen, onClose, account }) => {
                     <Activity size={14} />
                     Status
                   </span>
-                  <span className="detail-value-view">{account.status}</span>
+                  <span className="detail-value-view">
+                    {account.status === 'unsuspended' ? 'Active' : 'Suspended'}
+                  </span>
                 </div>
                 
-                {account.payment_ref && (
-                  <div className="detail-item-view">
-                    <span className="detail-label-view">
-                      <CreditCard size={14} />
-                      Payment Reference
-                    </span>
-                    <span className="detail-value-view">{account.payment_ref}</span>
-                  </div>
-                )}
+                <div className="detail-item-view">
+                  <span className="detail-label-view">
+                    <Calendar size={14} />
+                    Join Date
+                  </span>
+                  <span className="detail-value-view">
+                    {account.joinDate ? formatDate(account.joinDate) : 'Unknown'}
+                  </span>
+                </div>
+
+                <div className="detail-item-view">
+                  <span className="detail-label-view">
+                    <Clock size={14} />
+                    Last Login
+                  </span>
+                  <span className="detail-value-view">
+                    {account.lastLogin ? formatDate(account.lastLogin) : 'Never'}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Admin-specific Information */}
-            {account.role === 'admin' && (
+            {/* Admin/Role-specific Information */}
+            {isAdminRole(account.role) && (
               <div className="details-section">
                 <h4 className="section-title">
                   <Building2 size={18} />
@@ -249,9 +248,9 @@ const UserViewModal = ({ isOpen, onClose, account }) => {
                       Assigned Outlets
                     </span>
                     <span className="detail-value-view">
-                      {account.outlets && account.outlets.length > 0 ? (
+                      {formatOutlets(account.outlets).length > 0 ? (
                         <div className="outlets-list">
-                          {account.outlets.map((outlet, index) => (
+                          {formatOutlets(account.outlets).map((outlet, index) => (
                             <span key={index} className="outlet-tag">{outlet}</span>
                           ))}
                         </div>
@@ -260,66 +259,66 @@ const UserViewModal = ({ isOpen, onClose, account }) => {
                       )}
                     </span>
                   </div>
-                  
-                  {account.permissions && (
+
+                  {formatSubroles(account.subroles).length > 0 && (
                     <div className="detail-item-view">
                       <span className="detail-label-view">
                         <Shield size={14} />
-                        Permissions
+                        Subroles
                       </span>
-                      <span className="detail-value-view">{account.permissions}</span>
+                      <span className="detail-value-view">
+                        <div className="subroles-list">
+                          {formatSubroles(account.subroles).map((subrole, index) => (
+                            <span key={index} className="subrole-tag">{subrole}</span>
+                          ))}
+                        </div>
+                      </span>
+                    </div>
+                  )}
+                  
+                  {account.payment_ref && (
+                    <div className="detail-item-view">
+                      <span className="detail-label-view">
+                        <CreditCard size={14} />
+                        Payment Reference
+                      </span>
+                      <span className="detail-value-view">{account.payment_ref}</span>
                     </div>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Activity Information */}
-            <div className="details-section">
-              <h4 className="section-title">
-                <Clock size={18} />
-                Activity Information
-              </h4>
-              <div className="user-details-grid-view">
-                <div className="detail-item-view">
-                  <span className="detail-label-view">
-                    <Calendar size={14} />
-                    Join Date
-                  </span>
-                  <span className="detail-value-view">
-                    {account.joinDate ? formatDate(account.joinDate) : 'Unknown'}
-                  </span>
+            {/* Activity Summary */}
+            {(account.orders !== undefined || (account.shippings !== undefined && account.shippings !== 'not a rider')) && (
+              <div className="details-section">
+                <h4 className="section-title">
+                  <Activity size={18} />
+                  Activity Summary
+                </h4>
+                <div className="user-details-grid-view">
+                  {account.orders !== undefined && (
+                    <div className="detail-item-view">
+                      <span className="detail-label-view">
+                        <CreditCard size={14} />
+                        Total Orders
+                      </span>
+                      <span className="detail-value-view">{account.orders}</span>
+                    </div>
+                  )}
+
+                  {account.shippings !== undefined && account.shippings !== 'not a rider' && (
+                    <div className="detail-item-view">
+                      <span className="detail-label-view">
+                        <Users size={14} />
+                        Total Deliveries
+                      </span>
+                      <span className="detail-value-view">{account.shippings}</span>
+                    </div>
+                  )}
                 </div>
-                
-                <div className="detail-item-view">
-                  <span className="detail-label-view">
-                    <Clock size={14} />
-                    Last Login
-                  </span>
-                  <span className="detail-value-view">
-                    {account.lastLogin ? formatDate(account.lastLogin) : 'Never'}
-                  </span>
-                </div>
-                
-                <div className="detail-item-view">
-                  <span className="detail-label-view">
-                    <Activity size={14} />
-                    Account Age
-                  </span>
-                  <span className="detail-value-view">{getAccountAge(account.joinDate)}</span>
-                </div>
-                
-                {account.orders !== undefined && (
-                  <div className="detail-item-view">
-                    <span className="detail-label-view">
-                      <CreditCard size={14} />
-                      Total Orders
-                    </span>
-                    <span className="detail-value-view">{account.orders}</span>
-                  </div>
-                )}
               </div>
-            </div>
+            )}
           </div>
         </div>
         

@@ -1,10 +1,10 @@
-
 import { Eye, EyeOff, UserPlus, X } from 'lucide-react';
 import '../styles/UserAdminFormModal.css';
 import { useRegister } from '../hooks/useRegister';
 import { validateEmail, validatePassword } from '../schema/LoginSchema';
 import Cookies from 'js-cookie';
 import { useEffect, useState } from 'react';
+import { useRoles } from '../hooks/useRoles';
 
 const UserAdminFormModal = ({
   isEdit,
@@ -17,16 +17,24 @@ const UserAdminFormModal = ({
   closeAllModals,
 }) => {
   const [validationErrors, setValidationErrors] = useState({});
-  // const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { mutateAsync: register, isPending } = useRegister();
+  const { data: rolesData } = useRoles();
+
   const [outletOptions, setOutletOptions] = useState([]);
+  const [roleOptions, setRoleOptions] = useState([]);
 
   useEffect(() => {
     loadOutlets();
   }, [activeTab]);
+
+  useEffect(() => {
+    if (rolesData && Array.isArray(rolesData)) {
+      setRoleOptions(rolesData);
+    }
+  }, [rolesData]);
 
   const loadOutlets = () => {
     try {
@@ -35,7 +43,6 @@ const UserAdminFormModal = ({
         const parsedOutlets = JSON.parse(outletsFromCookies);
         setOutletOptions(Array.isArray(parsedOutlets) ? parsedOutlets : []);
       } else {
-        console.warn('No outlets found in cookies');
         setOutletOptions([]);
       }
     } catch (error) {
@@ -43,8 +50,6 @@ const UserAdminFormModal = ({
       setOutletOptions([]);
     }
   };
-
-  console.log(outletOptions);
 
   // Validation functions
   const validateName = (name) => name.trim().length >= 2;
@@ -56,35 +61,28 @@ const UserAdminFormModal = ({
     return activeTab === "admins" && !isEdit;
   };
 
-  // Handle outlet selection from dropdown
+  // ===== Outlets Handlers =====
   const handleOutletSelect = (e) => {
     const selectedValue = e.target.value;
     if (!selectedValue) return;
 
     const currentOutlets = formValues.outlets || [];
-    
-    // Only add if not already selected
     if (!currentOutlets.includes(selectedValue)) {
       const updatedOutlets = [...currentOutlets, selectedValue];
       onChange({ ...formValues, outlets: updatedOutlets });
 
-      // Update validation
       const newErrors = { ...validationErrors };
       delete newErrors.outlets;
       setValidationErrors(newErrors);
     }
-
-    // Reset select to placeholder
     e.target.value = '';
   };
 
-  // Remove a specific outlet
   const removeOutlet = (outletToRemove) => {
     const currentOutlets = formValues.outlets || [];
     const updatedOutlets = currentOutlets.filter(outlet => outlet !== outletToRemove);
     onChange({ ...formValues, outlets: updatedOutlets });
 
-    // Validation
     const newErrors = { ...validationErrors };
     if (updatedOutlets.length === 0) {
       newErrors.outlets = "Please select at least one outlet";
@@ -94,94 +92,100 @@ const UserAdminFormModal = ({
     setValidationErrors(newErrors);
   };
 
-  // Get available options (exclude already selected ones)
   const getAvailableOptions = () => {
     const selectedOutlets = formValues.outlets || [];
     return outletOptions.filter(option => !selectedOutlets.includes(option));
   };
 
+  // ===== Roles Handlers =====
+  const handleRoleSelect = (e) => {
+    const selectedRoleId = e.target.value;
+    if (!selectedRoleId) return;
+
+    const currentRoles = formValues.roles || [];
+    if (!currentRoles.includes(selectedRoleId)) {
+      const updatedRoles = [...currentRoles, selectedRoleId];
+      onChange({ ...formValues, roles: updatedRoles });
+
+      const newErrors = { ...validationErrors };
+      delete newErrors.roles;
+      setValidationErrors(newErrors);
+    }
+    e.target.value = "";
+  };
+
+  const removeRole = (roleIdToRemove) => {
+    const currentRoles = formValues.roles || [];
+    const updatedRoles = currentRoles.filter((roleId) => roleId !== roleIdToRemove);
+    onChange({ ...formValues, roles: updatedRoles });
+
+    const newErrors = { ...validationErrors };
+    if (updatedRoles.length === 0) {
+      newErrors.roles = "Please select at least one role";
+    } else {
+      delete newErrors.roles;
+    }
+    setValidationErrors(newErrors);
+  };
+
+  const getAvailableRoles = () => {
+    const selectedRoles = formValues.roles || [];
+    return roleOptions.filter((role) => !selectedRoles.includes(role.id));
+  };
+
+  // ===== Input Handlers =====
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     onChange({ ...formValues, [name]: value });
 
-    // Real-time validation
     const newErrors = { ...validationErrors };
 
     switch (name) {
       case 'firstName':
-        if (!value.trim()) {
-          newErrors.firstName = "First name is required";
-        } else if (!validateName(value)) {
-          newErrors.firstName = "First name must be at least 2 characters";
-        } else {
-          delete newErrors.firstName;
-        }
+        if (!value.trim()) newErrors.firstName = "First name is required";
+        else if (!validateName(value)) newErrors.firstName = "First name must be at least 2 characters";
+        else delete newErrors.firstName;
         break;
 
       case 'lastName':
-        if (!value.trim()) {
-          newErrors.lastName = "Last name is required";
-        } else if (!validateName(value)) {
-          newErrors.lastName = "Last name must be at least 2 characters";
-        } else {
-          delete newErrors.lastName;
-        }
+        if (!value.trim()) newErrors.lastName = "Last name is required";
+        else if (!validateName(value)) newErrors.lastName = "Last name must be at least 2 characters";
+        else delete newErrors.lastName;
         break;
 
       case 'email':
-        if (!value.trim()) {
-          newErrors.email = "Email is required";
-        } else if (!validateEmail(value)) {
-          newErrors.email = "Please enter a valid email address";
-        } else {
-          delete newErrors.email;
-        }
+        if (!value.trim()) newErrors.email = "Email is required";
+        else if (!validateEmail(value)) newErrors.email = "Please enter a valid email address";
+        else delete newErrors.email;
         break;
 
       case 'address':
-        if (!value.trim()) {
-          newErrors.address = "Address is required";
-        } else if (!validateAddress(value)) {
-          newErrors.address = "Address must be at least 3 characters";
-        } else {
-          delete newErrors.address;
-        }
+        if (!value.trim()) newErrors.address = "Address is required";
+        else if (!validateAddress(value)) newErrors.address = "Address must be at least 3 characters";
+        else delete newErrors.address;
         break;
 
       case 'phone_number':
-        if (!value.trim()) {
-          newErrors.phone_number = "Phone number is required";
-        } else if (!validatePhone(value)) {
-          newErrors.phone_number = "Please enter a valid phone number";
-        } else {
-          delete newErrors.phone_number;
-        }
+        if (!value.trim()) newErrors.phone_number = "Phone number is required";
+        else if (!validatePhone(value)) newErrors.phone_number = "Please enter a valid phone number";
+        else delete newErrors.phone_number;
         break;
 
       case 'whatsapp_number':
-        if (!value.trim()) {
-          newErrors.whatsapp_number = "WhatsApp number is required";
-        } else if (!validatePhone(value)) {
-          newErrors.whatsapp_number = "Please enter a valid WhatsApp number";
-        } else {
-          delete newErrors.whatsapp_number;
-        }
+        if (!value.trim()) newErrors.whatsapp_number = "WhatsApp number is required";
+        else if (!validatePhone(value)) newErrors.whatsapp_number = "Please enter a valid WhatsApp number";
+        else delete newErrors.whatsapp_number;
         break;
 
-      // Password validation - only for admins
       case 'password':
         if (isPasswordRequired()) {
-          if (!value.trim()) {
-            newErrors.password = "Password is required";
-          } else if (!validatePassword(value)) {
-            newErrors.password = "Password must be at least 6 characters";
-          } else {
-            delete newErrors.password;
-          }
-          // Check password confirmation match if it exists
+          if (!value.trim()) newErrors.password = "Password is required";
+          else if (!validatePassword(value)) newErrors.password = "Password must be at least 6 characters";
+          else delete newErrors.password;
+
           if (formValues.password_confirmation && value !== formValues.password_confirmation) {
             newErrors.password_confirmation = "Passwords do not match";
-          } else if (formValues.password_confirmation && value === formValues.password_confirmation) {
+          } else if (formValues.password_confirmation) {
             delete newErrors.password_confirmation;
           }
         }
@@ -189,13 +193,9 @@ const UserAdminFormModal = ({
 
       case 'password_confirmation':
         if (isPasswordRequired()) {
-          if (!value.trim()) {
-            newErrors.password_confirmation = "Please confirm your password";
-          } else if (value !== formValues.password) {
-            newErrors.password_confirmation = "Passwords do not match";
-          } else {
-            delete newErrors.password_confirmation;
-          }
+          if (!value.trim()) newErrors.password_confirmation = "Please confirm your password";
+          else if (value !== formValues.password) newErrors.password_confirmation = "Passwords do not match";
+          else delete newErrors.password_confirmation;
         }
         break;
 
@@ -206,38 +206,30 @@ const UserAdminFormModal = ({
     setValidationErrors(newErrors);
   };
 
+  // ===== Form Submit =====
   const handleFormSubmit = async () => {
-
     setApiError("");
-    
+
     try {
-      // Validate outlets for admins
-      if (activeTab === "admins" && (!formValues.outlets || formValues.outlets.length === 0)) {
-        setValidationErrors(prev => ({
-          ...prev,
-          outlets: "Please select at least one outlet"
-        }));
-     
-        return;
+      if (activeTab === "admins") {
+        if (!formValues.outlets || formValues.outlets.length === 0) {
+          setValidationErrors(prev => ({ ...prev, outlets: "Please select at least one outlet" }));
+          return;
+        }
+        if (!formValues.roles || formValues.roles.length === 0) {
+          setValidationErrors(prev => ({ ...prev, roles: "Please select at least one role" }));
+          return;
+        }
       }
 
-      // Check for validation errors
-      if (Object.keys(validationErrors).length > 0) {
-    
-        return;
-      }
+      if (Object.keys(validationErrors).length > 0) return;
 
-      // Merge firstName and lastName into full name
       const fullName = `${formValues.firstName || ''} ${formValues.lastName || ''}`.trim();
-      
-      let payload;
 
+      let payload;
       if (isEdit) {
-        // For editing, call the onSubmit function passed from parent
-        // The parent component will handle the API calls
         onSubmit(formValues);
       } else {
-        // For adding new users/admins/riders
         if (activeTab === "admins") {
           payload = {
             user: {
@@ -248,7 +240,8 @@ const UserAdminFormModal = ({
               whatsapp_number: formValues.whatsapp_number || '',
               password: formValues.password || '',
               password_confirmation: formValues.password_confirmation || '',
-              role: "admin",
+              role: 'admin',
+              'sub-roles': formValues.roles || [],
               outlets: formValues.outlets || []
             }
           };
@@ -276,27 +269,19 @@ const UserAdminFormModal = ({
           };
         }
 
-        console.log('Registration payload:', payload);
-
         const response = await register(payload);
-        console.log('Registration response:', response);
-        
         if (response?.message) {
-          closeAllModals(); 
+          closeAllModals();
         }
       }
     } catch (error) {
       console.error('Form submission failed:', error);
       setApiError(error.message || 'An error occurred while processing your request');
-    } finally {
-    
     }
   };
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    
-    // Additional validation can be added here if needed
     console.log(`Field ${name} blurred with value:`, value);
   };
 
@@ -308,13 +293,13 @@ const UserAdminFormModal = ({
             <UserPlus size={20} />
             {isEdit ? 'Edit' : 'Add New'} {activeTab === 'users' ? 'User' : activeTab === 'riders' ? 'Rider' : 'Admin'}
           </h2>
-          <button className="modal-close-form" onClick={closeAllModals}>
-            ×
-          </button>
+          <button className="modal-close-form" onClick={closeAllModals}>×</button>
         </div>
 
         <div className="modal-body-form">
           <form className="modal-form-form" onSubmit={(e) => e.preventDefault()}>
+            
+            {/* FIRST NAME */}
             <div className="form-field-form">
               <label className="form-label-form" htmlFor="firstName">First Name</label>
               <input
@@ -332,6 +317,7 @@ const UserAdminFormModal = ({
               )}
             </div>
 
+            {/* LAST NAME */}
             <div className="form-field-form">
               <label className="form-label-form" htmlFor="lastName">Last Name</label>
               <input
@@ -349,6 +335,7 @@ const UserAdminFormModal = ({
               )}
             </div>
 
+            {/* EMAIL */}
             <div className="form-field-form">
               <label className="form-label-form" htmlFor="email">Email</label>
               <input
@@ -366,6 +353,7 @@ const UserAdminFormModal = ({
               )}
             </div>
 
+            {/* ADDRESS */}
             <div className="form-field-form">
               <label className="form-label-form" htmlFor="address">Address</label>
               <input
@@ -383,6 +371,7 @@ const UserAdminFormModal = ({
               )}
             </div>
 
+            {/* PHONE */}
             <div className="form-field-form">
               <label className="form-label-form" htmlFor="phone_number">Phone Number</label>
               <input
@@ -399,6 +388,7 @@ const UserAdminFormModal = ({
               )}
             </div>
 
+            {/* WHATSAPP */}
             <div className="form-field-form">
               <label className="form-label-form" htmlFor="whatsapp_number">WhatsApp Number</label>
               <input
@@ -415,7 +405,7 @@ const UserAdminFormModal = ({
               )}
             </div>
 
-            {/* Password fields - only show for admins when not editing */}
+            {/* PASSWORD FIELDS */}
             {isPasswordRequired() && (
               <>
                 <div className="form-field-form">
@@ -472,22 +462,20 @@ const UserAdminFormModal = ({
               </>
             )}
 
-            {/* Multi-select Outlets with badges - only for admins */}
+            {/* ROLES (Admins Only) */}
             {activeTab === "admins" && (
               <div className="form-field-form">
-                <label className="form-label-form">Outlets</label>
-                
-                {/* Selected outlets display as badges */}
-                {formValues.outlets && formValues.outlets.length > 0 && (
-                  <div className="selected-outlets-badges">
-                    {formValues.outlets.map((outlet) => {
-                      const outletLabel = outletOptions.find(opt => opt === outlet) || outlet;
+                <label className="form-label-form">Sub Roles</label>
+                {formValues.roles && formValues.roles.length > 0 && (
+                  <div className="selected-roles-badges">
+                    {formValues.roles.map((roleId) => {
+                      const role = roleOptions.find((r) => r.id === roleId);
                       return (
-                        <span key={outlet} className="outlet-badge">
-                          {outletLabel}
+                        <span key={roleId} className="outlet-badge">
+                          {role ? role.name : roleId}
                           <button
                             type="button"
-                            onClick={() => removeOutlet(outlet)}
+                            onClick={() => removeRole(roleId)}
                             className="outlet-badge-remove"
                           >
                             <X size={14} />
@@ -497,53 +485,86 @@ const UserAdminFormModal = ({
                     })}
                   </div>
                 )}
-
-                {/* Dropdown to add outlets */}
                 <select
-                  onChange={handleOutletSelect}
-                  className={`form-select-form ${validationErrors.outlets || formErrors.outlets ? 'error' : ''}`}
+                  onChange={handleRoleSelect}
+                  className={`form-select-form ${validationErrors.roles || formErrors.roles ? "error" : ""}`}
                   value=""
                 >
                   <option value="">
-                    {getAvailableOptions().length > 0 ? 'Select outlet to add' : 'All outlets selected'}
+                    {getAvailableRoles().length > 0 ? "Select role to add" : "All roles selected"}
                   </option>
-                  {getAvailableOptions().map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
+                  {getAvailableRoles().map((role) => (
+                    <option key={role.id} value={role.name}>{role.name}</option>
                   ))}
                 </select>
+                {(validationErrors.roles || formErrors.roles) && (
+                  <div className="form-error-form">{validationErrors.roles || formErrors.roles}</div>
+                )}
+              </div>
+            )}
 
+            {/* OUTLETS (Admins Only) */}
+            {activeTab === "admins" && (
+              <div className="form-field-form">
+                <label className="form-label-form">Outlets</label>
+                {formValues.outlets && formValues.outlets.length > 0 && (
+                  <div className="selected-outlets-badges">
+                    {formValues.outlets.map((outlet) => (
+                      <span key={outlet} className="outlet-badge">
+                        {outlet}
+                        <button
+                          type="button"
+                          onClick={() => removeOutlet(outlet)}
+                          className="outlet-badge-remove"
+                        >
+                          <X size={14} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <select
+                  onChange={handleOutletSelect}
+                  className={`form-select-form ${validationErrors.outlets || formErrors.outlets ? "error" : ""}`}
+                  value=""
+                >
+                  <option value="">
+                    {getAvailableOptions().length > 0 ? "Select outlet to add" : "All outlets selected"}
+                  </option>
+                  {getAvailableOptions().map((outlet) => (
+                    <option key={outlet} value={outlet}>{outlet}</option>
+                  ))}
+                </select>
                 {(validationErrors.outlets || formErrors.outlets) && (
                   <div className="form-error-form">{validationErrors.outlets || formErrors.outlets}</div>
                 )}
               </div>
             )}
 
+            {/* API ERROR */}
             {apiError && <div className="form-error-form api-error">{apiError}</div>}
-
-            <div className="form-actions-form">
-              <button
-                type="button"
-                className="btn-form btn-secondary-form"
-                onClick={closeAllModals}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn-form btn-primary-form"
-                onClick={handleFormSubmit}
-                disabled={isLoading || isPending}
-              >
-                {isLoading || isPending ? (
-                  `${isEdit ? 'Updating...' : 'Adding...'}`
-                ) : (
-                  `${isEdit ? 'Update' : 'Add'} ${activeTab === 'users' ? 'User' : activeTab === 'riders' ? 'Rider' : 'Admin'}`
-                )}
-              </button>
-            </div>
           </form>
+        </div>
+
+        <div className="modal-footer-form">
+<button
+            type="button"
+            className="btn-cancel-form"
+            onClick={closeAllModals}
+            disabled={isLoading || isPending}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn-submit-form"
+            onClick={handleFormSubmit}
+            disabled={isLoading || isPending}
+          >
+            {(isLoading || isPending)
+              ? (isEdit ? "Saving..." : "Creating...")
+              : (isEdit ? "Save Changes" : "Create")}
+          </button>
         </div>
       </div>
     </div>

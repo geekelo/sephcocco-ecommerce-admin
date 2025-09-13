@@ -332,9 +332,11 @@
   border-radius: 6px;
   background: #ffffff;
   color: #6b7280;
+
   cursor: pointer;
   transition: all 0.15s ease;
-  z-index: -99999;
+  position: relative; 
+
   flex-shrink: 0;
 }
 
@@ -356,10 +358,10 @@
 }
 
 /* ===== DROPDOWN MENU POSITIONING - FIXED POSITION TO PREVENT OVERFLOW ===== */
-.actions-menu-table {
+.actions-menu-table-row {
   position: fixed;
   min-width: 160px;
-  width: 160px;
+  width: auto;
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 
@@ -376,16 +378,16 @@
 }
 
 /* Animation for dropdowns appearing above */
-.actions-menu-table.align-up {
+.actions-menu-table-row.align-up {
   animation: slideInUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: bottom right;
 }
 
-.actions-menu-table.align-left {
+.actions-menu-table-row.align-left {
   transform-origin: top left;
 }
 
-.actions-menu-table.align-up.align-left {
+.actions-menu-table-row.align-up.align-left {
   transform-origin: bottom left;
 }
 
@@ -628,7 +630,7 @@
   }
 
   /* Mobile dropdown positioning - Fixed position for mobile too */
-  .actions-menu-table {
+  .actions-menu-table-row {
     position: fixed;
     max-width: calc(100vw - 32px);
     width: auto;
@@ -685,7 +687,7 @@
 }
 
 /* ===== FOCUS MANAGEMENT ===== */
-.actions-dropdown-table:focus-within .actions-menu-table {
+.actions-dropdown-table:focus-within .actions-menu-table-row {
   display: block;
 }
 
@@ -699,7 +701,7 @@
     border-right-color: #000000;
   }
   
-  .actions-menu-table {
+  .actions-menu-table-row {
     border-color: #000000;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   }
@@ -715,7 +717,7 @@
     transition: none;
   }
   
-  .actions-menu-table {
+  .actions-menu-table-row {
     animation: none;
   }
 }
@@ -991,7 +993,7 @@
   }
 
   /* ===== MOBILE DROPDOWN POSITIONING ===== */
-  .actions-menu-table {
+  .actions-menu-table-row {
     position: fixed;
     max-width: calc(100vw - 32px);
     width: auto;

@@ -117,14 +117,16 @@ const ManageAccounts = () => {
   // };
 
   // Transform API users to match component expectations
-  const transformedUsers = useMemo(() => {
-    if (!Array.isArray(apiUsers)) return [];
-    
-    return apiUsers.map(user => ({
+const transformedUsers = useMemo(() => {
+  if (!Array.isArray(apiUsers)) return [];
+  
+  return apiUsers
+    .map(user => ({
       id: user.id,
       name: user.name,
       email: user.email || '',
       role: user.role || '',
+      subroles: user.subroles || [],
       status: user.suspended ? 'suspended' : 'unsuspended',
       phone_number: user.phone_number || '',
       whatsapp_number: user.whatsapp_number || '',
@@ -135,34 +137,75 @@ const ManageAccounts = () => {
       lastLogin: user.last_login_at || new Date().toISOString(),
       orders: user.total_orders,
       shippings: user.total_shippings
+    }))
+    // Sort by creation date - newest first
+    .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
+}, [apiUsers]);
 
-    }));
-  }, [apiUsers]);
+// Alternative: If you want to sort within each role category (users, admins, riders)
+// You can also add sorting to the individual arrays:
+
+// For users array
+const users = transformedUsers
+  .filter(user => user.role === 'user')
+  .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
+
+// For admins array  
+const admins = transformedUsers
+  .filter(user => user.role === 'admin')
+  .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
+
+// For riders array
+const riders = transformedUsers
+  .filter(user => user.role === 'rider')
+  .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
+
+// If you want to add sorting as a filter option, you can also modify your filteredUsers, filteredAdmins, and filteredRiders useMemo hooks:
+
+const filteredUsers = useMemo(() => {
+  let filtered = users;
+
+  if (searchTerm) {
+    filtered = filtered.filter(user =>
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.phone_number.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  if (filterStatus && filterStatus !== 'All Status') {
+    filtered = filtered.filter(user => user.status === filterStatus);
+  }
+
+  // Sort by newest first (this ensures sorting is maintained even after filtering)
+  return filtered.sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
+}, [users, searchTerm, filterStatus]);
 
   // Separate users, admins, and riders from the transformed data
-  const users = transformedUsers.filter(user => user.role === 'user');
-  const admins = transformedUsers.filter(user => user.role === 'admin');
-  const riders = transformedUsers.filter(user => user.role === 'rider');
+  // const users = transformedUsers.filter(user => user.role === 'user');
+  // const admins = transformedUsers.filter(user => user.role === 'admin');
+  // const riders = transformedUsers.filter(user => user.role === 'rider');
 
-  // Filter data based on search and status
-  const filteredUsers = useMemo(() => {
-    let filtered = users;
+  // // Filter data based on search and status
+  // const filteredUsers = useMemo(() => {
+  //   let filtered = users;
 
-    if (searchTerm) {
-      filtered = filtered.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.phone_number.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+  //   if (searchTerm) {
+  //     filtered = filtered.filter(user =>
+  //       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       user.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       user.phone_number.toLowerCase().includes(searchTerm.toLowerCase())
+  //     );
+  //   }
 
-    if (filterStatus && filterStatus !== 'All Status') {
-      filtered = filtered.filter(user => user.status === filterStatus);
-    }
+  //   if (filterStatus && filterStatus !== 'All Status') {
+  //     filtered = filtered.filter(user => user.status === filterStatus);
+  //   }
 
-    return filtered;
-  }, [users, searchTerm, filterStatus]);
+  //   return filtered;
+  // }, [users, searchTerm, filterStatus]);
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
@@ -386,6 +429,38 @@ const ManageAccounts = () => {
         </span>
       )
     },
+    {
+    key: 'subroles',
+    label: 'Subroles',
+    flex: 1.5,
+    minWidth: '150px',
+    format: (value, data) => {
+      if (!data.subroles || data.subroles.length === 0) {
+        return <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>No subroles</span>;
+      }
+      
+      return (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+          {data.subroles.map((subrole, index) => (
+            <span 
+              key={index}
+              className="badge subrole-badge"
+              style={{
+                backgroundColor: '#f3f4f6',
+                color: '#374151',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: '500'
+              }}
+            >
+              {subrole}
+            </span>
+          ))}
+        </div>
+      );
+    }
+  },
     {
       key: 'status',
       label: 'Status',
