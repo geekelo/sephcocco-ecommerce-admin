@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../styles/NotificationDialog.css';
 import { X } from 'lucide-react';
 
@@ -7,26 +7,33 @@ import { formatDate } from '../utils/formatDate';
 import { useUpdateNotifyAdmin } from '../hooks/useUpdateNotifyAdmin';
 
 const NotificationDialog = ({ onClose, notifyData, refetch }) => {
-const activeOutlet = getActiveOutlet()
-
+  const activeOutlet = getActiveOutlet();
   const { mutateAsync: updateNotify } = useUpdateNotifyAdmin();
+
+  const [loadingId, setLoadingId] = useState(null); 
 
   const handleMarkRead = async (notif) => {
     try {
-      // Payload example - adjust as needed for your backend
-      const payload = {
-        [`sephcocco_${activeOutlet}_admin_notification`]: { viewed: true }
-      };
-      await updateNotify({ active_outlet: activeOutlet, notifyId: notif.id, payload });
+      setLoadingId(notif.id);
 
-     
+      const payload = {
+        [`sephcocco_${activeOutlet}_admin_notification`]: { viewed: true },
+      };
+
+      await updateNotify({
+        active_outlet: activeOutlet,
+        notifyId: notif.id,
+        payload,
+      });
+
       await refetch();
     } catch (error) {
       console.error('Failed to mark notification as read', error);
+    } finally {
+      setLoadingId(null); // stop loading
     }
   };
 
-  // Sort notifications by created_at descending before rendering
   const sortedNotifications = notifyData
     ? [...notifyData].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     : [];
@@ -46,8 +53,12 @@ const activeOutlet = getActiveOutlet()
             <p className="notification-date">{formatDate(notif.created_at)}</p>
             <p className="notification-text">{notif.message}</p>
             {!notif.read && (
-              <button className="mark-read-btn" onClick={() => handleMarkRead(notif)}>
-                Mark as Read
+              <button
+                className="mark-read-btn"
+                onClick={() => handleMarkRead(notif)}
+                disabled={loadingId === notif.id} // disable only this one
+              >
+                {loadingId === notif.id ? 'Marking...' : 'Mark as Read'}
               </button>
             )}
           </div>
