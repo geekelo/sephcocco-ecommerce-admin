@@ -303,7 +303,7 @@ const ProductCategoriesPage = () => {
         initialValues={searchBarState}
       />
 
-      <div className="order-table-container">
+      <div className="order-table-container-cat">
         {/* Show total count */}
         <div className="page-title-section" style={{ marginBottom: '16px' }}>
           <h2>

@@ -121,7 +121,7 @@
 }
 
 /* Modal headers */
-.modal-header {
+.modal-header-order-summary {
   display: flex;
   justify-content: space-between;
   align-items: center;

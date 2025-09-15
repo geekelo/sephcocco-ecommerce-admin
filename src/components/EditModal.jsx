@@ -591,7 +591,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
               </div>
 
               {/* Stock Quantity */}
-              <div className={`form-group-add ${errors.quantity ? "error" : ""}`}>
+              {/* <div className={`form-group-add ${errors.quantity ? "error" : ""}`}>
                 <label htmlFor="quantity">Stock Quantity</label>
                 <input
                   type="number"
@@ -606,7 +606,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
                 {errors.quantity && (
                   <div className="error-message">{errors.quantity}</div>
                 )}
-              </div>
+              </div> */}
             </div>
 
             {/* Two column layout */}

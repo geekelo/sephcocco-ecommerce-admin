@@ -188,28 +188,34 @@ const formatCurrency = (value) => {
   };
 
   // Enhanced cell value getter that handles different column structures
-  const getCellValue = (column, data) => {
-    // Handle column.cell function (from react-table style)
-    if (column.cell && typeof column.cell === 'function') {
-      return column.cell({ row: { original: data } });
-    }
+// Enhanced cell value getter that handles different column structures
+const getCellValue = (column, data) => {
+  // Handle column.render function (your custom style) - ADD THIS FIRST
+  if (column.render && typeof column.render === 'function') {
+    return column.render(data);
+  }
 
-    // Handle accessorKey (from react-table style)
-    if (column.accessorKey) {
-      return column.accessorKey.split('.').reduce((obj, key) => obj?.[key], data);
-    }
+  // Handle column.cell function (from react-table style)
+  if (column.cell && typeof column.cell === 'function') {
+    return column.cell({ row: { original: data } });
+  }
 
-    // Handle key or accessor (from custom style)
-    const key = column.key || column.accessor;
-    if (key) {
-      if (key.includes('.')) {
-        return key.split('.').reduce((obj, k) => obj?.[k], data);
-      }
-      return data[key];
-    }
+  // Handle accessorKey (from react-table style)
+  if (column.accessorKey) {
+    return column.accessorKey.split('.').reduce((obj, key) => obj?.[key], data);
+  }
 
-    return null;
-  };
+  // Handle key or accessor (from custom style)
+  const key = column.key || column.accessor;
+  if (key) {
+    if (key.includes('.')) {
+      return key.split('.').reduce((obj, k) => obj?.[k], data);
+    }
+    return data[key];
+  }
+
+  return null;
+};
 
   // Mobile card configuration
   const getDefaultMobileConfig = () => {
@@ -439,123 +445,129 @@ const formatCurrency = (value) => {
   };
 
   // Default cell renderer with enhanced type handling (for desktop)
-  const defaultCellRenderer = (column, data, value) => {
-    // If the column already has a cell renderer, it was handled in getCellValue
-    if (column.cell && typeof column.cell === 'function') {
-      return value; // This is already the rendered content
-    }
+// Default cell renderer with enhanced type handling (for desktop)
+const defaultCellRenderer = (column, data, value) => {
+  // If the column has a render function, the value is already the rendered JSX
+  if (column.render && typeof column.render === 'function') {
+    return value; // Return the already rendered content
+  }
 
-    // Handle different cell types based on column configuration
-    if (column.type === 'custom' && column.render) {
-      return column.render(value, data, column);
-    }
+  // If the column already has a cell renderer, it was handled in getCellValue
+  if (column.cell && typeof column.cell === 'function') {
+    return value; // This is already the rendered content
+  }
 
-    if (column.type === 'actions') {
-      return renderActionsCell();
-    }
+  // Handle different cell types based on column configuration
+  if (column.type === 'custom' && column.render) {
+    return column.render(value, data, column);
+  }
 
-    if (column.type === 'status' && column.statusConfig) {
-      return renderStatusCell(value, column.statusConfig);
-    }
-    if (column.type === 'current_stage' && column.statusConfig) {
-      return renderStatusCell(value, column.statusConfig);
-    }
+  if (column.type === 'actions') {
+    return renderActionsCell();
+  }
 
-    if (column.type === 'avatar' && column.avatarConfig) {
-      return renderAvatarCell(value, data, column.avatarConfig);
-    }
+  if (column.type === 'status' && column.statusConfig) {
+    return renderStatusCell(value, column.statusConfig);
+  }
+  if (column.type === 'current_stage' && column.statusConfig) {
+    return renderStatusCell(value, column.statusConfig);
+  }
 
-    if (column.type === 'badge' && column.badgeConfig) {
-      return renderBadgeCell(value, column.badgeConfig);
-    }
+  if (column.type === 'avatar' && column.avatarConfig) {
+    return renderAvatarCell(value, data, column.avatarConfig);
+  }
 
-    if (column.type === 'icon' && column.iconConfig) {
-      return renderIconCell(value, column.iconConfig);
-    }
+  if (column.type === 'badge' && column.badgeConfig) {
+    return renderBadgeCell(value, column.badgeConfig);
+  }
 
-    if (column.type === 'date' && column.dateConfig) {
-      return renderDateCell(value, column.dateConfig);
-    }
+  if (column.type === 'icon' && column.iconConfig) {
+    return renderIconCell(value, column.iconConfig);
+  }
 
-    if (column.type === 'currency' && column.currencyConfig) {
-      return renderCurrencyCell(value, column.currencyConfig);
-    }
+  if (column.type === 'date' && column.dateConfig) {
+    return renderDateCell(value, column.dateConfig);
+  }
 
-    if (column.type === 'button' && column.buttonConfig) {
-      return renderButtonCell(value, data, column.buttonConfig);
-    }
+  if (column.type === 'currency' && column.currencyConfig) {
+    return renderCurrencyCell(value, column.currencyConfig);
+  }
 
-    // Enhanced auto-detection based on column key
-    const columnKey = (column.key || column.accessorKey || '')?.toLowerCase() || '';
-    
-    // Currency fields
-    if (columnKey.includes('price') || columnKey.includes('cost') || columnKey.includes('amount')) {
-      return (
-        <div className="currency-cell">
-          <span className="currency-value">{formatCurrency(value)}</span>
-        </div>
-      );
-    }
-    
-    // Date fields
-    if (columnKey.includes('date') || columnKey.includes('created') || columnKey.includes('updated')) {
-      return (
-        <div className="date-cell">
-          <Calendar size={14} className="date-icon" />
-          <span className="date-text-row">{formatDate(value)}</span>
-        </div>
-      );
-    }
-    
-    // Status field
-    if (columnKey === 'status') {
-      return (
-        <span className={`status-badge ${getStatusClass(value)}`}>
-          {capitalizeText(value)}
-        </span>
-      );
-    }
-    if (columnKey === 'current_stage') {
-      return (
-        <span className={`status-badge ${getStatusClass(value)}`}>
-          {capitalizeText(value)}
-        </span>
-      );
-    }
-    
-    // Stages field
-    if (columnKey === 'stages') {
-      return renderStages(value);
-    }
-    
-    // Action field
-    if (columnKey === 'action' || column.type === 'button') {
-      return (
-        <button
-          className={`cell-button ${column.buttonConfig?.className || 'view-button'}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (column.buttonConfig?.onClick) {
-              column.buttonConfig.onClick(data);
-            }
-            if (onActionClick) {
-              onActionClick('view', data);
-            }
-          }}
-        >
-          <Eye size={14} className="button-icon" />
-          {column.buttonConfig?.text || 'View'}
-        </button>
-      );
-    }
+  if (column.type === 'button' && column.buttonConfig) {
+    return renderButtonCell(value, data, column.buttonConfig);
+  }
 
-    // Default text rendering with optional formatting
-    if (column.format) {
-      return column.format(value, data);
-    }
+  // Enhanced auto-detection based on column key
+  const columnKey = (column.key || column.accessorKey || '')?.toLowerCase() || '';
+  
+  // Currency fields
+  if (columnKey.includes('price') || columnKey.includes('cost') || columnKey.includes('amount')) {
+    return (
+      <div className="currency-cell">
+        <span className="currency-value">{formatCurrency(value)}</span>
+      </div>
+    );
+  }
+  
+  // Date fields
+  if (columnKey.includes('date') || columnKey.includes('created') || columnKey.includes('updated')) {
+    return (
+      <div className="date-cell">
+        <Calendar size={14} className="date-icon" />
+        <span className="date-text-row">{formatDate(value)}</span>
+      </div>
+    );
+  }
+  
+  // Status field
+  if (columnKey === 'status') {
+    return (
+      <span className={`status-badge ${getStatusClass(value)}`}>
+        {capitalizeText(value)}
+      </span>
+    );
+  }
+  if (columnKey === 'current_stage') {
+    return (
+      <span className={`status-badge ${getStatusClass(value)}`}>
+        {capitalizeText(value)}
+      </span>
+    );
+  }
+  
+  // Stages field
+  if (columnKey === 'stages') {
+    return renderStages(value);
+  }
+  
+  // Action field
+  if (columnKey === 'action' || column.type === 'button') {
+    return (
+      <button
+        className={`cell-button ${column.buttonConfig?.className || 'view-button'}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (column.buttonConfig?.onClick) {
+            column.buttonConfig.onClick(data);
+          }
+          if (onActionClick) {
+            onActionClick('view', data);
+          }
+        }}
+      >
+        <Eye size={14} className="button-icon" />
+        {column.buttonConfig?.text || 'View'}
+      </button>
+    );
+  }
 
-    return <span className="cell-text">{value || column.defaultValue || '-'}</span>;
-  };
+  // Default text rendering with optional formatting
+  if (column.format) {
+    return column.format(value, data);
+  }
+
+  return <span className="cell-text">{value || column.defaultValue || '-'}</span>;
+};
 
   // Status cell renderer
   const renderStatusCell = (value, config) => {

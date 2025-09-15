@@ -11,32 +11,37 @@ import { useUpdateUsers } from '../hooks/useUpdateUsers';
 import { useSwitchRole } from '../hooks/useSwitchUser';
 import { useSuspendUser } from '../hooks/useSuspendUser';
 import { useUnsuspendUser } from '../hooks/useUnsuspendUser';
+import { useRoles } from '../hooks/useRoles'; // Add this import
 import ManageAccountsSkeleton from '../components/ManageAccountSkeleton';
 import Pagination from '../components/Pagination';
 
 const itemsPerPage = 10;
 
 const ManageAccounts = () => {
-    const [searchBarState, setSearchBarState] = useState({
+  const [searchBarState, setSearchBarState] = useState({
     search: "",
     status: "All Status", 
     startDate: "",
     endDate: ""
   });
-    const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState({
     search_terms: "",
     status: "",
     start_date: "",
     end_date: "",
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const { data: usersResponse, isLoading, error, refetch } = useGetAllUsers( filters,   currentPage, 
-    itemsPerPage);
+  const { data: usersResponse, isLoading, error, refetch } = useGetAllUsers(filters, currentPage, itemsPerPage);
+  const { data: rolesData } = useRoles(); // Add this hook
   
   // Extract users array from API response
   const apiUsers = usersResponse?.users;
-
   
+  // Set up roleOptions from rolesData
+  const roleOptions = useMemo(() => {
+    return rolesData && Array.isArray(rolesData) ? rolesData : [];
+  }, [rolesData]);
+
   const [activeTab, setActiveTab] = useState('users');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -70,6 +75,7 @@ const ManageAccounts = () => {
     whatsapp_number: '',
     address: '',
     outlets: [],
+    subroles: [], // Add subroles here
     // Rider-specific fields
     license_number: '',
     vehicle_type: '',
@@ -80,136 +86,72 @@ const ManageAccounts = () => {
 
   const [formErrors, setFormErrors] = useState({});
 
-  // // Function to generate mock delivery data for riders
-  // const generateMockDeliveryData = (riderId) => {
-  //   // Generate consistent mock data based on rider ID
-  //   const seed = riderId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  //   const random = (seed * 9301 + 49297) % 233280;
-    
-  //   const totalDeliveries = Math.floor((random / 233280) * 300) + 50; // 50-350 deliveries
-  //   const deliveredToday = Math.floor((random / 233280) * 15); // 0-15 deliveries today
-  //   const averageRating = 3.5 + ((random / 233280) * 1.5); // 3.5-5.0 rating
-  //   const totalEarnings = totalDeliveries * (150 + (random / 233280) * 200); // Variable earnings per delivery
-    
-  //   const statuses = ['available', 'busy', 'offline'];
-  //   const currentStatus = statuses[Math.floor((random / 233280) * 3)];
-    
-  //   const vehicleTypes = ['Motorcycle', 'Bicycle', 'Van', 'Car'];
-  //   const vehicleType = vehicleTypes[Math.floor((random / 233280) * 4)];
-    
-  //   const locations = ['Victoria Island, Lagos', 'Ikeja, Lagos', 'Lekki, Lagos', 'Surulere, Lagos', 'Yaba, Lagos'];
-  //   const currentLocation = locations[Math.floor((random / 233280) * 5)];
-    
-  //   return {
-  //     total_deliveries: totalDeliveries,
-  //     delivered_today: deliveredToday,
-  //     average_rating: Math.round(averageRating * 10) / 10,
-  //     current_status: currentStatus,
-  //     total_earnings: Math.round(totalEarnings),
-  //     vehicle_type: vehicleType,
-  //     vehicle_plate: vehicleType === 'Bicycle' ? 'N/A' : `${String.fromCharCode(65 + Math.floor((random / 233280) * 26))}${String.fromCharCode(65 + Math.floor(((random * 2) / 233280) * 26))}${String.fromCharCode(65 + Math.floor(((random * 3) / 233280) * 26))}-${Math.floor((random / 233280) * 900) + 100}-${String.fromCharCode(88 + Math.floor((random / 233280) * 3))}${String.fromCharCode(88 + Math.floor(((random * 2) / 233280) * 3))}`,
-  //     license_number: `LIC${Math.floor((random / 233280) * 900000) + 100000}`,
-  //     emergency_contact: 'Emergency Contact',
-  //     emergency_phone: '+234' + Math.floor((random / 233280) * 9000000000) + 1000000000,
-  //     current_location: currentLocation,
-  //     last_delivery: currentStatus !== 'offline' ? new Date(Date.now() - (random / 233280) * 86400000).toISOString() : new Date(Date.now() - 86400000 - (random / 233280) * 172800000).toISOString()
-  //   };
-  // };
-
   // Transform API users to match component expectations
-const transformedUsers = useMemo(() => {
-  if (!Array.isArray(apiUsers)) return [];
-  
-  return apiUsers
-    .map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email || '',
-      role: user.role || '',
-      subroles: user.subroles || [],
-      status: user.suspended ? 'suspended' : 'unsuspended',
-      phone_number: user.phone_number || '',
-      whatsapp_number: user.whatsapp_number || '',
-      address: user.address || '',
-      payment_ref: user.payment_ref || '',
-      outlets: user.outlets || [],
-      joinDate: user.created_at,
-      lastLogin: user.last_login_at || new Date().toISOString(),
-      orders: user.total_orders,
-      shippings: user.total_shippings
-    }))
-    // Sort by creation date - newest first
+  const transformedUsers = useMemo(() => {
+    if (!Array.isArray(apiUsers)) return [];
+    
+    return apiUsers
+      .map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email || '',
+        role: user.role || '',
+        subroles: user.subroles || [],
+        status: user.suspended ? 'suspended' : 'unsuspended',
+        phone_number: user.phone_number || '',
+        whatsapp_number: user.whatsapp_number || '',
+        address: user.address || '',
+        payment_ref: user.payment_ref || '',
+        outlets: user.outlets || [],
+        joinDate: user.created_at,
+        lastLogin: user.last_login_at || new Date().toISOString(),
+        orders: user.total_orders,
+        shippings: user.total_shippings
+      }))
+      // Sort by creation date - newest first
+      .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
+  }, [apiUsers]);
+
+  // For users array
+  const users = transformedUsers
+    .filter(user => user.role === 'user')
     .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
-}, [apiUsers]);
 
-// Alternative: If you want to sort within each role category (users, admins, riders)
-// You can also add sorting to the individual arrays:
+  // For admins array  
+  const admins = transformedUsers
+    .filter(user => user.role === 'admin')
+    .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
 
-// For users array
-const users = transformedUsers
-  .filter(user => user.role === 'user')
-  .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
+  // For riders array
+  const riders = transformedUsers
+    .filter(user => user.role === 'rider')
+    .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
 
-// For admins array  
-const admins = transformedUsers
-  .filter(user => user.role === 'admin')
-  .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
+  const filteredUsers = useMemo(() => {
+    let filtered = users;
 
-// For riders array
-const riders = transformedUsers
-  .filter(user => user.role === 'rider')
-  .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
+    if (searchTerm) {
+      filtered = filtered.filter(user =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.phone_number.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
-// If you want to add sorting as a filter option, you can also modify your filteredUsers, filteredAdmins, and filteredRiders useMemo hooks:
+    if (filterStatus && filterStatus !== 'All Status') {
+      filtered = filtered.filter(user => user.status === filterStatus);
+    }
 
-const filteredUsers = useMemo(() => {
-  let filtered = users;
+    // Sort by newest first (this ensures sorting is maintained even after filtering)
+    return filtered.sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
+  }, [users, searchTerm, filterStatus]);
 
-  if (searchTerm) {
-    filtered = filtered.filter(user =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phone_number.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }
-
-  if (filterStatus && filterStatus !== 'All Status') {
-    filtered = filtered.filter(user => user.status === filterStatus);
-  }
-
-  // Sort by newest first (this ensures sorting is maintained even after filtering)
-  return filtered.sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
-}, [users, searchTerm, filterStatus]);
-
-  // Separate users, admins, and riders from the transformed data
-  // const users = transformedUsers.filter(user => user.role === 'user');
-  // const admins = transformedUsers.filter(user => user.role === 'admin');
-  // const riders = transformedUsers.filter(user => user.role === 'rider');
-
-  // // Filter data based on search and status
-  // const filteredUsers = useMemo(() => {
-  //   let filtered = users;
-
-  //   if (searchTerm) {
-  //     filtered = filtered.filter(user =>
-  //       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //       user.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //       user.phone_number.toLowerCase().includes(searchTerm.toLowerCase())
-  //     );
-  //   }
-
-  //   if (filterStatus && filterStatus !== 'All Status') {
-  //     filtered = filtered.filter(user => user.status === filterStatus);
-  //   }
-
-  //   return filtered;
-  // }, [users, searchTerm, filterStatus]);
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
-    // Updated to handle the new sort parameters from SearchBar
+
+  // Updated to handle the new sort parameters from SearchBar
   const handleApplyFilters = ({ 
     status, 
     search_terms, 
@@ -242,6 +184,7 @@ const filteredUsers = useMemo(() => {
       sort_by_stock: ""  // Clear sort filters
     });
   };
+
   const filteredAdmins = useMemo(() => {
     let filtered = admins;
 
@@ -430,37 +373,37 @@ const filteredUsers = useMemo(() => {
       )
     },
     {
-    key: 'subroles',
-    label: 'Subroles',
-    flex: 1.5,
-    minWidth: '150px',
-    format: (value, data) => {
-      if (!data.subroles || data.subroles.length === 0) {
-        return <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>No subroles</span>;
+      key: 'subroles',
+      label: 'Subroles',
+      flex: 1.5,
+      minWidth: '150px',
+      format: (value, data) => {
+        if (!data.subroles || data.subroles.length === 0) {
+          return <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>No subroles</span>;
+        }
+        
+        return (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+            {data.subroles.map((subrole, index) => (
+              <span 
+                key={index}
+                className="badge subrole-badge"
+                style={{
+                  backgroundColor: '#f3f4f6',
+                  color: '#374151',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  fontWeight: '500'
+                }}
+              >
+                {subrole}
+              </span>
+            ))}
+          </div>
+        );
       }
-      
-      return (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-          {data.subroles.map((subrole, index) => (
-            <span 
-              key={index}
-              className="badge subrole-badge"
-              style={{
-                backgroundColor: '#f3f4f6',
-                color: '#374151',
-                padding: '2px 8px',
-                borderRadius: '12px',
-                fontSize: '12px',
-                fontWeight: '500'
-              }}
-            >
-              {subrole}
-            </span>
-          ))}
-        </div>
-      );
-    }
-  },
+    },
     {
       key: 'status',
       label: 'Status',
@@ -545,17 +488,14 @@ const filteredUsers = useMemo(() => {
         </div>
       )
     },
-       {
+    {
       key: 'total_orders',
       label: 'Total Orders',
       flex: 1,
       minWidth: '120px',
       format: (value, data) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-
-            <div style={{ fontWeight: '600' }}>{data.orders}</div>
-
-      
+          <div style={{ fontWeight: '600' }}>{data.orders}</div>
         </div>
       )
     },
@@ -566,15 +506,11 @@ const filteredUsers = useMemo(() => {
       minWidth: '120px',
       format: (value, data) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-
-            <div style={{ fontWeight: '600' }}>{data.shippings}</div>
-
-      
+          <div style={{ fontWeight: '600' }}>{data.shippings}</div>
         </div>
       )
     },
-
-     {
+    {
       key: 'status',
       label: 'Status',
       flex: 1,
@@ -661,10 +597,21 @@ const filteredUsers = useMemo(() => {
     setShowViewModal(true);
   };
   
-  // Handle edit account
+  // Handle edit account (FIXED)
   const handleEditAccount = (account) => {
     setSelectedAccount(account);
     console.log('Editing account:', account);
+    
+    // Map subroles from names to IDs for the form
+    const subroleIds = [];
+    if (account.subroles && Array.isArray(account.subroles)) {
+      account.subroles.forEach(subroleName => {
+        const matchingRole = roleOptions.find(role => role.name === subroleName);
+        if (matchingRole) {
+          subroleIds.push(matchingRole.id);
+        }
+      });
+    }
     
     const [firstName, ...lastNameParts] = (account.name || '').split(' ');
     setFormData({
@@ -676,12 +623,12 @@ const filteredUsers = useMemo(() => {
       whatsapp_number: account.whatsapp_number || '',
       address: account.address || '',
       outlets: account.outlets || [],
-
+      subroles: subroleIds, // Use mapped IDs instead of names
     });
     setShowEditModal(true);
   };
 
-  // Handle form submit for edit
+  // Handle form submit for edit (FIXED)
   const handleFormSubmit = async (submissionData) => {
     try {
       if (!selectedAccount?.id) {
@@ -702,8 +649,6 @@ const filteredUsers = useMemo(() => {
         }
       };
 
- 
-
       // Add password fields if they exist (for new users or password changes)
       if (submissionData.password) {
         userDetailsPayload.user.password = submissionData.password;
@@ -713,25 +658,45 @@ const filteredUsers = useMemo(() => {
       console.log('Updating user details:', userDetailsPayload);
       
       // Update user details
-  await updateUser({
-  userId: selectedAccount.id,
-  payload: userDetailsPayload
-});
+      await updateUser({
+        userId: selectedAccount.id,
+        payload: userDetailsPayload
+      });
 
-
-      // If outlets are provided and different, update outlets separately
+      // Handle outlets update
       if (submissionData.outlets && submissionData.outlets.length > 0) {
         const outletsPayload = {
           user: {
             outlets: submissionData.outlets
           }
         };
-        
+
         console.log('Updating user outlets:', outletsPayload);
-       await updateUser({
-    userId: selectedAccount.id,
-    payload: outletsPayload
-  });
+        await updateUser({
+          userId: selectedAccount.id,
+          payload: outletsPayload
+        });
+      }
+
+      // Handle subroles update - FIXED VERSION
+      if (submissionData.subroles && submissionData.subroles.length > 0) {
+        // Convert role IDs back to role names for the API
+        const subroleNames = submissionData.subroles.map(roleId => {
+          const role = roleOptions.find(r => r.id === roleId);
+          return role ? role.name : roleId;
+        });
+
+        const subrolesPayload = {
+          user: {
+            subroles: subroleNames // Send names instead of IDs
+          }
+        };
+        
+        console.log('Updating user subroles:', subrolesPayload);
+        await updateUser({
+          userId: selectedAccount.id,
+          payload: subrolesPayload
+        });
       }
 
       // Refetch data to update the UI
@@ -840,6 +805,7 @@ const filteredUsers = useMemo(() => {
       whatsapp_number: '',
       address: '',
       outlets: [],
+      subroles: [], // Initialize subroles as empty array
     });
     setFormErrors({});
     setShowAddModal(true);
@@ -866,7 +832,6 @@ const filteredUsers = useMemo(() => {
     if (!formData.email?.trim()) errors.email = 'Email is required';
     if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Email is invalid';
     if (!formData.role) errors.role = 'Role is required';
-    
     
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -920,6 +885,7 @@ const filteredUsers = useMemo(() => {
       whatsapp_number: '',
       address: '',
       outlets: [],
+      subroles: [], // Reset subroles
     });
     setFormErrors({});
   };
@@ -984,7 +950,7 @@ const filteredUsers = useMemo(() => {
   // Handle loading state
   if (isLoading) {
     return (
-     <ManageAccountsSkeleton/>
+      <ManageAccountsSkeleton/>
     );
   }
 
@@ -1037,7 +1003,6 @@ const filteredUsers = useMemo(() => {
 
   // Get filter options based on active tab
   const getFilterOptions = () => {
-
     return ['All Status', 'unsuspended', 'suspended'];
   };
 
@@ -1142,17 +1107,15 @@ const filteredUsers = useMemo(() => {
       {/* Search and Filter */}
       <div className="accounts-controls">
         <SearchBar
-    
           filterOptions={getFilterOptions()}
-             onApply={handleApplyFilters}
-        onManualSearch={handleManualSearch} // Add manual search handler
-
-        categoryOptions={[]} // Explicitly disable category filtering
-        sortOptions={[]} // Explicitly disable sort options
-        placeholder={`Search ${activeTab}...`}
-        filterLabel="Filter by Status"
-        showDate={true} // Enable date filtering for shipping
-        initialValues={searchBarState} // Pass persistent state
+          onApply={handleApplyFilters}
+          onManualSearch={handleManualSearch} // Add manual search handler
+          categoryOptions={[]} // Explicitly disable category filtering
+          sortOptions={[]} // Explicitly disable sort options
+          placeholder={`Search ${activeTab}...`}
+          filterLabel="Filter by Status"
+          showDate={true} // Enable date filtering for shipping
+          initialValues={searchBarState} // Pass persistent state
         />
       </div>
 
@@ -1185,15 +1148,14 @@ const filteredUsers = useMemo(() => {
           className="accounts-table"
         />
         <Pagination
-
-       currentPage={currentPage}
-              totalPages={meta.total_pages}
-              onPageChange={handlePageChange}
-              totalItems={meta.total_count}
-              itemsPerPage={itemsPerPage}
-              showInfo={true}
-  name="Shipping"
-/>
+          currentPage={currentPage}
+          totalPages={meta.total_pages}
+          onPageChange={handlePageChange}
+          totalItems={meta.total_count}
+          itemsPerPage={itemsPerPage}
+          showInfo={true}
+          name="Shipping"
+        />
       </div>
 
       {/* View Account Modal */}

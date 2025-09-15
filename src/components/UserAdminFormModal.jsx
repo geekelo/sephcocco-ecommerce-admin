@@ -97,39 +97,39 @@ const UserAdminFormModal = ({
     return outletOptions.filter(option => !selectedOutlets.includes(option));
   };
 
-  // ===== Roles Handlers =====
+  // ===== Roles Handlers (FIXED) =====
   const handleRoleSelect = (e) => {
     const selectedRoleId = e.target.value;
     if (!selectedRoleId) return;
 
-    const currentRoles = formValues.roles || [];
+    const currentRoles = formValues.subroles || []; // Use subroles consistently
     if (!currentRoles.includes(selectedRoleId)) {
       const updatedRoles = [...currentRoles, selectedRoleId];
-      onChange({ ...formValues, roles: updatedRoles });
+      onChange({ ...formValues, subroles: updatedRoles }); // Use subroles consistently
 
       const newErrors = { ...validationErrors };
-      delete newErrors.roles;
+      delete newErrors.subroles; // Use subroles consistently
       setValidationErrors(newErrors);
     }
     e.target.value = "";
   };
 
   const removeRole = (roleIdToRemove) => {
-    const currentRoles = formValues.roles || [];
+    const currentRoles = formValues.subroles || []; // Use subroles consistently
     const updatedRoles = currentRoles.filter((roleId) => roleId !== roleIdToRemove);
-    onChange({ ...formValues, roles: updatedRoles });
+    onChange({ ...formValues, subroles: updatedRoles }); // Use subroles consistently
 
     const newErrors = { ...validationErrors };
     if (updatedRoles.length === 0) {
-      newErrors.roles = "Please select at least one role";
+      newErrors.subroles = "Please select at least one role"; // Use subroles consistently
     } else {
-      delete newErrors.roles;
+      delete newErrors.subroles; // Use subroles consistently
     }
     setValidationErrors(newErrors);
   };
 
   const getAvailableRoles = () => {
-    const selectedRoles = formValues.roles || [];
+    const selectedRoles = formValues.subroles || []; // Use subroles consistently
     return roleOptions.filter((role) => !selectedRoles.includes(role.id));
   };
 
@@ -206,7 +206,7 @@ const UserAdminFormModal = ({
     setValidationErrors(newErrors);
   };
 
-  // ===== Form Submit =====
+  // ===== Form Submit (FIXED) =====
   const handleFormSubmit = async () => {
     setApiError("");
 
@@ -216,8 +216,9 @@ const UserAdminFormModal = ({
           setValidationErrors(prev => ({ ...prev, outlets: "Please select at least one outlet" }));
           return;
         }
-        if (!formValues.roles || formValues.roles.length === 0) {
-          setValidationErrors(prev => ({ ...prev, roles: "Please select at least one role" }));
+        // FIXED: Check subroles instead of roles
+        if (!formValues.subroles || formValues.subroles.length === 0) {
+          setValidationErrors(prev => ({ ...prev, subroles: "Please select at least one role" }));
           return;
         }
       }
@@ -231,6 +232,12 @@ const UserAdminFormModal = ({
         onSubmit(formValues);
       } else {
         if (activeTab === "admins") {
+          // Convert role IDs to role names for API
+          const subroleNames = (formValues.subroles || []).map(roleId => {
+            const role = roleOptions.find(r => r.id === roleId);
+            return role ? role.name : roleId;
+          });
+
           payload = {
             user: {
               name: fullName,
@@ -241,7 +248,7 @@ const UserAdminFormModal = ({
               password: formValues.password || '',
               password_confirmation: formValues.password_confirmation || '',
               role: 'admin',
-              'sub-roles': formValues.roles || [],
+              'sub-roles': subroleNames, // Use converted names
               outlets: formValues.outlets || []
             }
           };
@@ -462,13 +469,13 @@ const UserAdminFormModal = ({
               </>
             )}
 
-            {/* ROLES (Admins Only) */}
+            {/* ROLES (Admins Only) - FIXED */}
             {activeTab === "admins" && (
               <div className="form-field-form">
                 <label className="form-label-form">Sub Roles</label>
-                {formValues.roles && formValues.roles.length > 0 && (
+                {formValues.subroles && formValues.subroles.length > 0 && (
                   <div className="selected-roles-badges">
-                    {formValues.roles.map((roleId) => {
+                    {formValues.subroles.map((roleId) => {
                       const role = roleOptions.find((r) => r.id === roleId);
                       return (
                         <span key={roleId} className="outlet-badge">
@@ -487,18 +494,18 @@ const UserAdminFormModal = ({
                 )}
                 <select
                   onChange={handleRoleSelect}
-                  className={`form-select-form ${validationErrors.roles || formErrors.roles ? "error" : ""}`}
+                  className={`form-select-form ${validationErrors.subroles || formErrors.subroles ? "error" : ""}`}
                   value=""
                 >
                   <option value="">
                     {getAvailableRoles().length > 0 ? "Select role to add" : "All roles selected"}
                   </option>
                   {getAvailableRoles().map((role) => (
-                    <option key={role.id} value={role.name}>{role.name}</option>
+                    <option key={role.id} value={role.id}>{role.name}</option>
                   ))}
                 </select>
-                {(validationErrors.roles || formErrors.roles) && (
-                  <div className="form-error-form">{validationErrors.roles || formErrors.roles}</div>
+                {(validationErrors.subroles || formErrors.subroles) && (
+                  <div className="form-error-form">{validationErrors.subroles || formErrors.subroles}</div>
                 )}
               </div>
             )}
@@ -547,7 +554,7 @@ const UserAdminFormModal = ({
         </div>
 
         <div className="modal-footer-form">
-<button
+          <button
             type="button"
             className="btn-cancel-form"
             onClick={closeAllModals}

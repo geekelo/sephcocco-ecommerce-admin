@@ -1,4 +1,4 @@
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Cookies from 'js-cookie';
 import { 
@@ -18,6 +18,7 @@ import {
   ResetPasswordPage, 
   SettingsPage, 
   ShippingPage, 
+  StockPage, 
   StoresPage, 
   VerifyOTPPage 
 } from "./LazyLoader";
@@ -149,6 +150,7 @@ const AppRouter = () => {
             
                 <Route index element={<DashboardPage />} />
                 <Route path="products" element={<ProductsPage />} />
+                 <Route path="stocks" element={<StockPage />} />
                 <Route path="products-categories" element={<ProductCategoresPage />} />
                 <Route path="faq" element={<FAQPage />} />
                 <Route path="orders" element={<OrderPage />} />

@@ -55,7 +55,7 @@
 }
 
 /* Table container */
-.order-table-container {
+.order-table-container-cat {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -238,7 +238,7 @@
     justify-content: center;
   }
 
-  .order-table-container {
+  .order-table-container-cat {
     border-radius: 8px;
     margin: 0 -16px;
   }

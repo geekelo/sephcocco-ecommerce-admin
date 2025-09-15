@@ -9,7 +9,10 @@ import {
   LogOut,
   Users,
   TableOfContents, 
-  Bike
+  Bike,
+  Archive,
+  ShoppingCart,
+  Layers
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/Sidebar.css';
@@ -24,10 +27,11 @@ const Sidebar = ({ isOpen }) => {
     { name: 'Dashboard Overview', icon: <LayoutDashboard size={20} />, path: '/' },
   
     { name: 'Products', icon: <ShoppingBag size={20} />, path: '/products' },
-      { name: 'Orders', icon: <ShoppingBag size={20} />, path: '/orders' },
+      { name: 'Stocks Management', icon: <Archive size={20} />, path: '/stocks' },
+      { name: 'Orders', icon: <ShoppingCart size={20} />, path: '/orders' },
         { name: 'Payments', icon: <CreditCard size={20} />, path: '/payments' },
     { name: 'Logistics', icon: <Bike  size={20} />, path: '/logistics' },
-    { name: 'Product Categories', icon: <ShoppingBag size={20} />, path: '/products-categories' },
+    { name: 'Product Categories', icon: <Layers size={20} />, path: '/products-categories' },
     { name: 'Manage FAQ', icon: <TableOfContents size={20} />, path: '/faq' },
 
     { name: 'Messages', icon: <MessageSquare size={20} />, path: '/messages' },

@@ -142,7 +142,7 @@ if (order?.payment_details) {
     <>
       <div className="modal-overlay-order-summary" style={{paddingLeft: '240px', marginTop: '60px'}}>
         <div className="add-product-modal">
-          <div className="modal-header">
+          <div className="modal-header-order-summary">
             <h2>Order Summary</h2>
             <div className="header-actions">
               {/* Email button */}

@@ -1,0 +1,432 @@
+
+
+/* Tab Navigation */
+.stock-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 20px 0;
+  border-bottom: 2px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.stock-tabs .tab-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.stock-tabs .tab-button:hover {
+  color: #F93A01;
+  background-color: rgba(249, 58, 1, 0.05);
+}
+
+.stock-tabs .tab-button.active {
+  color: #F93A01;
+  border-bottom-color: #F93A01;
+  background-color: rgba(249, 58, 1, 0.05);
+}
+
+/* Table Cell Styles for Products */
+.product-image-cell {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 8px;
+}
+
+.product-image-cell img {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid #e5e7eb;
+}
+
+.product-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.product-name-cell .product-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.product-name-cell .product-barcode {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.price-cell {
+  font-size: 14px;
+  font-weight: 600;
+  color: #F93A01;
+}
+
+.stock-cell {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #e8f5e8;
+  color: #059669;
+  text-align: center;
+  min-width: 40px;
+  display: inline-block;
+}
+
+.stock-cell.low-stock {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.add-stock-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #F93A01;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.add-stock-action-btn:hover {
+  background-color: #e03000;
+}
+
+/* Stock History Table Cell Styles */
+.invoice-cell {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  font-family: monospace;
+}
+
+.product-info-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.product-info-cell .barcode {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.stock-changes-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.stock-changes-cell .old-stock {
+  color: #6b7280;
+  padding: 2px 6px;
+  background-color: #f3f4f6;
+  border-radius: 3px;
+}
+
+.stock-changes-cell .add-stock {
+  color: #059669;
+  font-weight: 600;
+  padding: 2px 6px;
+  background-color: #d1fae5;
+  border-radius: 3px;
+}
+
+.stock-changes-cell .new-stock {
+  color: #111827;
+  font-weight: 500;
+  padding: 2px 6px;
+  background-color: #e5e7eb;
+  border-radius: 3px;
+}
+
+.view-stock-action-btn {
+  padding: 6px 12px;
+  background-color: #F93A01;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.view-stock-action-btn:hover {
+  background-color: #e03000;
+}
+
+/* Status Badges - Scoped to stock management */
+.stock-table .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.stock-table .status-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.stock-table .status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.stock-table .status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Modal Styles for Stock Management */
+.modal-overlay-stock {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.stock-modal-stock {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: 20px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.stock-modal-stock .modal-header-stock {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.stock-modal-stock .modal-header-stock h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.stock-modal-stock .close-button-stock {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s ease;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.stock-modal-stock .close-button-stock:hover {
+  color: #374151;
+  background-color: #f3f4f6;
+}
+
+.stock-modal-stock .modal-content-stock {
+  padding: 24px;
+}
+
+.stock-modal-stock .form-group-stock {
+  margin-bottom: 16px;
+}
+
+.stock-modal-stock .form-group-stock label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.stock-modal-stock .form-group-stock input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #ffff;
+  color: #000;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.stock-modal-stock .form-group-stock input:focus {
+  outline: none;
+  border-color: #F93A01;
+  box-shadow: 0 0 0 2px rgba(249, 58, 1, 0.1);
+}
+
+.stock-modal-stock .form-group-stock input.disabled-input {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.stock-modal-stock .form-row-stock {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.stock-modal-stock .price-preview {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  text-align: center;
+  color: #0c4a6e;
+}
+
+.stock-modal-stock .modal-actions-stock {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.stock-modal-stock .cancel-btn {
+  padding: 10px 20px;
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stock-modal-stock .cancel-btn:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.stock-modal-stock .confirm-btn {
+  padding: 10px 20px;
+  background-color: #F93A01;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.stock-modal-stock .confirm-btn:hover:not(:disabled) {
+  background-color: #e03000;
+}
+
+.stock-modal-stock .confirm-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .stock-modal .form-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .stock-changes-visual {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+  
+  .stock-changes-visual .stock-arrow {
+    transform: rotate(90deg);
+    margin: 0;
+  }
+  
+  .stock-modal-stock .modal-actions-stock {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .stock-modal-stock .cancel-btn,
+  .stock-modal-stock .confirm-btn {
+    width: 100%;
+  }
+  
+  .order-info-row-stock {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stock-tabs .tab-button {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  
+  .add-stock-action-btn,
+  .view-stock-action-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  .stock-changes-cell {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+  
+  .stock-changes-visual .stock-value {
+    font-size: 16px;
+    min-width: 50px;
+    padding: 6px 12px;
+  }
+}
