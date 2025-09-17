@@ -253,7 +253,7 @@ const SearchBar = ({
   };
 
   return (
-    <div className="search-filter-section">
+    <div className="search-filter-section-search">
       {/* Search input */}
       <div className="search-box">
         <Search size={16} className="search-icon" />

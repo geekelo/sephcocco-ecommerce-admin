@@ -11,7 +11,6 @@ import SearchBar from '../components/SearchBar';
 import ConfirmActionModal from '../components/ConfirmActionModal';
 import Pagination from '../components/Pagination';
 
-import { toast } from "react-toastify";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import { useViewAllProduct } from "../hooks/useGetAllProduct";
 import { useViewProductCategories } from "../hooks/useGetProductCategories";
@@ -20,6 +19,7 @@ import { useDeleteProduct } from '../hooks/useDeleteProduct';
 import { useViewProductId } from '../hooks/useGetProductById';
 import { ErrorState } from '../components/ErrorState';
 import { EmptyState } from '../components/EmptyState';
+import { toast } from 'react-toastify';
 
 const ProductsPage = () => {
   const activeOutlet = getActiveOutlet();

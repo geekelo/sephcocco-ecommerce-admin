@@ -10,6 +10,7 @@ const StockSummary = ({
   onBack,
   onEdit,
   onDelete,
+  onUpdateStatus, 
 
   isUpdating = false,
   hideEmailButton = true
@@ -173,7 +174,7 @@ const StockSummary = ({
           {formattedProduct.length > 0 && (
             <div className="ordered-products-section">
               <h3>Product Information</h3>
-              <div className="products-grid">
+              <div className="ordered-products-grid">
                 {formattedProduct.map((product, index) => (
                   <ProductCard
                     key={product.id || index}
@@ -198,11 +199,11 @@ const StockSummary = ({
           <div className="form-actions">
             <button 
               className="update-button add-button" 
-              onClick={onEdit}
+              onClick={onUpdateStatus}
               disabled={isUpdating}
             >
-              <Edit size={16} />
-              Edit Stock Record
+             
+              Update Stock Status
             </button>
           
             <button 
@@ -210,7 +211,7 @@ const StockSummary = ({
               onClick={onDelete}
               disabled={isUpdating}
             >
-              <Trash2 size={16} />
+           
               Delete Record
             </button>
           </div>

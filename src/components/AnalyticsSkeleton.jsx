@@ -97,7 +97,7 @@ const AnalyticsSkeleton = () => {
                 <div key={index} className="chat-item-skeleton">
                   <div className="chat-info-skeleton">
                     <div className="skeleton-line chat-user"></div>
-                    <div className="skeleton-line chat-product"></div>
+                    <div className="skeleton-line chat-product-ske"></div>
                     <div className="skeleton-line chat-message"></div>
                   </div>
                   <div className="chat-meta-skeleton">

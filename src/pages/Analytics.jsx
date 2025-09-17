@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, Tooltip } from 'recharts';
 import OutletSwitcher from '../components/OutletSwitcher';
 import '../styles/Analytics.css';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
@@ -311,6 +311,10 @@ const AnalyticsPage = () => {
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#888' }}
                 />
+                    <Tooltip 
+      formatter={(value) => [`${value}`, "Orders"]}
+      labelStyle={{ color: "#333" }}
+    />
                 <Area
                   type="monotone"
                   dataKey="orders"
@@ -357,6 +361,10 @@ const AnalyticsPage = () => {
                   tick={{ fontSize: 12, fill: '#888' }}
                   tickFormatter={(value) => `₦${(value/1000).toFixed(0)}`}
                 />
+                    <Tooltip 
+      formatter={(value) => [formatCurrency(value), "Revenue"]}
+      labelStyle={{ color: "#333" }}
+    />
                 <Bar dataKey="payments" radius={[4, 4, 0, 0]}>
                   {paymentsChartData?.map((entry, index) => (
                     <Cell 

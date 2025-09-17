@@ -1,4 +1,4 @@
-.search-filter-section {
+.search-filter-section-search {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -159,7 +159,7 @@
 
 /* === Responsive === */
 @media (max-width: 768px) {
-  .search-filter-section {
+  .search-filter-section-search {
     flex-direction: column;
     align-items: stretch;
   }

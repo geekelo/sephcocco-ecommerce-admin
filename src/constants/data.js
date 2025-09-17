@@ -12,6 +12,10 @@ export  const navItems = [
     { name: 'Products', path: '/products' },
     { name: 'Payments', path: '/payments' },
     { name: 'Messages', path: '/messages' },
+    { name: 'Logistics', path: '/logistics', key: 'logistics' },
+{ name: 'Stocks Management', path: '/stocks', key: 'stocks' },
+{ name: 'Manage FAQ', path: '/faq', key: 'faq' },
+
     { name: 'Activities', path: '/activities' },
     { name: 'Analytics', path: '/analytics' },
     { name: 'Settings', path: '/settings' },

@@ -19,6 +19,7 @@ import { useDeleteStock } from '../hooks/useDeleteStock';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 import { toast } from 'react-toastify';
 import { StockModal } from '../components/StockModal';
+import UpdateStockStatusModal from '../components/UpdateStatusStockModal';
 
 const createProductColumns = (onAddStock) => [
   {
@@ -213,7 +214,8 @@ const StockManagement = () => {
   const [showUpdateStockModal, setShowUpdateStockModal] = useState(false);
   const [showStockDetailModal, setShowStockDetailModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  
+  const [showUpdateStockStatusModal, setShowUpdateStockStatusModal] = useState(false);
+
   // Pagination and filters
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -490,20 +492,28 @@ const StockManagement = () => {
       />
 
       {/* Stock Summary Modal - Updated */}
-      {showStockDetailModal && selectedStockHistory && (
-        <StockSummary
-          stockData={selectedStockHistory}
-          onBack={() => {
-            setShowStockDetailModal(false);
-            setSelectedStockHistory(null);
-          }}
-          onEdit={() => handleUpdateStock(selectedStockHistory)}
-          onDelete={() => setShowDeleteModal(true)}
-          onView={() => console.log('View product details')}
-          isUpdating={updatingStock}
-        />
-      )}
-
+   {showStockDetailModal && selectedStockHistory && (
+  <StockSummary
+    stockData={selectedStockHistory}
+    onBack={() => {
+      setShowStockDetailModal(false);
+      setSelectedStockHistory(null);
+    }}
+    onEdit={() => handleUpdateStock(selectedStockHistory)}
+    onDelete={() => setShowDeleteModal(true)}
+    isUpdating={updatingStock}
+ 
+    onUpdateStatus={() => setShowUpdateStockStatusModal(true)}
+  />
+)}
+<UpdateStockStatusModal
+  isOpen={showUpdateStockStatusModal}
+  onClose={() => setShowUpdateStockStatusModal(false)}
+  selectedStockHistory={selectedStockHistory}
+  product={selectedProduct} 
+  formData={selectedStockHistory}
+  refetchStock={refetchStock}
+/>
       {/* Delete confirmation modal */}
       {showDeleteModal && (
         <ConfirmActionModal

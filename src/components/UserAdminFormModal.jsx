@@ -5,6 +5,7 @@ import { validateEmail, validatePassword } from '../schema/LoginSchema';
 import Cookies from 'js-cookie';
 import { useEffect, useState } from 'react';
 import { useRoles } from '../hooks/useRoles';
+import { toast } from 'react-toastify';
 
 const UserAdminFormModal = ({
   isEdit,
@@ -277,6 +278,7 @@ const UserAdminFormModal = ({
         }
 
         const response = await register(payload);
+          toast.success(`${activeTab === "admins" ? "Admin" : activeTab === "users" ? "User" : "Rider"} Added successfully`);
         if (response?.message) {
           closeAllModals();
         }

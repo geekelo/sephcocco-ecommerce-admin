@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom'; // Add this import
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, ReferenceLine, Tooltip } from 'recharts';
 import StatsCard from '../components/StatsCard';
 import ChatItem from '../components/ChatItem';
 import ProductCard from '../components/ProductCard';
@@ -364,45 +364,50 @@ const topSellers = useMemo(() => {
           </div>
           <div className="chart-container performance-chart-container">
             {transformedPerformanceData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={transformedPerformanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: '#888' }}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: '#888' }}
-                  />
-                  
-                  {/* Dashed line in orange - position it at current month's value */}
-                  <ReferenceLine 
-                    y={transformedPerformanceData.find(item => item.name === currentMonthShort)?.value || 0} 
-                    stroke="#FF6B35" 
-                    strokeDasharray="4 4"
-                    strokeWidth={1}
-                    label={{ 
-                      value: "", 
-                      position: "insideTopLeft", 
-                      fill: "#FF6B35", 
-                      fontSize: 12, 
-                      fontWeight: 600 
-                    }}
-                  />
-                  
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                    {transformedPerformanceData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.name === currentMonthShort ? '#FF6B35' : '#FFE5E0'} 
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+             <ResponsiveContainer width="100%" height={300}>
+  <BarChart 
+    data={transformedPerformanceData} 
+    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+  >
+    <XAxis 
+      dataKey="name" 
+      axisLine={false}
+      tickLine={false}
+      tick={{ fontSize: 12, fill: '#888' }}
+    />
+    <YAxis 
+      axisLine={false}
+      tickLine={false}
+      tick={{ fontSize: 12, fill: '#888' }}
+    />
+
+    {/* Dashed line in orange - at current month's value */}
+    <ReferenceLine 
+      y={transformedPerformanceData.find(item => item.name === currentMonthShort)?.value || 0} 
+      stroke="#FF6B35" 
+      strokeDasharray="4 4"
+      strokeWidth={1}
+    />
+
+    {/* ✅ Tooltip added */}
+    <Tooltip
+      cursor={{ fill: 'rgba(255, 107, 53, 0.1)' }} // light hover highlight
+      formatter={(value) => [`${value}`, "Performance"]}
+      labelStyle={{ fontWeight: 600, color: "#333" }}
+      contentStyle={{ borderRadius: "8px", border: "1px solid #eee", backgroundColor: "#fff" }}
+    />
+
+    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+      {transformedPerformanceData.map((entry, index) => (
+        <Cell 
+          key={`cell-${index}`} 
+          fill={entry.name === currentMonthShort ? '#FF6B35' : '#FFE5E0'} 
+        />
+      ))}
+    </Bar>
+  </BarChart>
+</ResponsiveContainer>
+
             ) : (
               <div className="chart-empty-state">
                 <EmptyState message="No performance data available" />
