@@ -196,7 +196,7 @@
   white-space: nowrap;
 }
 
-.stock-table .status-completed {
+.stock-table .status-approved {
   background: #d1fae5;
   color: #065f46;
 }
@@ -206,7 +206,7 @@
   color: #92400e;
 }
 
-.stock-table .status-cancelled {
+.stock-table .status-declined {
   background: #fee2e2;
   color: #991b1b;
 }

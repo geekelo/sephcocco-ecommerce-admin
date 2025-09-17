@@ -151,10 +151,12 @@ const InfoCard = ({ items }) => {
         return 'status-badge status-cancelled';
       case 'payment confirmed':
             case 'delivering':
+              case 'approved':
         return 'status-badge status-processing';
       case 'active':
         return 'status-badge status-active';
       case 'inactive':
+         case 'declined':
       case 'suspended':
         return 'status-badge status-inactive';
       default:

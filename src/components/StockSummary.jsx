@@ -4,6 +4,7 @@ import ProductCard from './ProductCard';
 import '../styles/OrderSummary.css';
 import InfoCard from './InfoCard';
 import { formatDate } from '../utils/formatDate';
+import { getActiveUser } from '../utils/getActiveUser';
 
 const StockSummary = ({
   stockData,
@@ -15,7 +16,7 @@ const StockSummary = ({
   isUpdating = false,
   hideEmailButton = true
 }) => {
-  console.log('stock data', stockData);
+
   
   // Format stock data for display
   const formatStockData = (stock) => {
@@ -45,7 +46,9 @@ const StockSummary = ({
     priceChanges,
     notes
   } = formatStockData(stockData);
-
+ const { subroles } = getActiveUser();
+  const isStockSubrole = subroles.includes("stock");
+   const isPending = status?.toLowerCase() === "pending";
   // Format product for ProductCard component
   const formattedProduct = product ? [{
     id: product.id,
@@ -101,20 +104,23 @@ const StockSummary = ({
           </div>
         </div>
                         
-        <div className='verify'>
-          <button 
-            className="update-button add-button" 
-            onClick={onEdit}
-            disabled={isUpdating}
-            style={{ 
-              opacity: isUpdating ? 0.6 : 1,
-              cursor: isUpdating ? 'not-allowed' : 'pointer'
-            }}
-          >
-            <Edit size={16} />
-            {isUpdating ? 'Updating...' : 'Edit Stock Record'}  
-          </button>
-        </div>
+        {isPending && (
+          <div className='verify'>
+            <button 
+              className="update-button add-button" 
+              onClick={onEdit}
+              disabled={isUpdating}
+              style={{ 
+                opacity: isUpdating ? 0.6 : 1,
+                cursor: isUpdating ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <Edit size={16} />
+              {isUpdating ? 'Updating...' : 'Edit Stock Record'}  
+            </button>
+          </div>
+        )}
+
                         
         <div className="order-details">
           <div className="order-info-row">
@@ -196,25 +202,29 @@ const StockSummary = ({
             </div>
           )}
 
-          <div className="form-actions">
-            <button 
-              className="update-button add-button" 
-              onClick={onUpdateStatus}
-              disabled={isUpdating}
-            >
-             
-              Update Stock Status
-            </button>
-          
-            <button 
-              className="discard-button cancel-button" 
-              onClick={onDelete}
-              disabled={isUpdating}
-            >
-           
-              Delete Record
-            </button>
-          </div>
+          {isPending && (
+            <div className="form-actions">
+              {/* Hide update status if subrole = stock */}
+              {!isStockSubrole && (
+                <button 
+                  className="update-button add-button" 
+                  onClick={onUpdateStatus}
+                  disabled={isUpdating}
+                >
+                  Update Stock Status
+                </button>
+              )}
+
+              <button 
+                className="discard-button cancel-button" 
+                onClick={onDelete}
+                disabled={isUpdating}
+              >
+                Delete Record
+              </button>
+            </div>
+          )}
+      
         </div>
       </div>
     </div>
