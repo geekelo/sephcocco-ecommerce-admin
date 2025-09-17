@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { getActiveOutlet } from "../utils/getActiveOutlets";
 
 // Stock Modal Component (for both Add and Update)
 export const StockModal = ({ isOpen, onClose, product, stockData, onConfirm, isLoading, isEdit = false }) => {
@@ -11,7 +12,7 @@ export const StockModal = ({ isOpen, onClose, product, stockData, onConfirm, isL
     profit_markup: '',
     status: 'pending'
   });
-
+const activeOutlet = getActiveOutlet();
   // Initialize form data when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -47,7 +48,8 @@ export const StockModal = ({ isOpen, onClose, product, stockData, onConfirm, isL
   const calculateNewPrice = () => {
     const costPrice = parseFloat(formData.cost_price) || 0;
     const markup = parseFloat(formData.profit_markup) || 0;
-    return costPrice * (1 + markup / 100);
+    const percentage = ((costPrice - product?.price) / product?.price) * 100;
+    return costPrice + (markup * percentage);
   };
 
   const handleSubmit = () => {
@@ -56,19 +58,21 @@ export const StockModal = ({ isOpen, onClose, product, stockData, onConfirm, isL
       return;
     }
 
-    const payload = {
-      sephcocco_product_id: product?.id || stockData?.sephcocco_product_id,
-      invoice_number: formData.invoice_number,
-      vendor: formData.vendor,
-      status: formData.status || 'pending',
-      stock: {
-        add_stock: parseInt(formData.add_stock)
-      },
-      price: {
-        cost_price: parseFloat(formData.cost_price) || 0,
-        profit_markup: parseFloat(formData.profit_markup) || 0
-      }
-    };
+  const payload = {
+
+    [`sephcocco_${activeOutlet}_product_id`]: product?.id,
+    invoice_number: formData.invoice_number,
+    vendor: formData.vendor,
+    status: formData.status || 'pending',
+    stock: {
+      add_stock: parseInt(formData.add_stock, 10) || 0
+    },
+    price: {
+      cost_price: parseFloat(formData.cost_price) || 0,
+      profit_markup: parseFloat(formData.profit_markup) || 0
+    }
+
+};
     onConfirm(payload);
   };
 
@@ -130,6 +134,8 @@ export const StockModal = ({ isOpen, onClose, product, stockData, onConfirm, isL
                 className="disabled-input"
               />
             </div>
+        
+            
             
             <div className="form-group-stock">
               <label>{isEdit ? 'Stock Quantity' : 'Add Stock'} *</label>
@@ -143,6 +149,15 @@ export const StockModal = ({ isOpen, onClose, product, stockData, onConfirm, isL
           </div>
           
           <div className="form-row-stock">
+                  <div className="form-group-stock">
+              <label>Old Price</label>
+              <input
+                type="number"
+                value={product?.price}
+                disabled
+                className="disabled-input"
+              />
+            </div>
             <div className="form-group-stock">
               <label>Cost Price (₦)</label>
               <input

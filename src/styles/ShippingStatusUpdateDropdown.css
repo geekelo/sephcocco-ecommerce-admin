@@ -204,3 +204,405 @@
   opacity: 0.7;
   pointer-events: none;
 }
+
+/* ===== PORTAL-BASED RIDER DROPDOWN STYLES ===== */
+.rider-dropdown-menu-portal {
+  width: 280px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  animation: dropdownSlideIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top left;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.98);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.rider-dropdown-menu-portal .rider-dropdown-content {
+  padding: 12px;
+}
+
+.rider-dropdown-menu-portal .rider-dropdown-header {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.rider-dropdown-menu-portal .rider-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  text-align: left;
+  background-color: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  margin-bottom: 4px;
+}
+
+.rider-dropdown-menu-portal .rider-option:hover {
+  background-color: #f9fafb;
+}
+
+.rider-dropdown-menu-portal .rider-option:last-child {
+  margin-bottom: 0;
+}
+
+.rider-dropdown-menu-portal .rider-avatar {
+  width: 32px;
+  height: 32px;
+  background-color: #dbeafe;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #1e40af;
+}
+
+.rider-dropdown-menu-portal .rider-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.rider-dropdown-menu-portal .rider-option-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.rider-dropdown-menu-portal .rider-option-phone {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.rider-dropdown-menu-portal .rider-no-available {
+  padding: 16px 8px;
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+  font-style: italic;
+}
+
+/* ===== PORTAL-BASED STATUS DROPDOWN STYLES ===== */
+.status-dropdown-portal {
+  min-width: 200px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  animation: dropdownSlideIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.status-dropdown-portal .status-dropdown {
+  /* Reset positioning since we're using portal */
+  position: static;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  min-width: auto;
+  z-index: auto;
+}
+
+.status-dropdown-portal .dropdown-header {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.status-dropdown-portal .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: left;
+  transition: all 0.15s ease;
+  color: #374151;
+}
+
+.status-dropdown-portal .dropdown-item:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.status-dropdown-portal .dropdown-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status-dropdown-portal .complete-item:hover:not(:disabled) {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.status-dropdown-portal .cancel-item:hover:not(:disabled) {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+/* ===== CONFIRMATION MODAL STYLES ===== */
+.status-update-confirm-portal {
+  min-width: 220px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  animation: dropdownSlideIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.status-update-confirm-portal .status-update-confirm {
+  /* Reset positioning since we're using portal */
+  position: static;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  min-width: auto;
+  z-index: auto;
+  padding: 12px;
+}
+
+.status-update-confirm-portal .confirm-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.status-update-confirm-portal .confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.status-update-confirm-portal .confirm-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.status-update-confirm-portal .complete-btn {
+  background: #16a34a;
+  color: white;
+  border-color: #16a34a;
+}
+
+.status-update-confirm-portal .complete-btn:hover:not(:disabled) {
+  background: #15803d;
+  border-color: #15803d;
+}
+
+.status-update-confirm-portal .cancel-btn {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.status-update-confirm-portal .cancel-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.status-update-confirm-portal .confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== IMPROVED TRIGGER BUTTON STYLES ===== */
+.rider-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 140px;
+  justify-content: space-between;
+}
+
+.rider-dropdown-trigger:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.rider-dropdown-trigger.rider-assigned {
+  background-color: #d1fae5;
+  border-color: #10b981;
+  color: #065f46;
+}
+
+.rider-dropdown-trigger.rider-assigned:hover:not(:disabled) {
+  background-color: #a7f3d0;
+}
+
+.rider-dropdown-trigger.rider-unassigned {
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.rider-dropdown-trigger.rider-unassigned:hover:not(:disabled) {
+  background-color: #fde68a;
+}
+
+.rider-dropdown-trigger:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.rider-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  max-width: 100px;
+}
+
+.dropdown-arrow {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* ===== STATUS UPDATE BUTTON STYLES ===== */
+.status-update-btn {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s ease;
+  color: #6b7280;
+}
+
+.status-update-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.status-update-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .rider-dropdown-menu-portal {
+    width: 260px;
+    max-width: calc(100vw - 32px);
+  }
+  
+  .status-dropdown-portal,
+  .status-update-confirm-portal {
+    min-width: 180px;
+    max-width: calc(100vw - 32px);
+  }
+  
+  .rider-dropdown-trigger {
+    min-width: 120px;
+    font-size: 11px;
+  }
+  
+  .rider-name {
+    max-width: 80px;
+  }
+}
+
+/* ===== LOADING STATES ===== */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ===== HIGH CONTRAST MODE ===== */
+@media (prefers-contrast: high) {
+  .rider-dropdown-menu-portal,
+  .status-dropdown-portal,
+  .status-update-confirm-portal {
+    border-color: #000000;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    background: #ffffff;
+  }
+}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  .rider-dropdown-menu-portal,
+  .status-dropdown-portal,
+  .status-update-confirm-portal {
+    animation: none;
+  }
+  
+  .rider-dropdown-trigger,
+  .status-update-btn,
+  .dropdown-item,
+  .confirm-btn {
+    transition: none;
+  }
+  
+  .dropdown-arrow {
+    transition: none;
+  }
+}

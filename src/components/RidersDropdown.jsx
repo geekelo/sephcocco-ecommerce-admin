@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Truck, User, Loader2 } from "lucide-react";
 import '../styles/RidersDropdown.css'
 import { useAssignRider } from "../hooks/useAssignRider";
@@ -7,62 +8,51 @@ import { getActiveOutlet } from "../utils/getActiveOutlets";
 export const RiderDropdown = ({ currentRider, ridersData = [], shippingId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
   const triggerRef = useRef(null);
   const menuRef = useRef(null);
   const activeOutlet = getActiveOutlet();
   const assignRiderMutation = useAssignRider();
-console.log('id',shippingId);
 
-  // Position the dropdown when it opens
+  // Calculate dropdown position
   useEffect(() => {
-    if (isOpen && triggerRef.current && menuRef.current) {
+    if (isOpen && triggerRef.current) {
       const triggerRect = triggerRef.current.getBoundingClientRect();
-      const menu = menuRef.current;
-      
-      // Menu dimensions
       const menuWidth = 280;
-      const menuHeight = 320; // Approximate max height
-      
-      // Calculate available space
-      const spaceBelow = window.innerHeight - triggerRect.bottom;
-      const spaceAbove = triggerRect.top;
-      
-      // Determine vertical position
-      let top;
-      if (spaceBelow < menuHeight && spaceAbove > menuHeight) {
-        // Position above the trigger
-        top = triggerRect.top - menuHeight - 4;
-        menu.classList.add('dropdown-above');
-      } else {
-        // Position below the trigger (default)
-        top = triggerRect.bottom + 4;
-        menu.classList.remove('dropdown-above');
-      }
-      
-      // Determine horizontal position
+      const menuHeight = 320;
+
+      let top = triggerRect.bottom + 8;
       let left = triggerRect.left;
-      const rightEdge = left + menuWidth;
-      
-      if (rightEdge > window.innerWidth - 16) {
-        // Align to the right edge of the trigger instead
+
+      // Adjust if going off right edge
+      if (left + menuWidth > window.innerWidth - 16) {
         left = triggerRect.right - menuWidth;
       }
-      
-      // Ensure it doesn't go off the left edge
+
+      // Adjust if going off left edge
       if (left < 16) {
         left = 16;
       }
-      
-      menu.style.top = `${Math.max(8, top)}px`;
-      menu.style.left = `${left}px`;
+
+      // Adjust if going off bottom
+      if (top + menuHeight > window.innerHeight - 16) {
+        top = triggerRect.top - menuHeight - 8;
+      }
+
+      // Ensure minimum distance from edges
+      top = Math.max(16, Math.min(top, window.innerHeight - menuHeight - 16));
+      left = Math.max(16, Math.min(left, window.innerWidth - menuWidth - 16));
+
+      setPosition({ top, left });
     }
   }, [isOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (triggerRef.current && !triggerRef.current.contains(event.target) &&
-          menuRef.current && !menuRef.current.contains(event.target)) {
+      if (isOpen && 
+          !triggerRef.current?.contains(event.target) &&
+          !menuRef.current?.contains(event.target)) {
         setIsOpen(false);
       }
     };
@@ -88,24 +78,16 @@ console.log('id',shippingId);
   }, [isOpen]);
 
   const handleRiderSelect = async (rider, e) => {
-    e?.stopPropagation(); // Prevent event bubbling
+    e?.stopPropagation();
     
-    // Validate rider and required props
-    if (!rider) {
+    if (!rider || !shippingId) {
       console.error('Missing required props for rider selection');
-      return;
-    }
-
-    // Check if we have shippingId for API call
-    if (!shippingId) {
-      console.error('shippingId is required for rider assignment API call');
       return;
     }
 
     setIsAssigning(true);
 
     try {
-      // Call the API to assign rider
       const response = await assignRiderMutation.mutateAsync({
         active_outlet: activeOutlet,
         riderId: rider.id,
@@ -113,43 +95,27 @@ console.log('id',shippingId);
       });
 
       console.log('Rider assigned successfully:', response);
-
- 
-
       setIsOpen(false);
-      
-      // Show success message (optional)
-      // You could use a toast notification here
       console.log(`Successfully assigned ${rider.name} to shipping ${shippingId}`);
 
     } catch (error) {
       console.error('Error assigning rider:', error);
-      
-      // Show error message to user (optional)
-      // You could use a toast notification here
       alert(`Failed to assign rider: ${error.message || 'Unknown error'}`);
-      
     } finally {
       setIsAssigning(false);
     }
   };
 
   const handleToggleDropdown = (e) => {
-    e?.stopPropagation(); // Prevent row click event
-    
-    // Don't open dropdown if currently assigning
+    e?.stopPropagation();
     if (isAssigning) return;
-    
     setIsOpen(!isOpen);
   };
 
   const handleDropdownClick = (e) => {
-    e?.stopPropagation(); // Prevent any click events from bubbling up
+    e?.stopPropagation();
   };
 
-
-
-  // Handle case where ridersData might be null/undefined
   if (!ridersData || !Array.isArray(ridersData)) {
     console.warn('ridersData is not a valid array:', ridersData);
     return (
@@ -192,41 +158,49 @@ console.log('id',shippingId);
       </button>
 
       {isOpen && !isAssigning && (
-        <div 
-          ref={menuRef}
-          className="rider-dropdown-menu"
-          style={{ position: 'fixed' }}
-          role="listbox"
-        >
-          <div className="rider-dropdown-content">
-            <div className="rider-dropdown-header">Available Riders</div>
-            {ridersData?.length > 0 ? (
-              ridersData?.map((rider) => (
-                <button
-                  key={rider.id || `rider-${Math.random()}`}
-                  className="rider-option"
-                  onClick={(e) => handleRiderSelect(rider, e)}
-                  role="option"
-                  aria-selected={currentRider?.id === rider.id}
-                  disabled={assignRiderMutation.isPending}
-                >
-                  <div className="rider-avatar">
-                    <User size={16} />
-                  </div>
-                  <div className="rider-details">
-                    <div className="rider-option-name">{rider.name || 'Unknown'}</div>
-                    <div className="rider-option-phone">{rider.phone || rider.phone_number || 'No phone'}</div>
-               
-                  </div>
-                </button>
-              ))
-            ) : (
-              <div className="rider-no-available">
-                {ridersData.length === 0 ? 'No riders found' : 'No available riders'}
-              </div>
-            )}
-          </div>
-        </div>
+        createPortal(
+          <div 
+            ref={menuRef}
+            className="rider-dropdown-menu-portal"
+            style={{
+              position: 'fixed',
+              top: position.top,
+              left: position.left,
+              zIndex: 99999,
+            }}
+            role="listbox"
+            onClick={handleDropdownClick}
+          >
+            <div className="rider-dropdown-content">
+              <div className="rider-dropdown-header">Available Riders</div>
+              {ridersData?.length > 0 ? (
+                ridersData?.map((rider) => (
+                  <button
+                    key={rider.id || `rider-${Math.random()}`}
+                    className="rider-option"
+                    onClick={(e) => handleRiderSelect(rider, e)}
+                    role="option"
+                    aria-selected={currentRider?.id === rider.id}
+                    disabled={assignRiderMutation.isPending}
+                  >
+                    <div className="rider-avatar">
+                      <User size={16} />
+                    </div>
+                    <div className="rider-details">
+                      <div className="rider-option-name">{rider.name || 'Unknown'}</div>
+                      <div className="rider-option-phone">{rider.phone || rider.phone_number || 'No phone'}</div>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="rider-no-available">
+                  {ridersData.length === 0 ? 'No riders found' : 'No available riders'}
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )
       )}
     </div>
   );

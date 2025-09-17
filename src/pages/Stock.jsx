@@ -5,10 +5,10 @@ import FlexibleTable from '../components/FlexibleTable';
 import Pagination from '../components/Pagination';
 import { EmptyState } from '../components/EmptyState';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import PaymentSummary from '../components/PaymentSummary';
+import StockSummary from '../components/StockSummary'; // Updated import
 import ConfirmActionModal from '../components/ConfirmActionModal';
 import '../styles/Stock.css'
-
+import '../styles/OrderPage.css'
 // Import the stock management hooks
 import { useViewAllProduct } from '../hooks/useGetAllProduct';
 import { useGetStock } from '../hooks/useGetStock';
@@ -20,7 +20,6 @@ import { getActiveOutlet } from '../utils/getActiveOutlets';
 import { toast } from 'react-toastify';
 import { StockModal } from '../components/StockModal';
 
-// Product table columns
 const createProductColumns = (onAddStock) => [
   {
     key: 'image',
@@ -29,7 +28,7 @@ const createProductColumns = (onAddStock) => [
       <div className="product-image-cell">
         <img 
           src={product.main_image_url || 'https://via.placeholder.com/50x50?text=P'} 
-          alt={product.name} 
+          alt={product.name || 'Product'} 
           style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }}
         />
       </div>
@@ -41,46 +40,49 @@ const createProductColumns = (onAddStock) => [
     header: 'Product Name',
     render: (product) => (
       <div className="product-name-cell">
-        <div className="product-name">{product.name}</div>
-        <div className="product-barcode">Barcode: {product.barcode || 'N/A'}</div>
+        <div className="product-name">{String(product.name || 'N/A')}</div>
+        <div className="product-barcode">Barcode: {String(product.barcode || 'N/A')}</div>
       </div>
     )
   },
-{
-  key: 'category',
-  header: 'Product Category',
-  render: (product) => (
-    <div className="product-category-cell">
-      {product.categories && product.categories.length > 0 ? (
-        <div className="category-list">
-          {product.categories.map((category, index) => (
-            <span key={category.id} className="category-badge">
-              {category.name}
-              {index < product.categories.length - 1 && ', '}
-            </span>
-          ))}
+  {
+    key: 'category',
+    header: 'Product Category',
+    render: (product) => {
+      // Safely handle categories array
+      if (!product.categories || !Array.isArray(product.categories) || product.categories.length === 0) {
+        return <span className="no-category">No Category</span>;
+      }
+
+      return (
+        <div className="product-category-cell">
+          <div className="category-list">
+            {product.categories.map((category, index) => (
+              <span key={category.id || index} className="category-badge">
+                {String(category.name || 'Category')}
+                {index < product.categories.length - 1 && ', '}
+              </span>
+            ))}
+          </div>
         </div>
-      ) : (
-        <span className="no-category">No Category</span>
-      )}
-    </div>
-  )
-},
-{
-  key: 'price',
-  header: 'Price',
-  render: (product) => (
-    <div className="price-cell">
-      ₦{parseFloat(product.price || 0).toLocaleString()}
-    </div>
-  )
-},
+      );
+    }
+  },
+  {
+    key: 'price',
+    header: 'Price',
+    render: (product) => (
+      <div className="price-cell">
+        ₦{parseFloat(product.price || 0).toLocaleString()}
+      </div>
+    )
+  },
   {
     key: 'current_stock',
     header: 'Current Stock',
     render: (product) => (
       <div className={`stock-cell ${(product.amount_in_stock || 0) < 20 ? 'low-stock' : ''}`}>
-        {product.amount_in_stock || 0}
+        {String(product.amount_in_stock || 0)}
       </div>
     )
   },
@@ -97,60 +99,96 @@ const createProductColumns = (onAddStock) => [
   }
 ];
 
-// Stock history table columns
+// Fixed Stock history table columns - handling object rendering properly
 const createStockHistoryColumns = (onViewStock) => [
   {
     key: 'invoice_number',
     header: 'Invoice Number',
     render: (history) => (
-      <div className="invoice-cell">{history.invoice_number}</div>
+      <div className="invoice-cell">{String(history.invoice_number || 'N/A')}</div>
     )
   },
   {
     key: 'vendor',
     header: 'Vendor',
-    render: (history) => history.vendor || 'N/A'
+    render: (history) => String(history.vendor || 'N/A')
   },
   {
     key: 'status',
     header: 'Status',
     render: (history) => (
-      <span className={`status-badge status-${history.status?.toLowerCase() || 'pending'}`}>
-        {history.status || 'Pending'}
+      <span className={`status-badge status-${(history.status || 'pending').toLowerCase()}`}>
+        {String(history.status || 'Pending')}
       </span>
     )
   },
   {
     key: 'product',
     header: 'Product',
-    render: (history) => (
-      <div className="product-info-cell">
-        <div>{history.product?.name || 'N/A'}</div>
-      </div>
-    )
+    render: (history) => {
+      // Safely handle product object
+      const productName = history.product && typeof history.product === 'object' 
+        ? history.product.name 
+        : 'N/A';
+      
+      return (
+        <div className="product-info-cell">
+          <div>{String(productName)}</div>
+        </div>
+      );
+    }
   },
   {
     key: 'stock_changes',
     header: 'Stock Changes',
-    render: (history) => (
-      <div className="stock-changes-cell">
-        <span className="old-stock">{history.stock?.old_stock || 0}</span>
-        <span className="add-stock">+{history.stock?.add_stock || 0}</span>
-        <span className="new-stock">{history.stock?.new_stock || 0}</span>
-      </div>
-    )
+    render: (history) => {
+      // Safely handle stock object
+      const oldStock = history.stock && typeof history.stock === 'object' 
+        ? history.stock.old_stock || 0 
+        : 0;
+      const addStock = history.stock && typeof history.stock === 'object' 
+        ? history.stock.add_stock || 0 
+        : 0;
+      const newStock = history.stock && typeof history.stock === 'object' 
+        ? history.stock.new_stock || 0 
+        : 0;
+      
+      return (
+        <div className="stock-changes-cell">
+          <span className="old-stock">{String(oldStock)}</span>
+          <span className="add-stock">+{String(addStock)}</span>
+          <span className="new-stock">{String(newStock)}</span>
+        </div>
+      );
+    }
   },
   {
     key: 'price',
     header: 'Price',
-    render: (history) => (
-      <div className="price-cell">₦{history.price?.new_price?.toLocaleString() || '0'}</div>
-    )
+    render: (history) => {
+      // Safely handle price object
+      const newPrice = history.price && typeof history.price === 'object' 
+        ? history.price.new_price || 0 
+        : history.price || 0;
+      
+      return (
+        <div className="price-cell">
+          ₦{parseFloat(newPrice).toLocaleString()}
+        </div>
+      );
+    }
   },
   {
     key: 'date',
     header: 'Date',
-    render: (history) => new Date(history.created_at || history.date).toLocaleDateString()
+    render: (history) => {
+      try {
+        const date = history.created_at || history.date;
+        return date ? new Date(date).toLocaleDateString() : 'Invalid Date';
+      } catch (e) {
+        return 'Invalid Date';
+      }
+    }
   },
   {
     key: 'actions',
@@ -282,7 +320,7 @@ const StockManagement = () => {
   const handleConfirmAddStock = async (stockData) => {
     try {
       const payload = {
-        stock_management_param_key: stockData
+        [`sephcocco_${activeOutlet}_stock_management`]: stockData
       };
 
       await addStock({
@@ -395,7 +433,7 @@ const StockManagement = () => {
             <FlexibleTable
               data={currentData}
               columns={currentColumns}
-              actions={[]}
+              actions={[]} // Empty actions array since we handle actions in columns
               keyField="id"
               onRowClick={activeTab === 'history' ? handleViewStock : undefined}
               className="stock-table"
@@ -425,6 +463,7 @@ const StockManagement = () => {
         )}
       </div>
 
+      {/* Add Stock Modal */}
       <StockModal
         isOpen={showAddStockModal}
         onClose={() => {
@@ -437,6 +476,7 @@ const StockManagement = () => {
         isEdit={false}
       />
 
+      {/* Update Stock Modal */}
       <StockModal
         isOpen={showUpdateStockModal}
         onClose={() => {
@@ -449,34 +489,18 @@ const StockManagement = () => {
         isEdit={true}
       />
 
-      {/* Use PaymentSummary component for stock details */}
+      {/* Stock Summary Modal - Updated */}
       {showStockDetailModal && selectedStockHistory && (
-        <PaymentSummary
-          order={{
-            ...selectedStockHistory,
-            customerName: selectedStockHistory.vendor,
-            customerEmail: '', // Stock doesn't have email
-            products: selectedStockHistory.product,
-            amount: selectedStockHistory.price?.new_price,
-            paymentMethod: 'Stock Purchase',
-            status: selectedStockHistory.status,
-            paymentDate: selectedStockHistory.created_at,
-            transactionId: selectedStockHistory.invoice_number,
-            totalPrice: selectedStockHistory.price?.new_price
-          }}
+        <StockSummary
+          stockData={selectedStockHistory}
           onBack={() => {
             setShowStockDetailModal(false);
             setSelectedStockHistory(null);
           }}
-          onViewOrder={() => console.log('View order')}
-          onVerify={() => handleUpdateStock(selectedStockHistory)}
-          onDiscard={() => setShowDeleteModal(true)}
-          onEdit={() => console.log('Edit stock')}
+          onEdit={() => handleUpdateStock(selectedStockHistory)}
           onDelete={() => setShowDeleteModal(true)}
-          onView={() => console.log('View stock')}
-          isVerifying={updatingStock}
-          // Hide email button for stock
-          hideEmailButton={true}
+          onView={() => console.log('View product details')}
+          isUpdating={updatingStock}
         />
       )}
 
