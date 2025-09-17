@@ -40,6 +40,7 @@
 .ordered-products-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+    justify-content: start;
   gap: 24px;
   margin-top: 20px;
   padding: 0 15px;
@@ -223,7 +224,10 @@
 /* Section styling */
 .ordered-products-section,
 .linked-payment-section {
+
   margin-bottom: 24px;
+
+
 }
 
 .ordered-products-section h3,
@@ -235,7 +239,7 @@
 }
 
 /* Products grid */
-.products-grid {
+.products-grid-order {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;

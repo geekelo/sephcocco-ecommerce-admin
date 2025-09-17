@@ -180,7 +180,7 @@ console.log('proddpaymed',paymentData);
           {formattedProducts.length > 0 && (
             <div className="ordered-products-section">
               <h3>Ordered Product</h3>
-              <div className="products-grid">
+              <div className="ordered-products-grid">
                 {formattedProducts.map((product, index) => (
                   <ProductCard
                     key={product.id || index}

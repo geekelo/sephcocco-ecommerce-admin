@@ -13,6 +13,8 @@ export const StockModal = ({ isOpen, onClose, product, stockData, onConfirm, isL
     status: 'pending'
   });
 const activeOutlet = getActiveOutlet();
+console.log('edit',stockData);
+
   // Initialize form data when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -45,12 +47,12 @@ const activeOutlet = getActiveOutlet();
     }));
   };
 
-  const calculateNewPrice = () => {
-    const costPrice = parseFloat(formData.cost_price) || 0;
-    const markup = parseFloat(formData.profit_markup) || 0;
-    const percentage = ((costPrice - product?.price) / product?.price) * 100;
-    return costPrice + (markup * percentage);
-  };
+const calculateNewPrice = () => {
+  const costPrice = parseFloat(formData.cost_price) || 0;
+  const markup = parseFloat(formData.profit_markup) || 0;
+  return costPrice + markup;
+};
+
 
   const handleSubmit = () => {
     if (!formData.invoice_number || !formData.vendor || !formData.add_stock) {
@@ -129,7 +131,7 @@ const activeOutlet = getActiveOutlet();
               <label>Current Stock</label>
               <input
                 type="number"
-                value={product?.amount_in_stock}
+                value={product?.amount_in_stock || stockData?.sephcocco_pharmacy_product?.amount_in_stock}
                 disabled
                 className="disabled-input"
               />
@@ -153,7 +155,7 @@ const activeOutlet = getActiveOutlet();
               <label>Old Price</label>
               <input
                 type="number"
-                value={product?.price}
+                value={product?.price || stockData?.sephcocco_pharmacy_product?.price}
                 disabled
                 className="disabled-input"
               />

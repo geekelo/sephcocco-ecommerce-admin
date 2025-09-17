@@ -10,7 +10,7 @@ const StockSummary = ({
   onBack,
   onEdit,
   onDelete,
-  onView,
+
   isUpdating = false,
   hideEmailButton = true
 }) => {
@@ -63,7 +63,7 @@ const StockSummary = ({
   const leftCardItems = [
     { label: "Invoice Number:", value: invoiceNumber || 'N/A', isCopyable: true },
     { label: "Stock ID:", value: stockId || 'N/A', isCopyable: true },
-    { label: "Vendor:", value: vendor },
+    { label: "Vendor Name:", value: vendor },
     { label: "Transaction Date:", value: createdDate ? formatDate(createdDate) : 'N/A' },
     { label: "Status:", value: status || 'N/A', badge: true }
   ];
@@ -178,8 +178,7 @@ const StockSummary = ({
                   <ProductCard
                     key={product.id || index}
                     product={product}
-                    onView={onView}
-                    showActions={true}
+                    showVisible={false}
                   />
                 ))}
               </div>

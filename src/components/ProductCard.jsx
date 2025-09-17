@@ -4,7 +4,7 @@ import { useSwitchProductVisibility } from '../hooks/useSwitchProductVisibility'
 import '../styles/ProductCard.css';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 
-const ProductCard = ({ product, onView, onEdit, onDelete, onVisibilityChange }) => {
+const ProductCard = ({ product, onView, onEdit, onDelete, onVisibilityChange, showVisible = true }) => {
   // const {
   //   // order_number: productId,
   //   name,
@@ -18,7 +18,7 @@ const ProductCard = ({ product, onView, onEdit, onDelete, onVisibilityChange }) 
 const active_outlet = getActiveOutlet()
   const [isVisible, setIsVisible] = useState(product?.visible);
   const switchVisibilityMutation = useSwitchProductVisibility();
-console.log('okk',product);
+console.log('porod',product);
 const orderNumber = product?.order_number
   const handleVisibilityToggle = async () => {
     try {
@@ -46,12 +46,13 @@ const orderNumber = product?.order_number
     <>
       <div className={`product-card`}>
         {/* 👁️ Preview icon at the top-right corner */}
-        <div className="preview-icon" onClick={onView} title="View product">
+        {onView &&     <div className="preview-icon" onClick={onView} title="View product">
           <Eye size={20} color='#000'/>
-        </div>
+        </div>}
+    
 
         <div className="product-image">
-          <img src={product?.main_image_url} alt={name} />
+          <img src={product?.main_image_url || product?.image} alt={name} />
          
         </div>
 
@@ -60,29 +61,26 @@ const orderNumber = product?.order_number
             <h3 className="product-name">{product?.name}</h3>
             <div className="product-rating">
               <Heart 
-                fill={product?.likes > 0 ? '#e74c3c' : 'none'}
-                color={product?.likes > 0 ? '#e74c3c' : '#666'}
+                fill={(product?.likes || product?.rating) > 0 ? '#e74c3c' : 'none'}
+                color={(product?.likes || product?.rating) > 0 ? '#e74c3c' : '#666'}
                 size={14} 
                 className="heart-icon"  
               />
-              <span className="rating-value">{product?.likes}</span>
+              <span className="rating-value">{(product?.likes || product?.rating)}</span>
             </div>
           </div>
 {
-<div className="discount-price"> ₦{product?.price } <span className='product-price'> ₦{product?.discount_price}</span></div>
+<div className="discount-price"> ₦{product?.price } {product?.discount_price && <span className='product-price'> ₦{product?.discount_price}</span>}</div>
 }
           
 
 
           <div className="product-stock">
             <div className="stock-info">
-              {product?.out_of_stock_status ? "Out of stock" : "In Stock"} · {product?.amount_in_stock} items
+              {product?.out_of_stock_status ? "Out of stock" : "In Stock"} · {product?.amount_in_stock || product?.stockCount} items
             </div>
           </div>
-
-
-          {/* Visibility Toggle Switch */}
-          <div className="product-visibility">
+{showVisible &&     <div className="product-visibility">
             <div className="visibility-control">
               <span className="visibility-label">
                 {isVisible ? 'Public' : 'Hidden'}
@@ -103,7 +101,10 @@ const orderNumber = product?.order_number
                 </label>
               </div>
             </div>
-          </div>
+          </div>}
+
+       
+      
 
           <div className="product-actions">
             {onEdit &&    <button

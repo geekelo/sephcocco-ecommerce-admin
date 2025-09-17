@@ -24,6 +24,7 @@
 .table-cell-row {
   padding: 12px 16px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   font-size: 14px;
   color: #374151;

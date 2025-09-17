@@ -40,7 +40,7 @@ const createProductColumns = (onAddStock) => [
     header: 'Product Name',
     render: (product) => (
       <div className="product-name-cell">
-        <div className="product-name">{String(product.name || 'N/A')}</div>
+        <div className="product-name" >{String(product.name || 'N/A')}</div>
         <div className="product-barcode">Barcode: {String(product.barcode || 'N/A')}</div>
       </div>
     )
@@ -56,11 +56,11 @@ const createProductColumns = (onAddStock) => [
 
       return (
         <div className="product-category-cell">
-          <div className="category-list">
+          <div className="category-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
             {product.categories.map((category, index) => (
               <span key={category.id || index} className="category-badge">
                 {String(category.name || 'Category')}
-                {index < product.categories.length - 1 && ', '}
+         
               </span>
             ))}
           </div>
@@ -110,7 +110,7 @@ const createStockHistoryColumns = (onViewStock) => [
   },
   {
     key: 'vendor',
-    header: 'Vendor',
+    header: 'Vendor Name',
     render: (history) => String(history.vendor || 'N/A')
   },
   {
@@ -392,13 +392,13 @@ const StockManagement = () => {
   const totalPages = Math.ceil((meta.total_count || 0) / itemsPerPage);
 
   return (
-    <div className="order-page">
+    <div className="order-page" style={{height: '100vh'}}>
       <SearchBar
         onApply={handleApplyFilters}
         onManualSearch={handleManualSearch}
         filterOptions={activeTab === 'products' 
           ? ["All Status", "Public", "Private"] 
-          : ["All Status", "Completed", "Pending", "Cancelled"]
+          : ["All Status",  "Pending","Approved", "Declined"]
         }
         categoryOptions={[]}
         sortOptions={[]}
@@ -511,7 +511,7 @@ const StockManagement = () => {
           onClose={() => setShowDeleteModal(false)}
           onConfirm={handleDeleteStock}
           type="delete"
-          title="Confirm Delete"
+          title={deletingStock? 'Deleting...' : "Confirm Delete"}
           message={
             <p>
               Are you sure you want to delete stock record{" "}
@@ -519,7 +519,7 @@ const StockManagement = () => {
               This action cannot be undone.
             </p>
           }
-          isLoading={deletingStock}
+        
         />
       )}
     </div>

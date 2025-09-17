@@ -292,7 +292,7 @@ console.log('oddd', sortedPaymentData);
   };
 
   return (
-    <div className="order-page">
+    <div className="order-page" style={{height: '100vh'}}>
       <SearchBar
         onApply={handleApplyFilters}
         onManualSearch={handleManualSearch} // Add manual search handler
@@ -419,7 +419,7 @@ console.log('oddd', sortedPaymentData);
           onClose={() => setIsDiscardPaymentModal(false)}
           onConfirm={handleDiscardPayment}
           type="discardPayment"
-          title="Confirm Discard Payment"
+          title={isUpdatingStatus? "Discarding..." : "Confirm Discard Payment"}
           message={
             <p>
               Are you sure you want to discard payment{" "}
@@ -438,7 +438,7 @@ console.log('oddd', sortedPaymentData);
           onClose={() => setIsVerifyPaymentModal(false)}
           onConfirm={handleVerifyConfirm}
           type="verify"
-          title="Confirm Verification"
+          title={isUpdatingStatus? "Confirming..." : "Confirm Verification"}
           message={
             <p>
               Are you sure you want to verify this payment made by{" "}
