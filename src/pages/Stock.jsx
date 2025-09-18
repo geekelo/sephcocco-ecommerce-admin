@@ -61,7 +61,6 @@ const createProductColumns = (onAddStock) => [
             {product.categories.map((category, index) => (
               <span key={category.id || index} className="category-badge">
                 {String(category.name || 'Category')}
-         
               </span>
             ))}
           </div>
