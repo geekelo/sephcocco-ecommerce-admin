@@ -40,10 +40,10 @@ const AnalyticsPage = () => {
 
   const COLORS = ['#FF6B35', '#FFE5E0', '#FFA07A', '#FF8C69', '#CD5C5C'];
 
-  // Handle outlet change
-  const handleOutletChange = (newOutlet) => {
-    console.log('Analytics outlet changed to:', newOutlet);
-  };
+  // // Handle outlet change
+  // const handleOutletChange = (newOutlet) => {
+  //   console.log('Analytics outlet changed to:', newOutlet);
+  // };
 
   const handleOrdersTimeframeChange = (timeframe) => {
     setOrdersTimeframe(timeframe);
@@ -223,12 +223,7 @@ const AnalyticsPage = () => {
           <h1>Analytics</h1>
           <p>Comprehensive insights for {businesses[selectedBusiness]}</p>
         </div>
-        <div className="analytics-controls">
-          <OutletSwitcher 
-            onOutletChange={handleOutletChange}
-            className="analytics-outlet-switcher"
-          />
-        </div>
+     
       </div>
 
       {/* Overview Stats */}

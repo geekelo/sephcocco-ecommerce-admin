@@ -24,17 +24,19 @@ import { useViewProductId } from '../hooks/useGetProductById';
 import { toast } from "react-toastify";
 import { EmptyState } from '../components/EmptyState';
 import DashboardSkeleton from '../components/DashboardSkeleton';
+import { getActiveUser } from '../utils/getActiveUser';
 
 const DashboardPage = () => {
   const navigate = useNavigate(); // Add navigation hook
   const activeOutlet = getActiveOutlet();
-  
+  const user_id = getActiveUser()
   // API hooks
 const { 
   data: productsResponse, 
   isLoading: isLoadingProducts, 
+  refetch: refetchProducts,
   error: productsError 
-} = useViewAllProduct(activeOutlet, {}, 1, 6);
+} = useViewAllProduct(activeOutlet, user_id.id, {}, 1, 6);
   
   const {
     allAnalyticsData,
@@ -269,11 +271,11 @@ const topSellers = useMemo(() => {
   };
 
   // Handle outlet change
-  const handleOutletChange = (newOutlet) => {
+  // const handleOutletChange = (newOutlet) => {
 
-    // Refetch data when outlet changes
-    refetchProducts();
-  };
+  //   // Refetch data when outlet changes
+  //   refetchProducts();
+  // };
 
   // Close all modals and reset state
   const handleCloseModals = () => {
@@ -327,12 +329,12 @@ const topSellers = useMemo(() => {
           <h1>Dashboard</h1>
           <p>Welcome back! Here's what's happening with your store.</p>
         </div>
-        <div className="dashboard-controls">
+        {/* <div className="dashboard-controls">
           <OutletSwitcher 
             onOutletChange={handleOutletChange}
             className="dashboard-outlet-switcher"
           />
-        </div>
+        </div> */}
       </div>
 
       {/* Top Stats Row */}
