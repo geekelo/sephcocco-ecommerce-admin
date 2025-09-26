@@ -1,6 +1,6 @@
 import { apiClient } from "./axios";
 
-export const getAllProduct = async (active_outlet,     filters = {}, page = 1, per_page = 20) => {
+export const getAllProduct = async (active_outlet, user_id,    filters = {}, page = 1, per_page = 20) => {
   try {
         const filter = {};
 
@@ -14,6 +14,7 @@ export const getAllProduct = async (active_outlet,     filters = {}, page = 1, p
 
 
    const params = {
+    user_id,
       filter,
       page,
       per_page,

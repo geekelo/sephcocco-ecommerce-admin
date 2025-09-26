@@ -85,8 +85,9 @@ const handleSubmit = async (e) => {
           localStorage.setItem('token', response?.token);
           localStorage.setItem('user', JSON.stringify(response?.user));
           localStorage.setItem('userRole', response?.user?.role);
+          localStorage.setItem('userId', response?.user?.id);
           localStorage.setItem('subroles', JSON.stringify(response?.user?.subroles || []));
-
+          
           localStorage.setItem('userName', response?.user?.name);
           Cookies.set('outlets', JSON.stringify(response?.user?.outlets), { expires: 1 }); 
           
