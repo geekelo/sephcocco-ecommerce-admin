@@ -18,15 +18,14 @@ const ProductCard = ({ product, onView, onEdit, onDelete, onVisibilityChange, sh
 const active_outlet = getActiveOutlet()
   const [isVisible, setIsVisible] = useState(product?.visible);
   const switchVisibilityMutation = useSwitchProductVisibility();
-console.log('porod',product);
-const orderNumber = product?.order_number
+
   const handleVisibilityToggle = async () => {
     try {
     const res =  await switchVisibilityMutation.mutateAsync({
-        active_outlet,
-      orderNumber
+       active_outlet: active_outlet,
+     productId: product.id
       });
-      console.log(res);
+
       
       // Toggle the local state
       const newVisibility = !isVisible;
