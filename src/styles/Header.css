@@ -213,6 +213,9 @@
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid #f0f0f0;
+
+}
+.profile-item.address {
   text-transform: capitalize;
 }
 
