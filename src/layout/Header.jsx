@@ -158,7 +158,7 @@ const Header = ({ toggleSidebar, isMobile }) => {
                       <span>{profileData.email}</span>
                     </div>
                     
-                    <div className="profile-item">
+                    <div className="profile-item address">
                       <label>Address</label>
                       <span>{profileData.address}</span>
                     </div>
