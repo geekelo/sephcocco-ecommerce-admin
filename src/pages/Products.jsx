@@ -20,6 +20,8 @@ import { useViewProductId } from '../hooks/useGetProductById';
 import { ErrorState } from '../components/ErrorState';
 import { EmptyState } from '../components/EmptyState';
 import { toast } from 'react-toastify';
+import { getActiveUser } from '../utils/getActiveUser';
+
 
 const ProductsPage = () => {
   const activeOutlet = getActiveOutlet();
@@ -84,10 +86,13 @@ const ProductsPage = () => {
     const category = categories.find(cat => cat.name === categoryName);
     return category ? category.id : "";
   };
+const user_id = getActiveUser()
+
 
   // API call with filters (now using category_id)
   const { data: responseData = { products: [], meta: {} }, isLoading, error, refetch } = useViewAllProduct(
     activeOutlet, 
+    user_id.id,
     filters, // Pass filters with category_id to the API call
     currentPage, 
     itemsPerPage
