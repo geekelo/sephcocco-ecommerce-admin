@@ -82,6 +82,7 @@ const handleSubmit = async (e) => {
  if (response?.user?.email_confirmed) {
         // User is verified, proceed with normal login
         if (response?.message) {
+          
           localStorage.setItem('token', response?.token);
           localStorage.setItem('user', JSON.stringify(response?.user));
           localStorage.setItem('userRole', response?.user?.role);

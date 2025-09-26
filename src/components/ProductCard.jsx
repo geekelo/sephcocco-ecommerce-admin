@@ -5,35 +5,26 @@ import '../styles/ProductCard.css';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 
 const ProductCard = ({ product, onView, onEdit, onDelete, onVisibilityChange, showVisible = true }) => {
-  // const {
-  //   // order_number: productId,
-  //   name,
-  //   main_image_url,
-  //   price,
-  //   likes,
-  //   amount_in_stock,
-  //   out_of_stock_status,
-  //   visible
-  // } = product;
-const active_outlet = getActiveOutlet()
+  const active_outlet = getActiveOutlet()
   const [isVisible, setIsVisible] = useState(product?.visible);
   const switchVisibilityMutation = useSwitchProductVisibility();
 
-  const handleVisibilityToggle = async () => {
+  const handleVisibilityToggle = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     try {
-    const res =  await switchVisibilityMutation.mutateAsync({
-       active_outlet: active_outlet,
-     productId: product.id
+      const res = await switchVisibilityMutation.mutateAsync({
+        active_outlet: active_outlet,
+        productId: product.id
       });
 
-      
       // Toggle the local state
       const newVisibility = !isVisible;
       setIsVisible(newVisibility);
       
-      // Call parent callback if provided
+  
       if (onVisibilityChange) {
-        onVisibilityChange(product?.order_number, newVisibility);
+        onVisibilityChange(product.id, newVisibility);
       }
     } catch (error) {
       console.error('Failed to toggle product visibility:', error);
@@ -45,14 +36,12 @@ const active_outlet = getActiveOutlet()
     <>
       <div className={`product-card`}>
         {/* 👁️ Preview icon at the top-right corner */}
-        {onView &&     <div className="preview-icon" onClick={onView} title="View product">
+        {onView && <div className="preview-icon" onClick={onView} title="View product">
           <Eye size={20} color='#000'/>
         </div>}
-    
 
         <div className="product-image">
-          <img src={product?.main_image_url || product?.image} alt={name} />
-         
+          <img src={product?.main_image_url || product?.image} alt={product?.name} />
         </div>
 
         <div className="product-details">
@@ -68,18 +57,18 @@ const active_outlet = getActiveOutlet()
               <span className="rating-value">{(product?.likes || product?.rating)}</span>
             </div>
           </div>
-{
-<div className="discount-price"> ₦{product?.price } {product?.discount_price && <span className='product-price'> ₦{product?.discount_price}</span>}</div>
-}
-          
 
+          <div className="discount-price">
+            ₦{product?.price} {product?.discount_price && <span className='product-price'> ₦{product?.discount_price}</span>}
+          </div>
 
           <div className="product-stock">
             <div className="stock-info">
               {product?.out_of_stock_status ? "Out of stock" : "In Stock"} · {product?.amount_in_stock || product?.stockCount} items
             </div>
           </div>
-{showVisible &&     <div className="product-visibility">
+
+          {showVisible && <div className="product-visibility">
             <div className="visibility-control">
               <span className="visibility-label">
                 {isVisible ? 'Public' : 'Hidden'}
@@ -87,26 +76,22 @@ const active_outlet = getActiveOutlet()
               <div className="switch-container">
                 <input
                   type="checkbox"
-                  id={`visibility-${product?.order_number}`}
+                  id={`visibility-${product.id}`} // Changed from product?.order_number to product.id
                   className="visibility-switch"
                   checked={isVisible}
                   onChange={handleVisibilityToggle}
                   disabled={switchVisibilityMutation.isPending}
                 />
-                <label htmlFor={`visibility-${product?.order_number}`} className="switch-label">
+                <label htmlFor={`visibility-${product.id}`} className="switch-label"> {/* Changed from product?.order_number to product.id */}
                   <span className="switch-slider">
-                    
                   </span>
                 </label>
               </div>
             </div>
           </div>}
 
-       
-      
-
           <div className="product-actions">
-            {onEdit &&    <button
+            {onEdit && <button
               className="action-button-product edit-button"
               onClick={onEdit}
               title="Edit product"
@@ -115,7 +100,7 @@ const active_outlet = getActiveOutlet()
               <span>Edit</span>
             </button>}
          
-            {onDelete &&   <button
+            {onDelete && <button
               className="action-button-product delete-button-product"
               onClick={onDelete}
               title="Delete product"
@@ -123,7 +108,6 @@ const active_outlet = getActiveOutlet()
               <Trash2 size={16} className="delete-icon" />
               <span>Delete</span>
             </button>}
-          
           </div>
         </div>
       </div>
