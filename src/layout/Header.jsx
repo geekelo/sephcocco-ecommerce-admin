@@ -5,17 +5,20 @@ import '../styles/Header.css';
 import Image from '../assets/profile.png';
 import { navItems } from '../constants/data';
 import NotificationDialog from '../components/NotificationDialog';
+import OutletSwitcher from '../components/OutletSwitcher'; // Add this import
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 import { useNotifyAdmin } from '../hooks/useNotifyAdmin';
-
+import { useViewAllProduct } from '../hooks/useGetAllProduct';
 
 const Header = ({ toggleSidebar, isMobile }) => {
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const activeOutlet = getActiveOutlet();
-const user = localStorage.getItem('userName')
+  const user = localStorage.getItem('userName')
+  
   // Destructure refetch from the query hook
   const { data: notifyData, refetch } = useNotifyAdmin(activeOutlet);
+
   const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
 
   let currentPage = 'Hello, Welcome Back!';
@@ -30,6 +33,11 @@ const user = localStorage.getItem('userName')
       currentPage = matches[0].name;
     }
   }
+
+  // Handle outlet change - the OutletSwitcher will handle its own state management
+  const handleOutletChange = () => {
+window.location.reload()
+  };
 
   return (
     <>
@@ -49,14 +57,19 @@ const user = localStorage.getItem('userName')
           </div>
 
           <div className="header-actions">
+            {/* Add OutletSwitcher to header actions */}
+            <OutletSwitcher 
+      onOutletChange={handleOutletChange}
+              className="header-outlet-switcher"
+            />
+            
             <div
               className="notification-badge"
               onClick={() => setShowNotifications(!showNotifications)}
               style={{ cursor: 'pointer' }}
             >
               <Bell size={20} color="#000" />
-              {notifyData?.length > 0 &&  <span className="notification-indicator"></span>}
-             
+              {notifyData?.length > 0 && <span className="notification-indicator"></span>}
             </div>
 
             <div className="user-profile-header">
@@ -75,6 +88,5 @@ const user = localStorage.getItem('userName')
     </>
   );
 };
-
 
 export default Header;
