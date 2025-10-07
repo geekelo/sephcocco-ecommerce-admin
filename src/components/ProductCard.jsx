@@ -41,7 +41,7 @@ const ProductCard = ({ product, onView, onEdit, onDelete, onVisibilityChange, sh
         </div>}
 
         <div className="product-image">
-          <img src={product?.main_image_url || product?.image} alt={product?.name} />
+          <img src={product?.main_image_url || product?.image || '/image.png'} alt={product?.name} />
         </div>
 
         <div className="product-details">
