@@ -111,8 +111,11 @@ const topSellers = useMemo(() => {
       value: item.orders_count,
       fullMonth: item.month
     }));
-  }, [overallPerformanceData]);
 
+  
+    
+  }, [overallPerformanceData]);
+  console.log('ober',transformedPerformanceData);
   // Get current month name
   const getCurrentMonth = () => {
     const monthNames = [
@@ -403,7 +406,7 @@ const topSellers = useMemo(() => {
       {transformedPerformanceData.map((entry, index) => (
         <Cell 
           key={`cell-${index}`} 
-          fill={entry.name === currentMonthShort ? '#FF6B35' : '#FFE5E0'} 
+          fill={entry.name ? '#FF6B35' : '#FFE5E0'} 
         />
       ))}
     </Bar>

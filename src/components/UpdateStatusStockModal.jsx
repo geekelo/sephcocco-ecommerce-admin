@@ -32,13 +32,7 @@ const UpdateStockStatusModal = ({
         invoice_number: formData.invoice_number,
         vendor: formData.vendor,
         status: selectedStatus,
-        stock: {
-          add_stock: parseInt(formData.add_stock, 10) || 0,
-        },
-        price: {
-          cost_price: parseFloat(formData.cost_price) || 0,
-          profit_markup: parseFloat(formData.profit_markup) || 0,
-        },
+     
       };
 
       await updateStock({
