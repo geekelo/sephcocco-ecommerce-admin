@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import '../styles/ManageAccounts.css';
-import { Users, Shield, UserPlus, Edit3, Trash2, Eye, MoreVertical, Ban, CheckCircle, Mail, Calendar, Phone, MapPin, Truck, Package, Star, Clock } from 'lucide-react';
+import { Users, Shield, UserPlus, Edit3, Trash2, Eye, MoreVertical, Ban, CheckCircle, Mail, Calendar, Phone, MapPin, Truck, Package, Star, Clock, Replace } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import FlexibleTable from '../components/FlexibleTable';
 import UserAdminFormModal from '../components/UserAdminFormModal';
@@ -14,6 +14,7 @@ import { useUnsuspendUser } from '../hooks/useUnsuspendUser';
 import { useRoles } from '../hooks/useRoles'; // Add this import
 import ManageAccountsSkeleton from '../components/ManageAccountSkeleton';
 import Pagination from '../components/Pagination';
+import { useDeleteUser } from '../hooks/useDeleteUser';
 
 const itemsPerPage = 10;
 
@@ -49,6 +50,7 @@ const ManageAccounts = () => {
   const { mutateAsync: switchRole } = useSwitchRole();
   const { mutateAsync: suspendUser } = useSuspendUser();
   const { mutateAsync: unSuspendUser } = useUnsuspendUser();
+  const {mutateAsync: deleteUser} = useDeleteUser()
   const meta = {
     current_page: currentPage,
     total_pages: Math.ceil(apiUsers?.length / itemsPerPage),
@@ -576,6 +578,12 @@ const ManageAccounts = () => {
     {
       key: 'switch-role',
       label: 'Switch Role',
+      icon: <Replace size={14} />,
+      className: 'activate'
+    },
+        {
+      key: 'delete',
+      label: 'Delete User',
       icon: <Trash2 size={14} />,
       className: 'delete'
     }
@@ -756,7 +764,28 @@ const ManageAccounts = () => {
       // Handle error appropriately - you might want to show an error message to the user
     }
   };
+const handleDeleteUser = async () => {
+    console.log('Unsuspending user:', selectedAccount);
+    
+    try {
+      if (!selectedAccount?.id) {
+        console.error('No selected account ID');
+        return;
+      }
 
+      console.log('Deleteing user with ID:', selectedAccount.id);
+      await deleteUser({userId: selectedAccount.id});
+      console.log('User Deleted successfully');
+
+      // Refetch data to update the UI
+      refetch();
+      closeAllModals();
+      
+    } catch (error) {
+      console.error('Unsuspend failed:', error);
+      // Handle error appropriately - you might want to show an error message to the user
+    }
+  };
   // Handle switch role
   const handleSwitchRole = async () => {
     try {
@@ -860,6 +889,10 @@ const ManageAccounts = () => {
         break;
       case 'switch-role':
         setShowSwitchRoleModal(true);
+        break;
+           case 'delete':
+        // Show confirmation modal for suspend
+        setShowDeleteModal(true);
         break;
       default:
         break;
@@ -987,6 +1020,14 @@ const ManageAccounts = () => {
           confirmButtonText: 'Unsuspend Account',
           type: 'activate',
           onConfirm: handleUnsuspendUser
+        };
+          case 'delete':
+        return {
+          title: 'Delete Account',
+          message: `Are you sure you want to delete ${selectedAccount.name}'s account? They will regain access to the system.`,
+          confirmButtonText: 'Delete Account',
+          type: 'activate',
+          onConfirm: handleDeleteUser
         };
       default:
         return {

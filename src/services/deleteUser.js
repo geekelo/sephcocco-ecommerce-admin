@@ -4,7 +4,7 @@ import { apiClient } from "./axios";
 
 export const deleteUser = async (userId) => {
   try {
-    const data = await apiClient().delete(`/api/v1/sephcocco_users/delete_user/${userId}`)
+    const data = await apiClient().patch(`/api/v1/sephcocco_users/soft_delete_user?id=${userId}`)
     return data.data;
   } catch (err) {
     console.error(err);
