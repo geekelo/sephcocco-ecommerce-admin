@@ -172,13 +172,13 @@ const calculateNewPrice = () => {
             </div>
             
             <div className="form-group-stock">
-              <label>Profit Markup (%)</label>
+              <label>Profit Markup</label>
               <input
                 type="number"
                 step="0.01"
                 value={formData.profit_markup}
                 onChange={(e) => handleInputChange('profit_markup', e.target.value)}
-                placeholder="Enter markup percentage"
+                placeholder="Enter profit markup"
               />
             </div>
           </div>
