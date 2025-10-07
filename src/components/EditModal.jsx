@@ -610,30 +610,11 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
 
             {/* Two column layout */}
             <div className="form-row">
-              {/* Product Price */}
-              <div className={`form-group-add ${errors.price ? "error" : ""}`}>
-                <label htmlFor="price">Product Price</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  id="price"
-                  name="price"
-                  placeholder="Enter product price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  min="0"
-                  disabled={isSubmitting}
-                />
-                {errors.price && (
-                  <div className="error-message">{errors.price}</div>
-                )}
-              </div>
-
               {/* Discount Price */}
               <div
                 className={`form-group-add ${errors.discountPrice ? "error" : ""}`}
               >
-                <label htmlFor="discountPrice">Selling Price</label>
+                <label htmlFor="discountPrice">Product Price</label>
                 <input
                   type="number"
                   step="0.01"
@@ -647,6 +628,24 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
                 />
                 {errors.discountPrice && (
                   <div className="error-message">{errors.discountPrice}</div>
+                )}
+              </div>
+              {/* Product Price */}
+              <div className={`form-group-add ${errors.price ? "error" : ""}`}>
+                <label htmlFor="price">Selling Price</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  id="price"
+                  name="price"
+                  placeholder="Enter product price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  min="0"
+                  disabled={isSubmitting}
+                />
+                {errors.price && (
+                  <div className="error-message">{errors.price}</div>
                 )}
               </div>
             </div>
