@@ -119,6 +119,9 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
       } else if (formData.mainImage && formData.mainImage.url) {
         // Keep existing image URL
         uploadedImages.mainImageUrl = formData.mainImage.url;
+      } else {
+        // Use backup image if no main image provided
+        uploadedImages.mainImageUrl = "https://i.ibb.co/VpgyJ7SM/no-image-template.png";
       }
 
       // Upload other images that are new files and keep existing URLs
@@ -308,9 +311,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
       newErrors.long_description = "Long description is required";
     }
 
-    if (!formData.mainImage) {
-      newErrors.mainImage = "Main product image is required";
-    }
+    // Main image is now optional - will use backup if not provided
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -634,7 +635,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
               <div
                 className={`form-group-add ${errors.discountPrice ? "error" : ""}`}
               >
-                <label htmlFor="discountPrice">Discount Price</label>
+                <label htmlFor="discountPrice">Selling Price</label>
                 <input
                   type="number"
                   step="0.01"
@@ -689,7 +690,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
             {/* Main Product Image Upload */}
             <div className={`form-group-add ${errors.mainImage ? "error" : ""}`}>
               <label>
-                Main Product Image <span className="required">*</span>
+                Main Product Image <span className="optional">(optional)</span>
               </label>
 
               {/* Hidden file input for main image */}
