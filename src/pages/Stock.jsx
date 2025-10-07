@@ -17,6 +17,7 @@ import { useAddStock } from '../hooks/useAddStock';
 import { useUpdateStock } from '../hooks/useUpdateStock';
 import { useDeleteStock } from '../hooks/useDeleteStock';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
+import { getActiveUser } from '../utils/getActiveUser';
 import { toast } from 'react-toastify';
 import { StockModal } from '../components/StockModal';
 import UpdateStockStatusModal from '../components/UpdateStatusStockModal';
@@ -61,7 +62,6 @@ const createProductColumns = (onAddStock) => [
             {product.categories.map((category, index) => (
               <span key={category.id || index} className="category-badge">
                 {String(category.name || 'Category')}
-         
               </span>
             ))}
           </div>
@@ -207,6 +207,7 @@ const createStockHistoryColumns = (onViewStock) => [
 // Main Stock Management Component
 const StockManagement = () => {
   const activeOutlet = getActiveOutlet();
+  const user_id = getActiveUser();
   const [activeTab, setActiveTab] = useState('products');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedStockHistory, setSelectedStockHistory] = useState(null);
@@ -237,6 +238,7 @@ const StockManagement = () => {
   // API hooks
   const { data: productsData = { products: [], meta: {} }, isLoading: productsLoading, refetch: refetchProducts } = useViewAllProduct(
     activeOutlet, 
+    user_id.id,
     filters, 
     currentPage, 
     itemsPerPage

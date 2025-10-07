@@ -269,11 +269,14 @@ const AddProductModal = ({ isOpen, onClose }) => {
     };
 
     try {
-      // Upload main image
+      // Upload main image or use backup
       if (formData.mainImage) {
         setUploadProgress("Uploading main image...");
         const mainImageResponse = await uploadImageMutation.mutateAsync(formData.mainImage.file);
         uploadedImages.mainImageUrl = mainImageResponse.url;
+      } else {
+        // Use backup image if no main image provided
+        uploadedImages.mainImageUrl = "https://i.ibb.co/VpgyJ7SM/no-image-template.png";
       }
 
       // Upload other images
@@ -360,13 +363,9 @@ const AddProductModal = ({ isOpen, onClose }) => {
       newErrors.short_description = "Short description is required";
     }
 
-    if (!formData.long_description.trim()) {
-      newErrors.long_description = "Long description is required";
-    }
+    // Long description is now optional
 
-    if (!formData.mainImage) {
-      newErrors.mainImage = "Main product image is required";
-    }
+    // Main image is now optional - will use backup if not provided
 
     // Barcode validation (optional but if provided, should be valid)
     if (formData.barcode.trim() && formData.barcode.trim().length < 3) {
@@ -856,7 +855,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
                 <div
                   className={`form-group-add ${errors.discountPrice ? "error" : ""}`}
                 >
-                  <label htmlFor="discountPrice">Discount Price</label>
+                  <label htmlFor="discountPrice">Selling Price</label>
                   <input
                     type="number"
                     step="0.01"
@@ -893,7 +892,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
               {/* Product Long Description */}
               <div className={`form-group-add ${errors.long_description ? "error" : ""}`}>
-                <label htmlFor="long_description">Product Long Description</label>
+                <label htmlFor="long_description">Product Long Description <span className="optional">(optional)</span></label>
                 <textarea
                   id="long_description"
                   name="long_description"
@@ -911,7 +910,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
               {/* Main Product Image Upload */}
               <div className={`form-group-add ${errors.mainImage ? "error" : ""}`}>
                 <label>
-                  Main Product Image <span className="required">*</span>
+                  Main Product Image <span className="optional">(optional)</span>
                 </label>
 
                 {/* Hidden file input for main image */}
