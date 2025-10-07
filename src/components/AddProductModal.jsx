@@ -363,9 +363,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
       newErrors.short_description = "Short description is required";
     }
 
-    if (!formData.long_description.trim()) {
-      newErrors.long_description = "Long description is required";
-    }
+    // Long description is now optional
 
     // Main image is now optional - will use backup if not provided
 
@@ -894,7 +892,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
               {/* Product Long Description */}
               <div className={`form-group-add ${errors.long_description ? "error" : ""}`}>
-                <label htmlFor="long_description">Product Long Description</label>
+                <label htmlFor="long_description">Product Long Description <span className="optional">(optional)</span></label>
                 <textarea
                   id="long_description"
                   name="long_description"
