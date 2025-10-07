@@ -20,7 +20,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
     discountPrice: "",
     short_description: "",
     long_description: "",
-    visible: false, 
+    visible: true, 
     mainImage: null,
     other_images: [],
   });
@@ -75,7 +75,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
         discountPrice: "",
         short_description: "",
         long_description: "",
-        visible: false,
+        visible: true,
         mainImage: null,
         other_images: [],
       });
