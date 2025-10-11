@@ -1,0 +1,144 @@
+.admin-location-page {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.add-location-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #F93A01;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(249, 58, 1, 0.2);
+}
+
+.add-location-btn:hover {
+  background-color: #d63301;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(249, 58, 1, 0.3);
+}
+
+.add-location-btn:active {
+  transform: translateY(0);
+}
+
+.add-location-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.location-table-container {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.page-title-section {
+  margin-bottom: 1.5rem;
+}
+
+.page-title-section h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 0.5rem 0;
+}
+
+.search-results-info {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Status badge styles */
+.status-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-badge.active {
+  background-color: #e7f7ef;
+  color: #0d7f3f;
+}
+
+.status-badge.inactive {
+  background-color: #fee;
+  color: #d32f2f;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-location-page {
+    padding: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .add-location-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .location-table-container {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .page-title-section h2 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .add-location-btn {
+    font-size: 0.9rem;
+    padding: 0.65rem 1.25rem;
+  }
+}

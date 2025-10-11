@@ -35,6 +35,7 @@ const Sidebar = ({ isOpen }) => {
     { name: 'Orders', icon: <ShoppingCart size={20} />, path: '/orders', key: 'orders' },
     { name: 'Payments', icon: <CreditCard size={20} />, path: '/payments', key: 'payments' },
     { name: 'Logistics', icon: <Bike size={20} />, path: '/logistics', key: 'logistics' },
+    { name: 'Delivery Locations', icon: <Bike size={20} />, path: '/delivery-locations', key: 'locations' },
     { name: 'Stocks Management', icon: <Archive size={20} />, path: '/stocks', key: 'stocks' },
     { name: 'Product Categories', icon: <Layers size={20} />, path: '/products-categories', key: 'categories' },
     { name: 'Manage FAQ', icon: <TableOfContents size={20} />, path: '/faq', key: 'faq' },

@@ -20,6 +20,6 @@ export const AnalyticsPage = lazy(() => import("../pages/Analytics"));
 export const SettingsPage = lazy(() => import("../pages/Settings"));
 export const ShippingPage = lazy(() => import("../pages/ShippingPage"));
 
-
+export const LocationPage = lazy(() => import("../pages/Location"));
 
 

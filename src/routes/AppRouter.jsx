@@ -7,6 +7,7 @@ import {
   DashboardPage, 
   FAQPage, 
   ForgotPasswordPage, 
+  LocationPage, 
   LoginPage, 
   ManageAccountPage, 
   MessagesPage, 
@@ -156,6 +157,7 @@ const AppRouter = () => {
                 <Route path="orders" element={<OrderPage />} />
                 <Route path="payments" element={<PaymentPage />} />
                 <Route path="logistics" element={<ShippingPage />} />
+                <Route path="delivery-locations" element={<LocationPage />} />
                 <Route path="activities" element={<ActivitiesPage />} />
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="messages" element={<MessagesPage />} />
