@@ -10,9 +10,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ErrorState } from "../components/ErrorState";
 import { EmptyState } from "../components/EmptyState";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
-import "../styles/AdminLocationPage.css";
 
-// Location table columns configuration
+import "../styles/AdminLocationPage.css";
+import '../styles/ManageAccounts.css';
+import { useGetLocation } from "../hooks/useGetLocation";
+import { useAddLocation } from "../hooks/useAddLocation";
+import { useUpdateLocation } from "../hooks/useUpdateLocation";
+import { useDeleteLocation } from "../hooks/useDeleteLocation";
 const locationColumns = [
   {
     key: 'state',
@@ -34,21 +38,6 @@ const locationColumns = [
       return (
         <span style={{ color: '#F93A01', fontWeight: '600' }}>
           ₦{numericPrice.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
-        </span>
-      );
-    }
-  },
-  {
-    key: 'status',
-    label: 'Status',
-    sortable: true,
-    render: (value, row) => {
-      const statusValue = typeof value === 'object' && value !== null ? value.status : value;
-      const statusLower = statusValue ? String(statusValue).toLowerCase() : 'active';
-      const displayValue = statusValue ? String(statusValue) : 'Active';
-      return (
-        <span className={`status-badge ${statusLower}`}>
-          {displayValue}
         </span>
       );
     }
@@ -84,13 +73,14 @@ const locationActions = [
   {
     label: 'Edit',
     value: 'edit',
-    icon: <Edit3 size={14} />
+    icon: <Edit3 size={14} />,
+    className: 'edit'
   },
   {
     label: 'Delete',
     value: 'delete',
     icon: <Trash size={14} />,
-    className: 'delete-action'
+    className: 'delete'
   }
 ];
 
@@ -120,19 +110,19 @@ const AdminLocationPage = () => {
   const active_outlet = getActiveOutlet();
   const queryClient = useQueryClient();
 
-  // Mock data - Replace with your actual API hooks
-  const mockLocations = [
-    { id: 1, state: 'Lagos', price: 2500, status: 'Active', created_at: '2024-01-15T10:30:00Z' },
-    { id: 2, state: 'Abuja', price: 3000, status: 'Active', created_at: '2024-01-16T11:20:00Z' },
-    { id: 3, state: 'Port Harcourt', price: 3500, status: 'Active', created_at: '2024-01-17T09:15:00Z' },
-    { id: 4, state: 'Kano', price: 4000, status: 'Inactive', created_at: '2024-01-18T14:45:00Z' },
-  ];
+  // Fetch locations using your API hook
+  const { 
+    data: locations = [], 
+    isLoading: isFetchingLocations, 
+    error: fetchError,
+    refetch: refetchLocations 
+  } = useGetLocation(filters, currentPage, itemsPerPage);
+console.log('location',locations);
 
-  // Replace these with your actual hooks
-  const locations = mockLocations;
-  const isFetchingLocations = false;
-  const fetchError = null;
-  const refetchLocations = () => console.log('Refetching locations...');
+  // Mutations
+  const addLocationMutation = useAddLocation();
+  const updateLocationMutation = useUpdateLocation();
+  const deleteLocationMutation = useDeleteLocation();
 
   // Handle filter application
   const handleApplyFilters = ({ 
@@ -200,6 +190,8 @@ const AdminLocationPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+
+
   const handleAddLocation = () => {
     if (!active_outlet) {
       toast.error("Please select an outlet first.");
@@ -241,13 +233,13 @@ const AdminLocationPage = () => {
     }
 
     try {
-      // Replace with your actual delete mutation
-      // await deleteLocationMutation.mutateAsync({ 
-      //   active_outlet, 
-      //   locationId: selectedLocation.id 
-      // });
+      await deleteLocationMutation.mutateAsync({ 
+        active_outlet, 
+        locationId: selectedLocation.id 
+      });
       
-      console.log('Deleting location:', selectedLocation);
+   
+      refetchLocations();
       
       toast.success("Location deleted successfully!");
       setIsDeleteLocationModal(false);
@@ -270,13 +262,39 @@ const AdminLocationPage = () => {
 
     try {
       if (selectedLocation) {
-        // Replace with your actual update mutation
-        console.log('Updating location:', locationData);
+        // Update existing location
+        const payload = {
+          location: {
+            location: locationData.state,
+            logistics_price: locationData.price
+          }
+        };
+        
+        await updateLocationMutation.mutateAsync({
+          locationId: selectedLocation.id,
+          payload
+        });
+        
+        // Invalidate queries to refetch fresh data
+        refetchLocations();
+        
         toast.success("Location updated successfully!");
         setIsEditLocationModal(false);
       } else {
-        // Replace with your actual add mutation
-        console.log('Adding location:', locationData);
+        // Add new location
+         const payload = {
+          location: {
+            location: locationData.state,
+            logistics_price: locationData.price
+          }
+        };
+        await addLocationMutation.mutateAsync({
+          payload
+        });
+        
+        // Invalidate queries to refetch fresh data
+        refetchLocations();
+        
         toast.success("Location added successfully!");
         setIsAddLocationModal(false);
       }
@@ -288,7 +306,9 @@ const AdminLocationPage = () => {
     }
   };
 
-  const isLoading = false; // Replace with actual loading states
+  const isLoading = addLocationMutation.isPending || 
+                   updateLocationMutation.isPending || 
+                   deleteLocationMutation.isPending;
 
   return (
     <div className="admin-location-page">
@@ -385,7 +405,7 @@ const AdminLocationPage = () => {
           onSubmit={handleLocationSubmit}
           location={null}
           title="Add New Location"
-          isLoading={isLoading}
+          isLoading={addLocationMutation.isPending}
         />
       )}
 
@@ -399,7 +419,7 @@ const AdminLocationPage = () => {
           onSubmit={handleLocationSubmit}
           location={selectedLocation}
           title="Edit Location"
-          isLoading={isLoading}
+          isLoading={updateLocationMutation.isPending}
         />
       )}
 
@@ -413,7 +433,7 @@ const AdminLocationPage = () => {
           onConfirm={handleConfirmDeleteLocation}
           type="delete"
           title="Confirm Delete Location"
-          isLoading={isLoading}
+          isLoading={deleteLocationMutation.isPending}
           message={
             <>
               Are you sure you want to delete the location{" "}

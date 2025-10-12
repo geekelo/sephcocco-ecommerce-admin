@@ -12,8 +12,7 @@ const LocationModal = ({
 }) => {
   const [formData, setFormData] = useState({
     state: '',
-    price: '',
-    status: 'Active'
+    price: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -22,14 +21,12 @@ const LocationModal = ({
     if (location) {
       setFormData({
         state: location.state || '',
-        price: location.price?.toString() || '',
-        status: location.status || 'Active'
+        price: location.price?.toString() || ''
       });
     } else {
       setFormData({
         state: '',
-        price: '',
-        status: 'Active'
+        price: ''
       });
     }
     setErrors({});
@@ -141,26 +138,6 @@ const LocationModal = ({
             )}
             <span className="helper-text">
               Enter the delivery price in Naira (e.g., 2500)
-            </span>
-          </div>
-
-          <div className="form-group-location">
-            <label htmlFor="status">
-              Status <span className="required">*</span>
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              disabled={isLoading}
-              className="status-select"
-            >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-            <span className="helper-text">
-              Inactive locations won't be available for delivery
             </span>
           </div>
 

@@ -13,6 +13,7 @@ export  const navItems = [
     { name: 'Payments', path: '/payments' },
     { name: 'Messages', path: '/messages' },
     { name: 'Logistics', path: '/logistics', key: 'logistics' },
+        { name: 'Delivery Locations', path: '/delivery-locations', key: 'locations' },
 { name: 'Stocks Management', path: '/stocks', key: 'stocks' },
 { name: 'Manage FAQ', path: '/faq', key: 'faq' },
 
