@@ -107,8 +107,8 @@ const AdminLocationPage = () => {
   const [isDeleteLocationModal, setIsDeleteLocationModal] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
-  const active_outlet = getActiveOutlet();
-  const queryClient = useQueryClient();
+  // const active_outlet = getActiveOutlet();
+  // const queryClient = useQueryClient();
 
   // Fetch locations using your API hook
   const { 
@@ -193,10 +193,7 @@ console.log('location',locations);
 
 
   const handleAddLocation = () => {
-    if (!active_outlet) {
-      toast.error("Please select an outlet first.");
-      return;
-    }
+
     setSelectedLocation(null);
     setIsAddLocationModal(true);
   };
@@ -207,10 +204,7 @@ console.log('location',locations);
   };
 
   const handleActionClick = (action, location) => {
-    if (!active_outlet) {
-      toast.error("Please select an outlet first.");
-      return;
-    }
+   
 
     setSelectedLocation(location);
     
@@ -227,14 +221,10 @@ console.log('location',locations);
   };
 
   const handleConfirmDeleteLocation = async () => {
-    if (!active_outlet) {
-      toast.error("Please select an outlet first.");
-      return;
-    }
+  
 
     try {
       await deleteLocationMutation.mutateAsync({ 
-        active_outlet, 
         locationId: selectedLocation.id 
       });
       
@@ -255,10 +245,7 @@ console.log('location',locations);
   };
 
   const handleLocationSubmit = async (locationData) => {
-    if (!active_outlet) {
-      toast.error("Please select an outlet first.");
-      return;
-    }
+
 
     try {
       if (selectedLocation) {
