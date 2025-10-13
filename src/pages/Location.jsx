@@ -72,13 +72,13 @@ const locationColumns = [
 const locationActions = [
   {
     label: 'Edit',
-    value: 'edit',
+    key: 'edit',
     icon: <Edit3 size={14} />,
     className: 'edit'
   },
   {
     label: 'Delete',
-    value: 'delete',
+    key: 'delete',
     icon: <Trash size={14} />,
     className: 'delete'
   }
@@ -87,16 +87,16 @@ const locationActions = [
 const AdminLocationPage = () => {
   const [searchBarState, setSearchBarState] = useState({
     search: "",
-    status: "All Status",
-    startDate: "",
-    endDate: ""
+    // status: "All Status",
+    // startDate: "",
+    // endDate: ""
   });
 
   const [filters, setFilters] = useState({
     search_terms: "",
-    status: "",
-    start_date: "",
-    end_date: "",
+    // status: "",
+    // start_date: "",
+    // end_date: "",
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -126,21 +126,22 @@ console.log('location',locations);
 
   // Handle filter application
   const handleApplyFilters = ({ 
-    status, 
+    // status, 
     search_terms, 
-    start_date, 
-    end_date, 
+    // start_date, 
+    // end_date, 
     sort_by_likes,
     sort_by_stock  
   }) => {
-    setFilters({ status, search_terms, start_date, end_date });
+      setFilters({ search_terms});
+    // setFilters({ status, search_terms, start_date, end_date });
     setCurrentPage(1);
     
     setSearchBarState({
       search: search_terms || "",
-      status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
-      startDate: start_date || "",
-      endDate: end_date || ""
+      // status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
+      // startDate: start_date || "",
+      // endDate: end_date || ""
     });
   };
 
