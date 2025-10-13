@@ -128,20 +128,20 @@ console.log('location',locations);
   const handleApplyFilters = ({ 
     // status, 
     search_terms, 
-    // start_date, 
-    // end_date, 
+    start_date, 
+    end_date, 
     sort_by_likes,
     sort_by_stock  
   }) => {
-      setFilters({ search_terms});
+      setFilters({ search_terms, start_date, end_date });
     // setFilters({ status, search_terms, start_date, end_date });
     setCurrentPage(1);
     
     setSearchBarState({
       search: search_terms || "",
       // status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
-      // startDate: start_date || "",
-      // endDate: end_date || ""
+      startDate: start_date || "",
+      endDate: end_date || ""
     });
   };
 
@@ -322,7 +322,7 @@ console.log('location',locations);
         sortOptions={[]}
         placeholder="Search by state or price..."
         filterLabel="Filter by"
-        showDate={false}
+        showDate={true}
         initialValues={searchBarState}
       />
 
