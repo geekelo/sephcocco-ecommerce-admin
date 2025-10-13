@@ -19,20 +19,20 @@ import { useUpdateLocation } from "../hooks/useUpdateLocation";
 import { useDeleteLocation } from "../hooks/useDeleteLocation";
 const locationColumns = [
   {
-    key: 'state',
+    key: 'location',
     label: 'State',
     sortable: true,
     render: (value, row) => {
-      const stateValue = typeof value === 'object' && value !== null ? value.state : value;
+      const stateValue = typeof value === 'object' && value !== null ? value.location : value;
       return <span style={{ fontWeight: '600' }}>{stateValue || 'N/A'}</span>;
     }
   },
   {
-    key: 'price',
+    key: 'logistics_price',
     label: 'Delivery Price',
     sortable: true,
     render: (value, row) => {
-      const priceValue = typeof value === 'object' && value !== null ? value.price : value;
+      const priceValue = typeof value === 'object' && value !== null ? value.logistics_price : value;
       const numericPrice = parseFloat(priceValue) || 0;
       
       return (
@@ -159,8 +159,8 @@ console.log('location',locations);
   // Sort and filter locations
   const { paginatedLocations, totalCount, totalPages } = useMemo(() => {
     let filtered = locations?.filter(location => {
-      const state = location?.state || "";
-      const price = location?.price?.toString() || "";
+      const state = location?.location || "";
+      const price = location?.logistics_price?.toString() || "";
       const searchLower = filters.search_terms.toLowerCase();
       
       if (!searchLower) return true;
@@ -331,11 +331,11 @@ console.log('location',locations);
           <h2>
             {totalCount} Location{totalCount !== 1 ? 's' : ''} found
           </h2>
-          {filters.search_terms && (
+          {/* {filters.search_terms && (
             <p className="search-results-info">
               Showing results for "{filters.search_terms}"
             </p>
-          )}
+          )} */}
         </div>
 
         {fetchError ? (
@@ -425,7 +425,7 @@ console.log('location',locations);
           message={
             <>
               Are you sure you want to delete the location{" "}
-              <strong>{selectedLocation?.state}</strong>?
+              <strong>{selectedLocation?.location}</strong>?
               <div style={{ marginTop: '8px', color: '#666', fontSize: '14px' }}>
                 This action cannot be undone.
               </div>

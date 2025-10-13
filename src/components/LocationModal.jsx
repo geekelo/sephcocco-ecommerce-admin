@@ -20,8 +20,8 @@ const LocationModal = ({
   useEffect(() => {
     if (location) {
       setFormData({
-        state: location.state || '',
-        price: location.price?.toString() || ''
+        state: location?.location || '',
+        price: location?.logistics_price?.toString() || ''
       });
     } else {
       setFormData({
