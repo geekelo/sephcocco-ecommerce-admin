@@ -157,9 +157,9 @@ console.log('location',locations);
 
   // Sort and filter locations
   const { paginatedLocations, totalCount, totalPages } = useMemo(() => {
-    let filtered = locations.filter(location => {
-      const state = location.state || "";
-      const price = location.price?.toString() || "";
+    let filtered = locations?.filter(location => {
+      const state = location?.state || "";
+      const price = location?.price?.toString() || "";
       const searchLower = filters.search_terms.toLowerCase();
       
       if (!searchLower) return true;

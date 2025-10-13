@@ -16,7 +16,7 @@ export const getLocations = async (filters = {}, page = 1, per_page = 20) => {
       per_page,
     };
     const data = await apiClient().get(`/api/v1/sephcocco_locations`, {params});
-    return data.data;
+    return data.data.locations;
   } catch (err) {
     console.error(err);
     throw err;
