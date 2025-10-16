@@ -49,6 +49,9 @@ const PaymentSummary = ({
       customerEmail: customer?.email,
       phoneNumber: customer?.phone_number,
       orderId: orderInfo?.id,
+      deliveryAmount: paymentInfo?.deliveryAmount,
+      deliveryLocation: paymentInfo?.deliveryLocation,
+      orderAmount: paymentInfo?.amount - paymentInfo?.deliveryAmount,
       orderNumber: orderInfo?.order_number,
       orderStatus: orderInfo?.status,
       orderDate: orderInfo?.created_at,
@@ -67,6 +70,9 @@ const PaymentSummary = ({
       customerName: order.customerName,
       customerEmail: order.customerEmail,
       phoneNumber: order.phoneNumber,
+            deliveryAmount: order?.deliveryAmount,
+      deliveryLocation: order?.deliveryLocation,
+      orderAmount: order?.amount - order?.deliveryAmount,
       orderNumber: order.orderNumber,
       orderStatus: order.orderStatus,
       orderDate: order.orderDate,
@@ -74,6 +80,7 @@ const PaymentSummary = ({
       notes: order.notes
     };
   }
+console.log('psymrny',paymentData);
 
   // Destructure the standardized data
   const {
@@ -91,6 +98,7 @@ const PaymentSummary = ({
     orderStatus,
     orderDate,
     products,
+    orderAmount, deliveryAmount, deliveryLocation,
     notes
   } = paymentData;
 console.log('proddd',products);
@@ -112,8 +120,19 @@ console.log('proddpaymed',paymentData);
     { label: "Payment ID:", value: paymentId || 'N/A', isCopyable: true },
     { label: "Transaction ID:", value: transactionId || 'N/A', isCopyable: true },
     { label: "Payment Method:", value: paymentMethod || "Not specified" },
-    { label: "Payment Date:", value: paymentDate ? formatDate(paymentDate) : new Date(paymentDate).toLocaleDateString() },
-    { label: "Total Amount:", value: `₦${amount}` }
+    { label: "Payment Date:", value:            new Date(paymentDate).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  })},
+    { label: "Delivery Location:", value: `${deliveryLocation}` },
+        { label: "Delivery Amount:", value: `₦${deliveryAmount}` },
+            { label: "Order Amount:", value: `₦${orderAmount}` },
+            { label: "Total Amount:", value: `₦${amount}` }
   ];
 
   const rightCardItems = [

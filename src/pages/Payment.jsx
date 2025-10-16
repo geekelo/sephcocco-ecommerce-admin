@@ -67,6 +67,9 @@ const PaymentPage = () => {
       notes: order.notes,
       products: order.product, // This is a single object, not an array
       amount: payment.amount,
+      deliveryAmount: payment.delivery_location.logistics_price,
+      deliveryLocation: payment.delivery_location.location,
+      orderAmount: payment.amount - payment.delivery_location.logistics_price,
       paymentDate: payment.created_at,
       transactionId: payment.transaction_id,
       orderNumber: order.order_number,
@@ -80,7 +83,7 @@ const sortedPaymentData = [...paymentData].sort((a, b) =>
   // new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime() // ASC
 );
 
-console.log('oddd', sortedPaymentData);
+
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditProductModal, setIsEditProductModal] = useState(false);
