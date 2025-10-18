@@ -1,27 +1,41 @@
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
+import { toast } from 'react-toastify';
+import VendorDropdown from './VendorDropdown'; // ✅ Import the new component
 
 // Stock Modal Component (for both Add and Update)
-export const StockModal = ({ isOpen, onClose, product, stockData, onConfirm, isLoading, isEdit = false }) => {
+export const StockModal = ({ 
+  isOpen, 
+  onClose, 
+  product, 
+  stockData, 
+  onConfirm, 
+  isLoading, 
+  isEdit = false,
+  vendors = [] 
+}) => {
   const [formData, setFormData] = useState({
     invoice_number: '',
-    vendor: '',
+    vendor: '', 
     add_stock: '',
     cost_price: '',
     profit_markup: '',
     status: 'pending'
   });
-const activeOutlet = getActiveOutlet();
-console.log('edit',stockData);
+  
+  const activeOutlet = getActiveOutlet();
 
   // Initialize form data when modal opens
   useEffect(() => {
     if (isOpen) {
       if (isEdit && stockData) {
+  
+        const vendorId = vendors.find(v => v.name === stockData.vendor)?.id || '';
+        
         setFormData({
           invoice_number: stockData.invoice_number || '',
-          vendor: stockData.vendor || '',
+          vendor: vendorId,
           add_stock: stockData.stock?.add_stock || '',
           cost_price: stockData.price?.cost_price || '',
           profit_markup: stockData.price?.profit_markup || '',
@@ -38,7 +52,7 @@ console.log('edit',stockData);
         });
       }
     }
-  }, [isOpen, isEdit, stockData]);
+  }, [isOpen, isEdit, stockData, vendors]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -47,12 +61,11 @@ console.log('edit',stockData);
     }));
   };
 
-const calculateNewPrice = () => {
-  const costPrice = parseFloat(formData.cost_price) || 0;
-  const markup = parseFloat(formData.profit_markup) || 0;
-  return costPrice + markup;
-};
-
+  const calculateNewPrice = () => {
+    const costPrice = parseFloat(formData.cost_price) || 0;
+    const markup = parseFloat(formData.profit_markup) || 0;
+    return costPrice + markup;
+  };
 
   const handleSubmit = () => {
     if (!formData.invoice_number || !formData.vendor || !formData.add_stock) {
@@ -60,21 +73,23 @@ const calculateNewPrice = () => {
       return;
     }
 
-  const payload = {
-
-    [`sephcocco_${activeOutlet}_product_id`]: product?.id,
-    invoice_number: formData.invoice_number,
-    vendor: formData.vendor,
-    status: formData.status || 'pending',
-    stock: {
-      add_stock: parseInt(formData.add_stock, 10) || 0
-    },
-    price: {
-      cost_price: parseFloat(formData.cost_price) || 0,
-      profit_markup: parseFloat(formData.profit_markup) || 0
-    }
-
-};
+    // ✅ Get vendor name from selected vendor ID
+    const selectedVendor = vendors.find(v => v.id === formData.vendor);
+    
+    const payload = {
+      [`sephcocco_${activeOutlet}_product_id`]: product?.id || stockData?.product?.id,
+      invoice_number: formData.invoice_number,
+      vendor: selectedVendor?.id || '',
+      status: formData.status || 'pending',
+      stock: {
+        add_stock: parseInt(formData.add_stock, 10) || 0
+      },
+      price: {
+        cost_price: parseFloat(formData.cost_price) || 0,
+        profit_markup: parseFloat(formData.profit_markup) || 0
+      }
+    };
+    
     onConfirm(payload);
   };
 
@@ -101,13 +116,15 @@ const calculateNewPrice = () => {
             />
           </div>
           
+          {/* ✅ UPDATED: Use VendorDropdown instead of text input */}
           <div className="form-group-stock">
-            <label>Vendor Name*</label>
-            <input
-              type="text"
+            <label>Vendor Name *</label>
+            <VendorDropdown
+              vendors={vendors}
               value={formData.vendor}
-              onChange={(e) => handleInputChange('vendor', e.target.value)}
-              placeholder="Enter vendor name"
+              onChange={(vendorId) => handleInputChange('vendor', vendorId)}
+              placeholder="Select vendor"
+              disabled={isLoading}
             />
           </div>
 
@@ -131,13 +148,11 @@ const calculateNewPrice = () => {
               <label>Current Stock</label>
               <input
                 type="number"
-                value={product?.amount_in_stock || stockData?.sephcocco_pharmacy_product?.amount_in_stock}
+                value={product?.amount_in_stock || stockData?.product?.amount_in_stock || 0}
                 disabled
                 className="disabled-input"
               />
             </div>
-        
-            
             
             <div className="form-group-stock">
               <label>{isEdit ? 'Stock Quantity' : 'Add Stock'} *</label>
@@ -151,11 +166,11 @@ const calculateNewPrice = () => {
           </div>
           
           <div className="form-row-stock">
-                  <div className="form-group-stock">
+            <div className="form-group-stock">
               <label>Old Price</label>
               <input
                 type="number"
-                value={product?.price || stockData?.sephcocco_pharmacy_product?.price}
+                value={product?.price || stockData?.product?.price || 0}
                 disabled
                 className="disabled-input"
               />

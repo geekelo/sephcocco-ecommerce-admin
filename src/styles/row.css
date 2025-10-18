@@ -25,6 +25,10 @@
   padding: 12px 16px;
   display: flex;
   flex-wrap: wrap;
+word-wrap: break-word !important;
+  word-break: break-all !important;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
   align-items: center;
   font-size: 14px;
   color: #374151;

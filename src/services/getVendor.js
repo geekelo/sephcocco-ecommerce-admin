@@ -1,13 +1,13 @@
 
 
+
 import { apiClient } from "./axios";
 
-export const getstock = async (active_outlet, filters = {}, page, per_page) => {
+export const getVendor = async (active_outlet, filters = {}, page, per_page) => {
     // Build filter object with only non-empty values
     const filter = {};
 
     if (filters.status) filter.status = filters.status;
-    if (filters.vendor) filter.vendor = filters.vendor;
     if (filters.search_terms) filter.search_terms = filters.search_terms;
     if (filters.start_date) filter.start_date = filters.start_date;
     if (filters.end_date) filter.end_date = filters.end_date;
@@ -20,7 +20,7 @@ export const getstock = async (active_outlet, filters = {}, page, per_page) => {
     };
 
   try {
-    const data = await apiClient().get(`/api/v1/${active_outlet}/sephcocco_${active_outlet}_stock_managements`, {params});
+    const data = await apiClient().get(`/api/v1/${active_outlet}/sephcocco_${active_outlet}_vendors`, {params});
     return data.data;
   } catch (err) {
     console.error(err);
