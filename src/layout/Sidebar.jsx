@@ -13,7 +13,8 @@ import {
   Archive,
   ShoppingCart,
   Layers,
-  MapPin
+  MapPin,
+  Building2
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getActiveUser } from '../utils/getActiveUser';
@@ -39,6 +40,7 @@ const Sidebar = ({ isOpen }) => {
     { name: 'Delivery Locations', icon: <MapPin  size={20} />, path: '/delivery-locations', key: 'locations' },
     { name: 'Stocks Management', icon: <Archive size={20} />, path: '/stocks', key: 'stocks' },
     { name: 'Product Categories', icon: <Layers size={20} />, path: '/products-categories', key: 'categories' },
+        { name: 'Manage Departments', icon: <Building2 size={20} />, path: '/departments', key: 'departments' },
     { name: 'Manage FAQ', icon: <TableOfContents size={20} />, path: '/faq', key: 'faq' },
     { name: 'Messages', icon: <MessageSquare size={20} />, path: '/messages', key: 'messages' },
     { name: 'Activities', icon: <Activity size={20} />, path: '/activities', key: 'activities' },

@@ -105,11 +105,68 @@
 
 .form-group input:focus,
 .form-group textarea:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none !important;
+  border-color: #F93A01;
+
+}
+/* Toggle Switch */
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
 }
 
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider-department {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d1d5db; /* grey background */
+  transition: 0.4s;
+  border-radius: 28px;
+}
+
+.slider-department:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider-department {
+  background-color: #F93A01; /* active color */
+}
+
+input:checked + .slider-department:before {
+  transform: translateX(22px);
+}
+
+.switch-label-department {
+  margin-left: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  vertical-align: middle;
+  color: #374151;
+}
+
+.checkbox-group{
+  flex-direction: row;
+}
 .form-group input::placeholder,
 .form-group textarea::placeholder {
   color: #9ca3af;
@@ -157,19 +214,19 @@
 }
 
 .submit-button {
-  background-color: #3b82f6;
+  background-color: #F93A01;
   color: white;
 }
 
 .submit-button:hover {
-  background-color: #2563eb;
+  background-color: #F93A01;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+
 }
 
 .submit-button:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+
 }
 
 .cancel-button {

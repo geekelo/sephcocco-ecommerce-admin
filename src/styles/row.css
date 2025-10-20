@@ -1084,6 +1084,39 @@ word-wrap: break-word !important;
     min-width: 800px;
   }
 }
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-category-btn,
+.delete-category-btn {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.edit-category-btn {
+  background-color: #F93A01;
+  color: white;
+}
+
+.edit-category-btn:hover {
+  background-color: #F93A01;
+}
+
+.delete-category-btn {
+  background-color: #dc2626;
+  color: white;
+}
+
+.delete-category-btn:hover {
+  background-color: #dc2626;
+}
 
 /* ===== EXTRA SMALL MOBILE (max-width: 480px) ===== */
 @media (max-width: 480px) {

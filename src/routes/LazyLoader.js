@@ -21,5 +21,6 @@ export const SettingsPage = lazy(() => import("../pages/Settings"));
 export const ShippingPage = lazy(() => import("../pages/ShippingPage"));
 
 export const LocationPage = lazy(() => import("../pages/Location"));
+export const DepartmentPage = lazy(() => import("../pages/Departments"));
 
 

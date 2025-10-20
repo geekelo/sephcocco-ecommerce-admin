@@ -5,6 +5,7 @@ import {
   ActivitiesPage, 
   AnalyticsPage, 
   DashboardPage, 
+  DepartmentPage, 
   FAQPage, 
   ForgotPasswordPage, 
   LocationPage, 
@@ -154,6 +155,7 @@ const AppRouter = () => {
                  <Route path="stocks" element={<StockPage />} />
                 <Route path="products-categories" element={<ProductCategoresPage />} />
                 <Route path="faq" element={<FAQPage />} />
+                 <Route path="departments" element={<DepartmentPage />} />
                 <Route path="orders" element={<OrderPage />} />
                 <Route path="payments" element={<PaymentPage />} />
                 <Route path="logistics" element={<ShippingPage />} />

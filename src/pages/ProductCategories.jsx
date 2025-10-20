@@ -7,7 +7,7 @@ import "../styles/ProductCategories.css"
 import "../styles/OrderPage.css";
 import CategoryModal from "../components/CategoryModal";
 import ConfirmActionModal from "../components/ConfirmActionModal";
-import { Plus, AlertTriangle, Eye, Edit3, Trash2, Calendar } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,8 +15,8 @@ import { useAddProductCategores } from "../hooks/useAddProductCategories";
 import { useUpdateProductCategores } from "../hooks/useUpdateProductCategories";
 import { useDeleteProductCategores } from "../hooks/useDeleteProductCategories";
 import { useViewProductCategories } from "../hooks/useGetProductCategories";
-import Cookies from 'js-cookie'; 
-import { categoryColumns } from "../columns/categoryColumns.jsx";
+
+import {  getCategoryColumns } from "../columns/categoryColumns.jsx";
 import { categoryActions } from "../columns/categoryActions.jsx";
 
 import { ErrorState } from "../components/ErrorState.jsx";
@@ -88,7 +88,16 @@ const ProductCategoriesPage = () => {
       endDate: end_date || ""
     });
   };
-
+const columns = getCategoryColumns(
+  (category) => {
+    setSelectedCategory(category);
+    setIsEditCategoryModal(true);
+  },
+  (category) => {
+    setSelectedCategory(category);
+    setIsDeleteCategoryModal(true);
+  }
+);
   // Manual search handler - Updated to include sort parameters
   const handleManualSearch = (searchTerm) => {
     handleApplyFilters({
@@ -299,7 +308,7 @@ const ProductCategoriesPage = () => {
         sortOptions={[]} // No sort options for categories
         placeholder="Search categories..."
         filterLabel="Filter by"
-        showDate={false} // Categories don't need date filtering
+        showDate={true} // Categories don't need date filtering
         initialValues={searchBarState}
       />
 
@@ -326,7 +335,7 @@ const ProductCategoriesPage = () => {
         ) : (
           <FlexibleTable
             data={paginatedCategories}
-            columns={categoryColumns}
+            columns={columns}
             actions={categoryActions}
             keyField="id"
             onRowClick={handleRowClick}

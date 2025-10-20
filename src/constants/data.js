@@ -16,6 +16,7 @@ export  const navItems = [
         { name: 'Delivery Locations', path: '/delivery-locations', key: 'locations' },
 { name: 'Stocks Management', path: '/stocks', key: 'stocks' },
 { name: 'Manage FAQ', path: '/faq', key: 'faq' },
+{ name: 'Manage Departments', path: '/departments', key: 'departments' },
 
     { name: 'Activities', path: '/activities' },
     { name: 'Analytics', path: '/analytics' },

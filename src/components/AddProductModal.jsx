@@ -5,25 +5,28 @@ import { getActiveOutlet } from "../utils/getActiveOutlets";
 import { useViewProductCategories } from "../hooks/useGetProductCategories";
 import { useAddProduct } from "../hooks/useAddProduct";
 import { useUploadSingleImage } from "../hooks/useUploadSingleImage";
+import { useViewDepartment } from "../hooks/useGetDepartment";
+import { toast } from "react-toastify";
 
 const AddProductModal = ({ isOpen, onClose }) => {
   // Get active outlet from cookies
   const active_outlet = getActiveOutlet();
   
   // Form fields state
-  const [formData, setFormData] = useState({
-    name: "",
-    barcode: "", 
-    category_ids: [],
-    quantity: "",
-    price: "",
-    discountPrice: "",
-    short_description: "",
-    long_description: "",
-    visible: true, 
-    mainImage: null,
-    other_images: [],
-  });
+const [formData, setFormData] = useState({
+  name: "",
+  barcode: "", 
+  category_ids: [],
+  department_id: "",  
+  quantity: "",
+  price: "",
+  discountPrice: "",
+  short_description: "",
+  long_description: "",
+  visible: true, 
+  mainImage: null,
+  other_images: [],
+});
 
   // Validation errors state
   const [errors, setErrors] = useState({});
@@ -48,6 +51,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
   // API hooks
   const { data: categories = [], isLoading: categoriesLoading } = useViewProductCategories(active_outlet);
+  const {data: departments, isLoading: departmentLoading} = useViewDepartment(active_outlet)
   const addProductMutation = useAddProduct();
   const uploadImageMutation = useUploadSingleImage();
 
@@ -323,7 +327,9 @@ const AddProductModal = ({ isOpen, onClose }) => {
     formData.category_ids.forEach((categoryId) => {
       formDataToSend.append('product[category_ids][]', categoryId);
     });
-    
+     if (formData.department_id) {
+    formDataToSend.append('product[department_id]', formData.department_id);
+  }
     // Add image URLs
     if (imageUrls.mainImageUrl) {
       formDataToSend.append('product[main_image_url]', imageUrls.mainImageUrl);
@@ -362,6 +368,9 @@ const AddProductModal = ({ isOpen, onClose }) => {
     if (!formData.short_description.trim()) {
       newErrors.short_description = "Short description is required";
     }
+if (!formData.department_id) {
+  newErrors.department_id = "Department is required";
+}
 
     // Long description is now optional
 
@@ -396,7 +405,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
         payload: formDataToSend
       });
 
-      console.log("Product created successfully:", productResponse);
+      toast("Product created successfully");
       setUploadProgress("Product added successfully!");
 
       // Success - close modal after a brief delay
@@ -405,7 +414,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
       }, 1000);
 
     } catch (error) {
-      console.error("Failed to add product:", error);
+      toast("Failed to add product:", error?.response?.message);
       setErrors({ 
         submit: error.message || "Failed to add product. Please try again." 
       });
@@ -728,9 +737,9 @@ const AddProductModal = ({ isOpen, onClose }) => {
               {/* Two column layout */}
               <div className="form-row">
                 {/* Product Category */}
-                <div className={`form-group-add ${errors.category_ids ? "error" : ""}`}>
+                <div >
                   <label htmlFor="category">Product Categories</label>
-                  <div className="form-group-add">
+                  <div>
                     <div className="selected-categories">
                       {formData.category_ids.map((catId) => {
                         const category = categories.find(cat => cat.id === catId);
@@ -765,10 +774,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
                       value=""
                       onChange={(e) => {
                         const selectedCategoryId = e.target.value;
-                        console.log('=== SELECT CATEGORY DEBUG ===');
-                        console.log('Selected value (UUID string):', selectedCategoryId);
-                        console.log('Current category_ids:', formData.category_ids);
-                        console.log('Already includes?', formData.category_ids.includes(selectedCategoryId));
+                       
                         
                         if (
                           selectedCategoryId &&
@@ -810,9 +816,54 @@ const AddProductModal = ({ isOpen, onClose }) => {
                     <div className="error-message">{errors.category_ids}</div>
                   )}
                 </div>
+  <div>
+  <label htmlFor="department">Department</label>
+
+  <div className="selected-categories">
+    {formData.department_id && (
+      <span className="badge">
+        {departments?.find(dep => dep.id === formData.department_id)?.name || "Unknown Department"}
+        <button
+          type="button"
+          className="remove-btn"
+          onClick={() => setFormData({ ...formData, department_id: "" })}
+          disabled={isSubmitting}
+        >
+          &times;
+        </button>
+      </span>
+    )}
+  </div>
+
+  <select
+    id="department"
+    name="department_id"
+    value={formData.department_id}
+    onChange={(e) => {
+      setFormData({ ...formData, department_id: e.target.value });
+      if (errors.department_id) {
+        setErrors({ ...errors, department_id: "" });
+      }
+    }}
+    disabled={departmentLoading || isSubmitting}
+  >
+    <option value="" disabled>
+      {departmentLoading ? "Loading departments..." : "Select a department"}
+    </option>
+    {departments?.map(dep => (
+      <option key={dep.id} value={dep.id}>
+        {dep.name}
+      </option>
+    ))}
+  </select>
+
+  {errors.department_id && (
+    <div className="error-message">{errors.department_id}</div>
+  )}
+</div>
 
                 {/* Stock Quantity */}
-                <div className={`form-group-add ${errors.quantity ? "error" : ""}`}>
+                <div >
                   <label htmlFor="quantity">Stock Quantity</label>
                   <input
                     type="number"
@@ -833,7 +884,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
               {/* Two column layout */}
               <div className="form-row">
                 {/* Product Price */}
-                <div className={`form-group-add ${errors.price ? "error" : ""}`}>
+                <div >
                   <label htmlFor="price">Product Price</label>
                   <input
                     type="number"
@@ -853,7 +904,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
                 {/* Discount Price */}
                 <div
-                  className={`form-group-add ${errors.discountPrice ? "error" : ""}`}
+              
                 >
                   <label htmlFor="discountPrice">Selling Price</label>
                   <input
