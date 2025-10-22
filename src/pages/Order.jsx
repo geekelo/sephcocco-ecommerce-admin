@@ -15,6 +15,7 @@ import { useGetOrder } from "../hooks/useGetOrder";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import '../styles/OrderPage.css'
+import { useActiveDepartment } from "../hooks/useGetActiveDepartment";
 
 const itemsPerPage = 10;
 
@@ -22,6 +23,7 @@ const OrderPage = () => {
   // Lift filter state to OrderPage level to persist across navigation
   const [searchBarState, setSearchBarState] = useState({
     search: "",
+    department_id: "",
     status: "All Status", 
     startDate: "",
     endDate: ""
@@ -30,6 +32,7 @@ const OrderPage = () => {
   const [filters, setFilters] = useState({
     search_terms: "",
     status: "",
+    department_id: "",
     start_date: "",
     end_date: "",
   });
@@ -41,6 +44,7 @@ const OrderPage = () => {
     currentPage,
     itemsPerPage,
   );
+  const {data: department = []} = useActiveDepartment(activeOutlet)
 
   // Sort orders by most recent first (descending order)
   const orders = useMemo(() => {
@@ -70,6 +74,7 @@ const OrderPage = () => {
   // Updated to handle the new sort parameters from SearchBar
   const handleApplyFilters = ({ 
     status, 
+    department_id,
     search_terms, 
     start_date, 
     end_date, 
@@ -78,13 +83,14 @@ const OrderPage = () => {
   }) => {
     // Update both the API filters and the search bar state
     // Note: We ignore sort parameters since orders don't use them
-    setFilters({ status, search_terms, start_date, end_date });
+    setFilters({ status,department_id, search_terms, start_date, end_date });
     setCurrentPage(1);
     
     // Update search bar state to maintain UI state
     setSearchBarState({
       search: search_terms || "",
       status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
+      department_id: department_id ? department_id.charAt(0).toUpperCase() + department_id.slice(1) : "All Department",
       startDate: start_date || "",
       endDate: end_date || ""
     });
@@ -95,6 +101,7 @@ const OrderPage = () => {
     // Clear all filters and only keep the search term
     handleApplyFilters({
       status: "", // Clear status filter
+      department: "",
       search_terms: searchTerm,
       start_date: "", // Clear start date filter
       end_date: "", // Clear end date filter
@@ -136,6 +143,10 @@ const OrderPage = () => {
             placeholder="Search orders..."
             filterLabel="Filter by"
             showDate={true} // Explicitly enable date filtering
+                            extraFilterOptions={department?.map(v => ({ label: v.name, value: v.id })) || []}
+  extraFilterLabel="Filter by Department"
+  extraFilterKey="department_id"
+  showExtraFilter = {true}
             // Pass the persistent state as initial values
             initialValues={searchBarState}
           />

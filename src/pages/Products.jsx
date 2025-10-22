@@ -21,6 +21,7 @@ import { ErrorState } from '../components/ErrorState';
 import { EmptyState } from '../components/EmptyState';
 import { toast } from 'react-toastify';
 import { getActiveUser } from '../utils/getActiveUser';
+import { useActiveDepartment } from '../hooks/useGetActiveDepartment';
 
 
 const ProductsPage = () => {
@@ -31,6 +32,7 @@ const ProductsPage = () => {
   const [searchBarState, setSearchBarState] = useState({
     search: "",
     status: "All Status", 
+    department_id: "",
     category: "", // This will store category name for UI display
     categoryId: "", // Add categoryId for internal tracking
     sort_by_likes: '',
@@ -42,6 +44,7 @@ const ProductsPage = () => {
   const [filters, setFilters] = useState({
     search_terms: "",
     status: "",
+    department_id: "",
     category_id: "", // Change from category to category_id
     sort_by_likes: "",
     sort_by_stock: "",
@@ -61,7 +64,7 @@ const ProductsPage = () => {
 
   // Fetch categories for the filter dropdown
   const { data: categories = [] } = useViewProductCategories(activeOutlet);
-  
+  const {data: department = []} = useActiveDepartment(activeOutlet)
   // Create category options with both name and id for SearchBar
   const categoryOptions = useMemo(() => {
     return categories
@@ -132,7 +135,7 @@ const user_id = getActiveUser()
   };
 
 
-const handleApplyFilters = ({ status, category, categoryId, sort_by_likes, sort_by_stock,search_terms, start_date, end_date }) => {
+const handleApplyFilters = ({ status,department_id, category, categoryId, sort_by_likes, sort_by_stock,search_terms, start_date, end_date }) => {
   // Use categoryId directly from SearchBar, fallback to converting category name if needed
   const finalCategoryId = categoryId || (category ? getCategoryIdByName(category) : "");
   
@@ -143,6 +146,7 @@ const handleApplyFilters = ({ status, category, categoryId, sort_by_likes, sort_
   
   setFilters({ 
     status, 
+    department_id,
     category_id: finalCategoryId, // Send category_id to backend
     search_terms, 
     sort_by_likes: sortByLikesBoolean, // Now sends boolean true or empty string
@@ -156,6 +160,7 @@ const handleApplyFilters = ({ status, category, categoryId, sort_by_likes, sort_
   setSearchBarState({
     search: search_terms || "",
     status: status ? (status.charAt(0).toUpperCase() + status.slice(1)) : "All Status",
+    department_id: department_id ? (department_id.charAt(0).toUpperCase() + department_id.slice(1)) : "All Department",
     category: category || "", // Keep category name for UI display
     categoryId: finalCategoryId, // Track category ID internally
     sort_by_likes: sort_by_likes, // Keep original string for UI display
@@ -171,6 +176,7 @@ const handleApplyFilters = ({ status, category, categoryId, sort_by_likes, sort_
     handleApplyFilters({
       status: "", // Clear status filter
       category: "", // Clear category filter
+      department_id: "",
       categoryId: "", // Clear category ID filter
       sort_by_likes: "",
       sort_by_stock: '',
@@ -322,6 +328,10 @@ const handleApplyFilters = ({ status, category, categoryId, sort_by_likes, sort_
               categoryOptions={categoryOptions} // Contains {label, value, name} objects
               onApply={handleApplyFilters} // Now receives both category and categoryId
               onManualSearch={handleManualSearch} 
+                extraFilterOptions={department?.map(v => ({ label: v.name, value: v.id })) || []}
+  extraFilterLabel="Filter by Department"
+  extraFilterKey="department_id"
+  showExtraFilter = {true}
               placeholder="Search products..."
               filterLabel="Filter by"
               categoryLabel="Category"

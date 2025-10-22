@@ -5,8 +5,8 @@ import { getActiveOutlet } from "../utils/getActiveOutlets";
 import { useViewProductCategories } from "../hooks/useGetProductCategories";
 import { useAddProduct } from "../hooks/useAddProduct";
 import { useUploadSingleImage } from "../hooks/useUploadSingleImage";
-import { useViewDepartment } from "../hooks/useGetDepartment";
 import { toast } from "react-toastify";
+import { useActiveDepartment } from "../hooks/useGetActiveDepartment";
 
 const AddProductModal = ({ isOpen, onClose }) => {
   // Get active outlet from cookies
@@ -51,7 +51,7 @@ const [formData, setFormData] = useState({
 
   // API hooks
   const { data: categories = [], isLoading: categoriesLoading } = useViewProductCategories(active_outlet);
-  const {data: departments, isLoading: departmentLoading} = useViewDepartment(active_outlet)
+  const {data: departments, isLoading: departmentLoading} = useActiveDepartment(active_outlet)
   const addProductMutation = useAddProduct();
   const uploadImageMutation = useUploadSingleImage();
 
@@ -328,7 +328,7 @@ const [formData, setFormData] = useState({
       formDataToSend.append('product[category_ids][]', categoryId);
     });
      if (formData.department_id) {
-    formDataToSend.append('product[department_id]', formData.department_id);
+    formDataToSend.append(`product[sephcocco_${active_outlet}_department_id]`, formData.department_id);
   }
     // Add image URLs
     if (imageUrls.mainImageUrl) {

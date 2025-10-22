@@ -6,6 +6,7 @@ export const getOrder = async (active_outlet, filters = {}, page, per_page) => {
     const filter = {};
 
     if (filters.status) filter.status = filters.status;
+     if (filters.department_id) filter.department_id = filters.department_id;
     if (filters.search_terms) filter.search_terms = filters.search_terms;
     if (filters.start_date) filter.start_date = filters.start_date;
     if (filters.end_date) filter.end_date = filters.end_date;

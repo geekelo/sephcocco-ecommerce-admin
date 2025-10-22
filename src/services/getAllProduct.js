@@ -5,6 +5,7 @@ export const getAllProduct = async (active_outlet, user_id,    filters = {}, pag
         const filter = {};
 
     if (filters.status) filter.status = filters.status;
+       if (filters.department_id) filter.department_id = filters.department_id;
     if (filters.category_id) filter.category_id = filters.category_id;
     if (filters.search_terms) filter.search_terms = filters.search_terms;
     if (filters.start_date) filter.start_date = filters.start_date;

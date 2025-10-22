@@ -25,6 +25,7 @@ import { useAddVendor } from '../hooks/useAddVendor';
 import { useUpdateVendor } from '../hooks/useUpdateVendor';
 import { useDeleteVendor } from '../hooks/useDeleteVendor';
 import { VendorModal } from '../components/VendorModal';
+import { useActiveDepartment } from '../hooks/useGetActiveDepartment';
 
 const createProductColumns = (onAddStock) => [
   {
@@ -270,6 +271,7 @@ const StockManagement = () => {
 
   const [filters, setFilters] = useState({
     search_terms: "",
+    department_id: "",
     status: "",
     vendor: "",
     start_date: "",
@@ -283,7 +285,7 @@ const StockManagement = () => {
     currentPage, 
     itemsPerPage
   );
-
+const {data: department = []} = useActiveDepartment(activeOutlet)
   const { data: stockData = { stocks: [], meta: {} }, isLoading: stockLoading, refetch: refetchStock } = useGetStock(
     activeOutlet,
     filters,
@@ -329,10 +331,11 @@ const StockManagement = () => {
 
   const { data: currentData, meta, isLoading } = getCurrentData();
 
-  const handleApplyFilters = ({ status,vendor, search_terms, start_date, end_date }) => {
+  const handleApplyFilters = ({ status,department_id,vendor, search_terms, start_date, end_date }) => {
       setFilters({ 
     status: status?.toLowerCase() || "", 
     vendor: vendor || "", 
+    department_id: department_id || "",
     search_terms, 
     start_date, 
     end_date 
@@ -342,6 +345,7 @@ const StockManagement = () => {
     setSearchBarState({
       search: search_terms || "",
       vendor: vendor || "",
+      department_id: department_id || "",
       status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
       startDate: start_date || "",
       endDate: end_date || ""
@@ -351,6 +355,7 @@ const StockManagement = () => {
   const handleManualSearch = (searchTerm) => {
     handleApplyFilters({
       vendor: "",
+      department_id: "",
       status: "",
       search_terms: searchTerm,
       start_date: "",
@@ -518,17 +523,34 @@ const StockManagement = () => {
 
   return (
     <div className="order-page" style={{height: '100vh'}}>
-    <SearchBar
+<SearchBar
   onApply={handleApplyFilters}
   onManualSearch={handleManualSearch}
   filterOptions={activeTab === 'products' 
     ? ["All Status", "Public", "Private"] 
+    : activeTab === 'vendors'
+    ? []
     : ["All Status", "Pending", "Approved", "Declined"]
   }
-  extraFilterOptions={vendorData?.map(v => ({ label: v.name, value: v.id })) || []}
-  extraFilterLabel="Filter by Vendor"
-  extraFilterKey="vendor"
-  showVendorFilter={activeTab === 'history'} 
+
+  extraFilterOptions={
+    (activeTab === 'products' || activeTab === 'history')
+      ? department?.map(d => ({ label: d.name, value: d.id })) || []
+      : []
+  }
+  extraFilterLabel="Filter by Department"
+  extraFilterKey="department_id"
+  showExtraFilter={activeTab === 'products' || activeTab === 'history'}
+  
+  extraFilter2Options={
+    activeTab === 'history'
+      ? vendorData?.map(v => ({ label: v.name, value: v.id })) || []
+      : []
+  }
+  extraFilter2Label="Filter by Vendor"
+  extraFilter2Key="vendor"
+  showExtraFilter2={activeTab === 'history'}
+  
   categoryOptions={[]}
   sortOptions={[]}
   placeholder={`Search ${activeTab}...`}

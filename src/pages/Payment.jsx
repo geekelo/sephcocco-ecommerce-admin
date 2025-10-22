@@ -19,6 +19,7 @@ import { getActiveOutlet } from "../utils/getActiveOutlets";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import Pagination from "../components/Pagination";
 import { useUpdatePaymentStatus } from "../hooks/useUpdatePaymentStatus";
+import { useActiveDepartment } from "../hooks/useGetActiveDepartment";
 
 const itemsPerPage = 10;
 
@@ -26,6 +27,7 @@ const PaymentPage = () => {
   // Add searchBarState for consistent UI state management
   const [searchBarState, setSearchBarState] = useState({
     search: "",
+    department_id: "",
     status: "All Status", 
     startDate: "",
     endDate: ""
@@ -33,6 +35,7 @@ const PaymentPage = () => {
 
   const [filters, setFilters] = useState({
     search_terms: "",
+    department_id: "",
     status: "",
     start_date: "",
     end_date: "",
@@ -48,8 +51,8 @@ const PaymentPage = () => {
   );
   
   const { mutateAsync: updatePaymentStatus, isLoading: isUpdatingStatus } = useUpdatePaymentStatus();
-
-  console.log('pay', payment);
+ const {data: department = []} = useActiveDepartment(activeOutlet)
+ 
   const meta = payment?.meta || {};
   
   // Extract payments from orders for the payment table
@@ -259,6 +262,7 @@ const sortedPaymentData = [...paymentData].sort((a, b) =>
   // Updated to handle the new sort parameters from SearchBar
   const handleApplyFilters = ({ 
     status, 
+    department_id,
     search_terms, 
     start_date, 
     end_date, 
@@ -266,12 +270,13 @@ const sortedPaymentData = [...paymentData].sort((a, b) =>
     sort_by_stock  // Accept but ignore sort parameters for payments
   }) => {
     // Only use the parameters that payments need
-    setFilters({ status, search_terms, start_date, end_date });
+    setFilters({ status,department_id, search_terms, start_date, end_date });
     setCurrentPage(1);
     
     // Update search bar state to maintain UI state
     setSearchBarState({
       search: search_terms || "",
+      department_id: department_id ? department_id.charAt(0).toUpperCase() + department_id.slice(1) : "All Department",
       status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
       startDate: start_date || "",
       endDate: end_date || ""
@@ -282,6 +287,7 @@ const sortedPaymentData = [...paymentData].sort((a, b) =>
   const handleManualSearch = (searchTerm) => {
     handleApplyFilters({
       status: "",
+      department_id: "",
       search_terms: searchTerm,
       start_date: "",
       end_date: "",
@@ -304,6 +310,10 @@ const sortedPaymentData = [...paymentData].sort((a, b) =>
         sortOptions={[]} // Explicitly disable sort options
         placeholder="Search..."
         filterLabel="Filter by"
+                        extraFilterOptions={department?.map(v => ({ label: v.name, value: v.id })) || []}
+  extraFilterLabel="Filter by Department"
+  extraFilterKey="department_id"
+  showExtraFilter = {true}
         showDate={true} // Enable date filtering for payments
         initialValues={searchBarState} // Pass persistent state
       />
