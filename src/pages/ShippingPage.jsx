@@ -19,6 +19,7 @@ import { useRiders } from '../hooks/useRiders';
 import { useCancelDelivery } from '../hooks/useCancelDelivery';
 import { useCompleteDelivery } from '../hooks/useCompleteDelivery';
 import { ShippingStatusUpdateDropdown } from '../components/ShippingStatus';
+import { useActiveDepartment } from '../hooks/useGetActiveDepartment';
 
 
 const itemsPerPage = 10;
@@ -27,6 +28,7 @@ const ShippingPage = () => {
   // Add searchBarState for consistent UI state management
   const [searchBarState, setSearchBarState] = useState({
     search: "",
+    department_id: "",
     status: "All Status", 
     startDate: "",
     endDate: ""
@@ -34,6 +36,7 @@ const ShippingPage = () => {
 
   const [filters, setFilters] = useState({
     search_terms: "",
+    department_id: "",
     status: "",
     start_date: "",
     end_date: "",
@@ -49,7 +52,7 @@ const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const { data, isLoading, error,refetch } = useShippings(activeOutlet, filters,   currentPage, 
     itemsPerPage);
 
-
+ const {data: department = []} = useActiveDepartment(activeOutlet)
 const {data: riders, isLoading: isLoadingRiders} = useRiders()
 
 
@@ -305,6 +308,7 @@ const handleCancelDelivery = async (shippingId) => {
   // Updated to handle the new sort parameters from SearchBar
   const handleApplyFilters = ({ 
     status, 
+    department_id,
     search_terms, 
     start_date, 
     end_date, 
@@ -312,13 +316,14 @@ const handleCancelDelivery = async (shippingId) => {
     sort_by_stock  // Accept but ignore sort parameters for shipping
   }) => {
     // Only use the parameters that shipping needs
-    setFilters({ status, search_terms, start_date, end_date });
+    setFilters({ status,department_id, search_terms, start_date, end_date });
     setCurrentPage(1);
     
     // Update search bar state to maintain UI state
     setSearchBarState({
       search: search_terms || "",
       status: status ? status.charAt(0).toUpperCase() + status.slice(1) : "All Status",
+      department_id: department_id ? department_id.charAt(0).toUpperCase() + department_id.slice(1) : "All Department",
       startDate: start_date || "",
       endDate: end_date || ""
     });
@@ -328,6 +333,7 @@ const handleCancelDelivery = async (shippingId) => {
   const handleManualSearch = (searchTerm) => {
     handleApplyFilters({
       status: "",
+      department_id: "",
       search_terms: searchTerm,
       start_date: "",
       end_date: "",
@@ -388,6 +394,10 @@ const handleCancelDelivery = async (shippingId) => {
         sortOptions={[]} // Explicitly disable sort options
         placeholder="Search by tracking number, customer name, or order ID..."
         filterLabel="Filter by Status"
+                                extraFilterOptions={department?.map(v => ({ label: v.name, value: v.id })) || []}
+  extraFilterLabel="Filter by Department"
+  extraFilterKey="department_id"
+  showExtraFilter = {true}
         showDate={true} // Enable date filtering for shipping
         initialValues={searchBarState} // Pass persistent state
       />
