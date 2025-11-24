@@ -6,7 +6,7 @@ import { overallPerformance } from '../services/analytics/overallPerformance';
 // Define analytics query keys
 export const AnalyticsKeys = {
   all: ['analytics'],
-  getAllAnalytics: (outlet) => ['analytics', 'all', outlet],
+  getAllAnalytics: (outlet, department_id = null) => ['analytics', 'all', outlet, department_id],
   overallPerformance: (outlet, year) => ['performance', outlet, year],
 //   totalOrders: (outlet) => ['analytics', 'totalOrders', outlet],
 //   totalPayments: (outlet) => ['analytics', 'totalPayments', outlet],
@@ -19,7 +19,7 @@ export const AnalyticsKeys = {
 //   unresolvedChats: (outlet) => ['analytics', 'unresolvedChats', outlet],
 };
 
-export const useAnalytics = ({ active_outlet, year }) => {
+export const useAnalytics = ({ active_outlet, year, department_id = null }) => {
   const queryClient = useQueryClient();
 
   // Query for getting all analytics
@@ -29,8 +29,8 @@ export const useAnalytics = ({ active_outlet, year }) => {
     error: allAnalyticsError,
     isSuccess: allAnalyticsQuerySuccess
   } = useQuery({
-    queryKey: AnalyticsKeys.getAllAnalytics(active_outlet),
-    queryFn: () => getAllAnalytics(active_outlet),
+    queryKey: AnalyticsKeys.getAllAnalytics(active_outlet, department_id),
+    queryFn: () => getAllAnalytics(active_outlet, department_id),
     enabled: !!active_outlet,
     retry: (failureCount, error) => {
       if (error?.status === 401 || error?.response?.status === 401) {
