@@ -57,6 +57,7 @@ const DepartmentsPage = () => {
     error: fetchError,
     refetch: refetchDepartments 
   } = useViewDepartment(active_outlet, filters, currentPage, itemsPerPage);
+console.log('dept', departments);
 
   // Mutations
   const addMutation = useAddDepartment();
@@ -87,7 +88,7 @@ const DepartmentsPage = () => {
 
   // Pagination and filtering
   const { paginatedDepartments, totalCount, totalPages } = useMemo(() => {
-    let filtered = departments.filter(d => {
+    let filtered = departments?.departments?.filter(d => {
       const name = typeof d.name === 'string' ? d.name : JSON.stringify(d.name);
       const description = typeof d.description === 'string' ? d.description : JSON.stringify(d.description);
       const searchLower = filters.search_terms.toLowerCase();
@@ -95,12 +96,12 @@ const DepartmentsPage = () => {
       return name.toLowerCase().includes(searchLower) || description.toLowerCase().includes(searchLower);
     });
 
-    filtered.sort((a,b) => new Date(b.created_at || b.updated_at).getTime() - new Date(a.created_at || a.updated_at).getTime());
-    const totalCount = filtered.length;
+    filtered?.sort((a,b) => new Date(b.created_at || b.updated_at).getTime() - new Date(a.created_at || a.updated_at).getTime());
+    const totalCount = filtered?.length;
     const totalPages = Math.ceil(totalCount / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    return { paginatedDepartments: filtered.slice(startIndex, endIndex), totalCount, totalPages };
+    return { paginatedDepartments: filtered?.slice(startIndex, endIndex), totalCount, totalPages };
   }, [departments, filters.search_terms, currentPage]);
 
   const handlePageChange = (page) => setCurrentPage(page);

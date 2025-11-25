@@ -316,6 +316,8 @@ const handleApplyFilters = ({ status,department_id, category, categoryId, sort_b
             refetch();
           }}
           product={selectedProduct}
+            categories={categories}
+          departments={department}
         />
       )}
 

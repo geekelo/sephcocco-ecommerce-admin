@@ -5,14 +5,20 @@ import { validateProductForm } from "../schema/ProductSchema";
 import { getActiveOutlet } from "../utils/getActiveOutlets";
 import { useUpdateProduct } from "../hooks/useUpdateProduct";
 import { useUploadSingleImage } from "../hooks/useUploadSingleImage";
+import { useActiveDepartment } from "../hooks/useGetActiveDepartment";
 
-const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
+const EditProductModal = ({ isOpen, onClose, product, categories = [], departments = [] }) => {
   // Get active outlet from cookies
   const active_outlet = getActiveOutlet();
- 
+  
+  // Fetch departments if not provided
+  const { data: fetchedDepartments = [] } = useActiveDepartment(active_outlet);
+  const availableDepartments = departments.length > 0 ? departments : fetchedDepartments;
+
   const [formData, setFormData] = useState({
     name: "",
     category_ids: [], 
+    department_id: "",
     quantity: "",
     price: "",
     discountPrice: "",
@@ -26,7 +32,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
   // Validation errors state
   const [errors, setErrors] = useState({});
 
-  // Loading states - Added to match AddProductModal
+  // Loading states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
 
@@ -48,21 +54,18 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
     if (product) {
       setFormData({
         name: product.name || "",
-        // Convert category to category_ids array - handle both string and array
         category_ids: Array.isArray(product.categories)
-          ? product.categories
-          : Array.isArray(product.categories)
           ? product.categories
           : product.categories
           ? [product.categories]
           : [],
+        department_id: product.department_id || "",
         quantity: product.amount_in_stock || "",
         price: product.price || "",
-        discountPrice: product.discount_price || product.discountPrice || "", // Handle both field names
+        discountPrice: product.discount_price || product.discountPrice || "",
         short_description: product.short_description || "",
-        long_description: product.long_description || product.description || "", // Handle both field names
+        long_description: product.long_description || product.description || "",
         visible: product.visible || false,
-        // Store existing images as objects with url property for consistency
         mainImage: product.main_image_url ? { url: product.main_image_url } : null,
         other_images: product.other_image_urls ? product.other_image_urls.map(url => ({ url })) : []
       });
@@ -90,7 +93,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
     };
   }, [isOpen, onClose]);
 
-  // Handle form input changes - Updated to match AddProductModal
+  // Handle form input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === 'checkbox' ? checked : value;
@@ -103,7 +106,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
     }
   };
 
-  // Upload images to imgbb (same as AddProductModal)
+  // Upload images to imgbb
   const uploadImages = async () => {
     const uploadedImages = {
       mainImageUrl: null,
@@ -111,20 +114,16 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
     };
 
     try {
-      // Upload main image if it's a new file (has .file property)
       if (formData.mainImage && formData.mainImage.file) {
         setUploadProgress("Uploading main image...");
         const mainImageResponse = await uploadImageMutation.mutateAsync(formData.mainImage.file);
         uploadedImages.mainImageUrl = mainImageResponse.url;
       } else if (formData.mainImage && formData.mainImage.url) {
-        // Keep existing image URL
         uploadedImages.mainImageUrl = formData.mainImage.url;
       } else {
-        // Use backup image if no main image provided
         uploadedImages.mainImageUrl = "https://i.ibb.co/VpgyJ7SM/no-image-template.png";
       }
 
-      // Upload other images that are new files and keep existing URLs
       const existingImageUrls = formData.other_images
         .filter(img => !img.file && img.url)
         .map(img => img.url);
@@ -150,11 +149,10 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
     }
   };
 
-  // Create FormData for product update including image URLs (same as AddProductModal)
+  // Create FormData for product update
   const createFormData = (imageUrls) => {
     const formDataToSend = new FormData();
     
-    // Add product fields using bracket notation for nested object structure
     formDataToSend.append('product[name]', formData.name.trim());
     formDataToSend.append('product[short_description]', formData.short_description.trim());
     formDataToSend.append('product[long_description]', formData.long_description.trim());
@@ -162,17 +160,19 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
     formDataToSend.append('product[price]', formData.price.toString());
     formDataToSend.append('product[visible]', formData.visible.toString());
     
-    // Add discount_price only if it exists and is greater than 0
     if (formData.discountPrice && formData.discountPrice > 0) {
       formDataToSend.append('product[discount_price]', formData.discountPrice.toString());
     }
     
-    // Add category IDs as array elements within product
     formData.category_ids.forEach((categoryId) => {
       formDataToSend.append('product[category_ids][]', categoryId);
     });
     
-    // Add image URLs
+    // Add department support
+    if (formData.department_id) {
+      formDataToSend.append(`product[sephcocco_${active_outlet}_department_id]`, formData.department_id);
+    }
+    
     if (imageUrls.mainImageUrl) {
       formDataToSend.append('product[main_image_url]', imageUrls.mainImageUrl);
     }
@@ -189,7 +189,6 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.match("image.*")) {
       setErrors({
         ...errors,
@@ -199,38 +198,32 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setErrors({ ...errors, mainImage: "Image size must be less than 5MB" });
       e.target.value = null;
       return;
     }
 
-    // Create image preview
     const mainImage = {
       file,
       preview: URL.createObjectURL(file),
     };
 
-    // Update formData
     setFormData({ ...formData, mainImage });
 
-    // Clear any error
     if (errors.mainImage) {
       setErrors({ ...errors, mainImage: "" });
     }
 
-    // Reset input
     e.target.value = null;
   };
 
-  // Handle additional images upload - Updated to use other_images
+  // Handle additional images upload
   const handleImageChange = (e) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
 
     if (files.length === 0) return;
 
-    // Calculate how many images can still be added
     const availableSlots = 4 - formData.other_images.length;
 
     if (availableSlots <= 0) {
@@ -242,10 +235,8 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
       return;
     }
 
-    // Take only the allowed number of files
     const filesToAdd = files.slice(0, availableSlots);
 
-    // Validate each file
     for (const file of filesToAdd) {
       if (!file.type.match("image.*")) {
         setErrors({
@@ -263,28 +254,24 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
       }
     }
 
-    // Map files to image object format
     const newImages = filesToAdd.map((file) => ({
       file,
       preview: URL.createObjectURL(file),
     }));
 
-    // Update formData images state appending new images
     setFormData({ ...formData, other_images: [...formData.other_images, ...newImages] });
 
     if (errors.other_images) {
       setErrors({ ...errors, other_images: "" });
     }
 
-    // Reset file input value
     e.target.value = null;
   };
 
-  // Handle form submission (same pattern as AddProductModal)
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation - Updated to match AddProductModal fields
     const newErrors = {};
 
     if (!formData.name.trim()) {
@@ -307,13 +294,12 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
       newErrors.short_description = "Short description is required";
     }
 
-    // Long description is now optional
-
-    // Main image is now optional - will use backup if not provided
+    if (!formData.department_id) {
+      newErrors.department_id = "Department is required";
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      // Scroll to the first error
       const firstErrorField = document.querySelector(".form-group-add.error");
       if (firstErrorField) {
         firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -324,10 +310,8 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
     try {
       setIsSubmitting(true);
       
-      // Step 1: Upload images first (including existing ones)
       const uploadedImages = await uploadImages();
 
-      // Step 2: Update product with image URLs
       setUploadProgress("Updating product...");
       const formDataToSend = createFormData(uploadedImages);
       const productResponse = await updateProductMutation.mutateAsync({
@@ -339,7 +323,6 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
       console.log("Product updated successfully:", productResponse);
       setUploadProgress("Product updated successfully!");
       
-      // Success - close modal after a brief delay
       setTimeout(() => {
         onClose();
       }, 1000);
@@ -414,43 +397,36 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
     }
   };
 
-  // Trigger file input click
   const triggerFileInput = () => {
     if (uploadRef.current) {
       uploadRef.current.click();
     }
   };
 
-  // Trigger main image file input click
   const triggerMainImageFileInput = () => {
     if (mainImageUploadRef.current) {
       mainImageUploadRef.current.click();
     }
   };
 
-  // Remove main image
   const removeMainImage = () => {
     setFormData({ ...formData, mainImage: null });
 
-    // Clear any error
     if (errors.mainImage) {
       setErrors({ ...errors, mainImage: "" });
     }
   };
 
-  // Remove additional image - Updated to use other_images
   const removeImage = (index) => {
     const newImages = [...formData.other_images];
     newImages.splice(index, 1);
     setFormData({ ...formData, other_images: newImages });
 
-    // Clear any image errors when removing images
     if (errors.other_images) {
       setErrors({ ...errors, other_images: "" });
     }
   };
 
-  // Handle close button click - Added to match AddProductModal
   const handleCloseClick = () => {
     if (!isSubmitting) {
       onClose();
@@ -477,12 +453,10 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
 
         <form onSubmit={handleSubmit} className="product-form">
           <div className="form-content">
-            {/* Submit Error - Added to match AddProductModal */}
             {errors.submit && (
               <div className="error-message submit-error">{errors.submit}</div>
             )}
 
-            {/* Upload Progress - Added to match AddProductModal */}
             {uploadProgress && (
               <div className="upload-progress-message">
                 <div className="progress-text">{uploadProgress}</div>
@@ -494,7 +468,6 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
               </div>
             )}
 
-            {/* Product Name */}
             <div className={`form-group-add ${errors.name ? "error" : ""}`}>
               <label htmlFor="name">Product Name</label>
               <input
@@ -511,9 +484,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
               )}
             </div>
 
-            {/* Two column layout */}
             <div className="form-row">
-              {/* Product Categories - Updated to match AddProductModal structure */}
               <div className={`form-group-add ${errors.category_ids ? "error" : ""}`}>
                 <label htmlFor="category">Product Categories</label>
                 <div className="form-group-add">
@@ -589,31 +560,59 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
                 )}
               </div>
 
-              {/* Stock Quantity */}
-              {/* <div className={`form-group-add ${errors.quantity ? "error" : ""}`}>
-                <label htmlFor="quantity">Stock Quantity</label>
-                <input
-                  type="number"
-                  id="quantity"
-                  name="quantity"
-                  placeholder="Enter Stock quantity"
-                  value={formData.quantity}
-                  onChange={handleChange}
-                  min="0"
+              <div className={`form-group-add ${errors.department_id ? "error" : ""}`}>
+                <label htmlFor="department">Department</label>
+
+                <div className="selected-categories">
+                  {formData.department_id && (
+                    <span className="badge">
+                      {availableDepartments?.find(dep => dep.id === formData.department_id)?.name || "Unknown Department"}
+                      <button
+                        type="button"
+                        className="remove-btn"
+                        onClick={() => {
+                          setFormData({ ...formData, department_id: "" });
+                          if (errors.department_id) {
+                            setErrors({ ...errors, department_id: "" });
+                          }
+                        }}
+                        disabled={isSubmitting}
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  )}
+                </div>
+
+                <select
+                  id="department"
+                  name="department_id"
+                  value={formData.department_id}
+                  onChange={(e) => {
+                    setFormData({ ...formData, department_id: e.target.value });
+                    if (errors.department_id) {
+                      setErrors({ ...errors, department_id: "" });
+                    }
+                  }}
                   disabled={isSubmitting}
-                />
-                {errors.quantity && (
-                  <div className="error-message">{errors.quantity}</div>
+                  className="category-select"
+                >
+                  <option value="">Select a department</option>
+                  {availableDepartments?.map(dep => (
+                    <option key={dep.id} value={dep.id}>
+                      {dep.name}
+                    </option>
+                  ))}
+                </select>
+
+                {errors.department_id && (
+                  <div className="error-message">{errors.department_id}</div>
                 )}
-              </div> */}
+              </div>
             </div>
 
-            {/* Two column layout */}
             <div className="form-row">
-              {/* Discount Price */}
-              <div
-                className={`form-group-add ${errors.discountPrice ? "error" : ""}`}
-              >
+              <div className={`form-group-add ${errors.discountPrice ? "error" : ""}`}>
                 <label htmlFor="discountPrice">Product Price</label>
                 <input
                   type="number"
@@ -630,7 +629,6 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
                   <div className="error-message">{errors.discountPrice}</div>
                 )}
               </div>
-              {/* Product Price */}
               <div className={`form-group-add ${errors.price ? "error" : ""}`}>
                 <label htmlFor="price">Selling Price</label>
                 <input
@@ -650,7 +648,6 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
               </div>
             </div>
 
-            {/* Product Short Description - Added to match AddProductModal */}
             <div className={`form-group-add ${errors.short_description ? "error" : ""}`}>
               <label htmlFor="short_description">Product Short Description</label>
               <textarea
@@ -667,7 +664,6 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
               )}
             </div>
 
-            {/* Product Long Description - Updated field name */}
             <div className={`form-group-add ${errors.long_description ? "error" : ""}`}>
               <label htmlFor="long_description">Product Long Description <span className="optional">(optional)</span></label>
               <textarea
@@ -684,13 +680,11 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
               )}
             </div>
 
-            {/* Main Product Image Upload */}
             <div className={`form-group-add ${errors.mainImage ? "error" : ""}`}>
               <label>
                 Main Product Image <span className="optional">(optional)</span>
               </label>
 
-              {/* Hidden file input for main image */}
               <input
                 type="file"
                 ref={mainImageUploadRef}
@@ -700,7 +694,6 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
                 disabled={isSubmitting}
               />
 
-              {/* Display uploaded main image */}
               {formData.mainImage ? (
                 <div className="main-image-container">
                   <div className="main-image-preview">
@@ -744,11 +737,9 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
               )}
             </div>
 
-            {/* Additional Images Upload - Updated to use other_images */}
             <div className={`form-group-add ${errors.other_images ? "error" : ""}`}>
               <label>Additional Product Images (Max 4)</label>
 
-              {/* Hidden file input for additional images */}
               <input
                 type="file"
                 ref={uploadRef}
@@ -759,7 +750,6 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
                 disabled={isSubmitting}
               />
 
-              {/* Display uploaded additional images in a grid with 3 per row */}
               {formData.other_images.length > 0 && (
                 <div className="image-upload-container">
                   <div className="image-preview-grid">
@@ -783,7 +773,6 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
                       </div>
                     ))}
 
-                    {/* Add more images button (if less than 4) */}
                     {formData.other_images.length < 4 && !isSubmitting && (
                       <div
                         className="add-more-images"
@@ -797,7 +786,6 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
                 </div>
               )}
 
-              {/* Upload area (shown only when no additional images are uploaded) */}
               {formData.other_images.length === 0 && (
                 <div
                   className={`image-upload-area ${
@@ -823,7 +811,6 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
               )}
             </div>
 
-            {/* Product Visibility Section - Added to match AddProductModal */}
             <div className="form-group-add">
               <label>Product Visibility</label>
               <div className="visibility-section">
@@ -864,7 +851,6 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [] }) => {
             </div>
           </div>
 
-          {/* Form Actions */}
           <div className="form-actions">
             <button 
               type="submit" 
