@@ -1217,6 +1217,7 @@ const handleDeleteUser = async () => {
           formValues={formData}
           formErrors={formErrors}
           isLoading={isPending}
+          refetch={refetch}
           onChange={handleFormChange}
           closeAllModals={closeAllModals}
         />

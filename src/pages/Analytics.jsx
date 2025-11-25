@@ -8,6 +8,8 @@ import LoadingSkeleton from '../components/LoadingSkeleton';
 import DashboardSkeleton from '../components/DashboardSkeleton';
 import AnalyticsSkeleton from '../components/AnalyticsSkeleton';
 import ChatItem from '../components/ChatItem';
+import SearchBar from '../components/SearchBar';
+import { useActiveDepartment } from '../hooks/useGetActiveDepartment';
 
 const AnalyticsPage = () => {
   const [ordersTimeframe, setOrdersTimeframe] = useState('monthly');
@@ -29,7 +31,7 @@ const AnalyticsPage = () => {
     refreshAllAnalytics,
   } = useAnalytics({ active_outlet: activeOutlet });
   console.log('all',allAnalyticsData);
-  
+  const {data: department = []} = useActiveDepartment(activeOutlet)
   const selectedBusiness = activeOutlet?.toLowerCase();
 
   const businesses = {
@@ -223,7 +225,17 @@ const AnalyticsPage = () => {
           <h1>Analytics</h1>
           <p>Comprehensive insights for {businesses[selectedBusiness]}</p>
         </div>
-     
+         <SearchBar
+        onApply={handleApplyFilters}
+        onManualSearch={handleManualSearch} // Add manual search handler
+        filterOptions={department?.map(v => ({ label: v.name, value: v.id })) || []}
+        categoryOptions={[]} // Explicitly disable category filtering
+        sortOptions={[]} // Explicitly disable sort options
+        placeholder="Search activities..."
+        filterLabel="Filter by Department"
+        showDate={false} // Enable date filtering for activities
+        initialValues={searchBarState} // Pass persistent state
+      />
       </div>
 
       {/* Overview Stats */}

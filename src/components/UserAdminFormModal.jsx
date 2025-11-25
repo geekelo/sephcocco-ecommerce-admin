@@ -14,6 +14,7 @@ const UserAdminFormModal = ({
   onSubmit,
   formValues,
   formErrors,
+  refetch,
   onChange,
   closeAllModals,
 }) => {
@@ -278,6 +279,7 @@ const UserAdminFormModal = ({
         }
 
         const response = await register(payload);
+        refetch();
           toast.success(`${activeTab === "admins" ? "Admin" : activeTab === "users" ? "User" : "Rider"} Added successfully`);
         if (response?.message) {
           closeAllModals();
