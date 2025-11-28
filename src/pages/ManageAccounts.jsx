@@ -1173,17 +1173,14 @@ const handleDeleteUser = async () => {
           isLoading={isLoading}
           emptyState={
             <div className="empty-state">
-              <h3>No {activeTab} found</h3>
+     
               <p>
                 {searchTerm || filterStatus 
                   ? `No ${activeTab} match your current search and filter criteria.`
                   : `No ${activeTab} have been added yet.`
                 }
               </p>
-              <button className="add-first-btn" onClick={handleAddAccount}>
-                <UserPlus size={16} />
-                Add First {activeTab === 'users' ? 'User' : activeTab === 'riders' ? 'Rider' : 'Admin'}
-              </button>
+            
             </div>
           }
           className="accounts-table"

@@ -59,7 +59,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [], departmen
           : product.categories
           ? [product.categories]
           : [],
-        department_id: product.department_id || "",
+        department_id: product.department.id || "",
         quantity: product.amount_in_stock || "",
         price: product.price || "",
         discountPrice: product.discount_price || product.discountPrice || "",
