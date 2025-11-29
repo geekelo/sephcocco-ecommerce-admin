@@ -59,7 +59,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [], departmen
           : product.categories
           ? [product.categories]
           : [],
-        department_id: product.department.id || "",
+        department_id: product?.department?.id ?? "",
         quantity: product.amount_in_stock || "",
         price: product.price || "",
         discountPrice: product.discount_price || product.discountPrice || "",
@@ -598,11 +598,11 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [], departmen
                   className="category-select"
                 >
                   <option value="">Select a department</option>
-                  {availableDepartments?.map(dep => (
+                  {availableDepartments.length > 0 ? availableDepartments?.map(dep => (
                     <option key={dep.id} value={dep.id}>
                       {dep.name}
                     </option>
-                  ))}
+                  )):  <option value="" disabled>No department added yet</option>}
                 </select>
 
                 {errors.department_id && (
