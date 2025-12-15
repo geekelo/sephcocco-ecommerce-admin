@@ -355,6 +355,7 @@ const sortedPaymentData = [...paymentData].sort((a, b) =>
       {/* Payment Summary Modal - Enhanced with Email Button */}
       {isPaymentSummaryModal && (
         <PaymentSummary
+       style={{ paddingLeft: '0px' }}
           order={selectedPayment}
           onBack={handlePaymentSummaryBack}
           onViewOrder={handleViewOrder}

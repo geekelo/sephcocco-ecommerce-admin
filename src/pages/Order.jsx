@@ -209,6 +209,7 @@ const OrderPage = () => {
       {/* Modals */}
       {isViewPaymentModal && (
         <PaymentSummary
+              style={{ paddingLeft: '240px' }} 
          order={selectedOrder?.[`sephcocco_${activeOutlet}_payment`]}
           onBack={() => setIsViewPaymentModal(false)}
           onViewOrder={() => {
