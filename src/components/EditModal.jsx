@@ -13,7 +13,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [], departmen
   
   // Fetch departments if not provided
   const { data: fetchedDepartments = [] } = useActiveDepartment(active_outlet);
-  const availableDepartments = departments.length > 0 ? departments : fetchedDepartments;
+  const availableDepartments = (Array.isArray(departments) && departments.length > 0) ? departments : (Array.isArray(fetchedDepartments) ? fetchedDepartments : []);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -598,7 +598,7 @@ const EditProductModal = ({ isOpen, onClose, product, categories = [], departmen
                   className="category-select"
                 >
                   <option value="">Select a department</option>
-                  {availableDepartments.length > 0 ? availableDepartments?.map(dep => (
+                  {Array.isArray(availableDepartments) && availableDepartments.length > 0 ? availableDepartments.map(dep => (
                     <option key={dep.id} value={dep.id}>
                       {dep.name}
                     </option>

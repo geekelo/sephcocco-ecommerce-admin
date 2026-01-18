@@ -88,7 +88,8 @@ console.log('dept', departments);
 
   // Pagination and filtering
   const { paginatedDepartments, totalCount, totalPages } = useMemo(() => {
-    let filtered = departments?.departments?.filter(d => {
+    const departmentsList = departments?.departments || (Array.isArray(departments) ? departments : []);
+    let filtered = departmentsList.filter(d => {
       const name = typeof d.name === 'string' ? d.name : JSON.stringify(d.name);
       const description = typeof d.description === 'string' ? d.description : JSON.stringify(d.description);
       const searchLower = filters.search_terms.toLowerCase();
@@ -96,12 +97,12 @@ console.log('dept', departments);
       return name.toLowerCase().includes(searchLower) || description.toLowerCase().includes(searchLower);
     });
 
-    filtered?.sort((a,b) => new Date(b.created_at || b.updated_at).getTime() - new Date(a.created_at || a.updated_at).getTime());
-    const totalCount = filtered?.length;
-    const totalPages = Math.ceil(totalCount / itemsPerPage);
+    filtered.sort((a,b) => new Date(b.created_at || b.updated_at).getTime() - new Date(a.created_at || a.updated_at).getTime());
+    const totalCount = filtered.length || 0;
+    const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    return { paginatedDepartments: filtered?.slice(startIndex, endIndex), totalCount, totalPages };
+    return { paginatedDepartments: filtered.slice(startIndex, endIndex) || [], totalCount, totalPages };
   }, [departments, filters.search_terms, currentPage]);
 
   const handlePageChange = (page) => setCurrentPage(page);
@@ -160,7 +161,7 @@ console.log('dept', departments);
           isLoading={isFetchingDepartments}
           emptyState={<EmptyState title="No departments found" btnText="Add Department" handleAddCategory={handleAdd} />}
         />}
-        {!isFetchingDepartments && paginatedDepartments.length>0 && totalPages>1 && <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} totalItems={totalCount} itemsPerPage={itemsPerPage} />}
+        {!isFetchingDepartments && paginatedDepartments && paginatedDepartments.length > 0 && totalPages > 1 && <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} totalItems={totalCount} itemsPerPage={itemsPerPage} />}
       </div>
 
       {isAddModal && <DepartmentModal isOpen={isAddModal} onClose={()=>setIsAddModal(false)} onSubmit={handleSubmit} department={null} title="Add Department" isLoading={addMutation.isPending} />}
