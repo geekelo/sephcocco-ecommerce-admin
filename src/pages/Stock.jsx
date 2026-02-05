@@ -33,9 +33,9 @@ const createProductColumns = (onAddStock) => [
     header: 'Product Image',
     render: (product) => (
       <div className="product-image-cell">
-        <img 
-          src={product.main_image_url} 
-          alt={product.name || 'Product'} 
+        <img
+          src={product.main_image_url}
+          alt={product.name || 'Product'}
           style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }}
         />
       </div>
@@ -96,7 +96,7 @@ const createProductColumns = (onAddStock) => [
     header: 'Actions',
     type: 'button',
     buttonConfig: {
-      text: 'Add Stock',      
+      text: 'Add Stock',
       className: 'view-stock-action-btn',
       onClick: (product) => onAddStock(product)
     },
@@ -130,10 +130,10 @@ const createStockHistoryColumns = (onViewStock) => [
     key: 'product',
     header: 'Product',
     render: (history) => {
-      const productName = history.product && typeof history.product === 'object' 
-        ? history.product.name 
+      const productName = history.product && typeof history.product === 'object'
+        ? history.product.name
         : 'N/A';
-      
+
       return (
         <div className="product-info-cell">
           <div>{String(productName)}</div>
@@ -145,16 +145,16 @@ const createStockHistoryColumns = (onViewStock) => [
     key: 'stock_changes',
     header: 'Stock Changes',
     render: (history) => {
-      const oldStock = history.stock && typeof history.stock === 'object' 
-        ? history.stock.old_stock || 0 
+      const oldStock = history.stock && typeof history.stock === 'object'
+        ? history.stock.old_stock || 0
         : 0;
-      const addStock = history.stock && typeof history.stock === 'object' 
-        ? history.stock.add_stock || 0 
+      const addStock = history.stock && typeof history.stock === 'object'
+        ? history.stock.add_stock || 0
         : 0;
-      const newStock = history.stock && typeof history.stock === 'object' 
-        ? history.stock.new_stock || 0 
+      const newStock = history.stock && typeof history.stock === 'object'
+        ? history.stock.new_stock || 0
         : 0;
-      
+
       return (
         <div className="stock-changes-cell">
           <span className="old-stock">{String(oldStock)}</span>
@@ -168,10 +168,10 @@ const createStockHistoryColumns = (onViewStock) => [
     key: 'price',
     header: 'Price',
     render: (history) => {
-      const newPrice = history.price && typeof history.price === 'object' 
-        ? history.price.new_price || 0 
+      const newPrice = history.price && typeof history.price === 'object'
+        ? history.price.new_price || 0
         : history.price || 0;
-      
+
       return (
         <div className="price-cell">
           ₦{parseFloat(newPrice).toLocaleString()}
@@ -196,7 +196,7 @@ const createStockHistoryColumns = (onViewStock) => [
     header: 'Actions',
     type: 'button',
     buttonConfig: {
-      text: 'View Stock',  
+      text: 'View Stock',
       className: 'view-stock-action-btn',
       onClick: (history) => onViewStock(history)
     },
@@ -218,25 +218,25 @@ const createVendorColumns = (onEditVendor, onDeleteVendor) => [
     header: 'Actions',
     render: (vendor) => (
       <div style={{ display: 'flex', gap: '8px' }}>
-        <button 
-          className="view-stock-action-btn" 
+        <button
+          className="view-stock-action-btn"
           onClick={(e) => {
             e.stopPropagation();
             onEditVendor(vendor);
           }}
         >
-    
+
           Edit
         </button>
-        <button 
-          className="delete-vendor-btn" 
+        <button
+          className="delete-vendor-btn"
           onClick={(e) => {
             e.stopPropagation();
             onDeleteVendor(vendor);
           }}
         >
           <Trash2 size={14} />
-  
+
         </button>
       </div>
     ),
@@ -261,10 +261,10 @@ const StockManagement = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  
+
   const [searchBarState, setSearchBarState] = useState({
     search: "",
-    status: "All Status", 
+    status: "All Status",
     startDate: "",
     endDate: ""
   });
@@ -278,14 +278,17 @@ const StockManagement = () => {
     end_date: "",
   });
 
+  const [selectedStockIds, setSelectedStockIds] = useState([]);
+
   const { data: productsData = { products: [], meta: {} }, isLoading: productsLoading, refetch: refetchProducts } = useViewAllProduct(
-    activeOutlet, 
+    activeOutlet,
     user_id.id,
-    filters, 
-    currentPage, 
+    filters,
+    currentPage,
     itemsPerPage
   );
-const {data: department = []} = useActiveDepartment(activeOutlet)
+
+  const { data: department = [] } = useActiveDepartment(activeOutlet)
   const { data: stockData = { stocks: [], meta: {} }, isLoading: stockLoading, refetch: refetchStock } = useGetStock(
     activeOutlet,
     filters,
@@ -296,7 +299,7 @@ const {data: department = []} = useActiveDepartment(activeOutlet)
   const { mutateAsync: addStock, isPending: addingStock } = useAddStock();
   const { mutateAsync: updateStock, isPending: updatingStock } = useUpdateStock();
   const { mutateAsync: deleteStock, isPending: deletingStock } = useDeleteStock();
-  const {data: vendorData, isLoading: vendorLoading, refetch: refetchVendor} = useGetVendor(
+  const { data: vendorData, isLoading: vendorLoading, refetch: refetchVendor } = useGetVendor(
     activeOutlet,
     filters,
     currentPage,
@@ -304,7 +307,7 @@ const {data: department = []} = useActiveDepartment(activeOutlet)
   );
 
   const { mutateAsync: addVendor, isPending: addingVendor } = useAddVendor();
-  const {mutateAsync: updateVendor, isPending: updatingVendor} = useUpdateVendor();
+  const { mutateAsync: updateVendor, isPending: updatingVendor } = useUpdateVendor();
   const { mutateAsync: deleteVendor, isPending: deletingVendor } = useDeleteVendor();
 
   const getCurrentData = () => {
@@ -331,17 +334,17 @@ const {data: department = []} = useActiveDepartment(activeOutlet)
 
   const { data: currentData, meta, isLoading } = getCurrentData();
 
-  const handleApplyFilters = ({ status,department_id,vendor, search_terms, start_date, end_date }) => {
-      setFilters({ 
-    status: status?.toLowerCase() || "", 
-    vendor: vendor || "", 
-    department_id: department_id || "",
-    search_terms, 
-    start_date, 
-    end_date 
-  });
+  const handleApplyFilters = ({ status, department_id, vendor, search_terms, start_date, end_date }) => {
+    setFilters({
+      status: status?.toLowerCase() || "",
+      vendor: vendor || "",
+      department_id: department_id || "",
+      search_terms,
+      start_date,
+      end_date
+    });
     setCurrentPage(1);
-    
+
     setSearchBarState({
       search: search_terms || "",
       vendor: vendor || "",
@@ -366,6 +369,7 @@ const {data: department = []} = useActiveDepartment(activeOutlet)
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setCurrentPage(1);
+    setSelectedStockIds([]); // Clear selection on tab change
   };
 
   const handlePageChange = (page) => {
@@ -508,6 +512,12 @@ const {data: department = []} = useActiveDepartment(activeOutlet)
     }
   };
 
+  const handleBulkUpdate = () => {
+    if (selectedStockIds.length > 0) {
+      setShowUpdateStockStatusModal(true);
+    }
+  };
+
   const productColumns = useMemo(() => createProductColumns(handleAddStock), []);
   const stockHistoryColumns = useMemo(() => createStockHistoryColumns(handleViewStock), []);
   const vendorColumns = useMemo(() => createVendorColumns(handleEditVendor, handleDeleteVendor), []);
@@ -522,65 +532,77 @@ const {data: department = []} = useActiveDepartment(activeOutlet)
   const totalPages = Math.ceil((meta?.total_count || 0) / itemsPerPage);
 
   return (
-    <div className="order-page" style={{height: '100vh'}}>
-<SearchBar
-  onApply={handleApplyFilters}
-  onManualSearch={handleManualSearch}
-  filterOptions={activeTab === 'products' 
-    ? ["All Status", "Public", "Private"] 
-    : activeTab === 'vendors'
-    ? []
-    : ["All Status", "Pending", "Approved", "Declined"]
-  }
+    <div className="order-page" style={{ height: '100vh' }}>
+      <SearchBar
+        onApply={handleApplyFilters}
+        onManualSearch={handleManualSearch}
+        filterOptions={activeTab === 'products'
+          ? ["All Status", "Public", "Private"]
+          : activeTab === 'vendors'
+            ? []
+            : ["All Status", "Pending", "Approved", "Declined"]
+        }
 
-  extraFilterOptions={
-    (activeTab === 'products' || activeTab === 'history')
-      ? department?.map(d => ({ label: d.name, value: d.id })) || []
-      : []
-  }
-  extraFilterLabel="Filter by Department"
-  extraFilterKey="department_id"
-  showExtraFilter={activeTab === 'products' || activeTab === 'history'}
-  
-  extraFilter2Options={
-    activeTab === 'history'
-      ? vendorData?.map(v => ({ label: v.name, value: v.id })) || []
-      : []
-  }
-  extraFilter2Label="Filter by Vendor"
-  extraFilter2Key="vendor"
-  showExtraFilter2={activeTab === 'history'}
-  
-  categoryOptions={[]}
-  sortOptions={[]}
-  placeholder={`Search ${activeTab}...`}
-  filterLabel="Filter by"
-  showDate={activeTab === 'history'}
-  initialValues={searchBarState}
-/>
+        extraFilterOptions={
+          (activeTab === 'products' || activeTab === 'history')
+            ? department?.map(d => ({ label: d.name, value: d.id })) || []
+            : []
+        }
+        extraFilterLabel="Filter by Department"
+        extraFilterKey="department_id"
+        showExtraFilter={activeTab === 'products' || activeTab === 'history'}
 
-      <div className="stock-tabs">
-        <button 
-          className={`tab-button ${activeTab === 'products' ? 'active' : ''}`}
-          onClick={() => handleTabChange('products')}
-        >
-          <Package size={16} />
-          Products
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
-          onClick={() => handleTabChange('history')}
-        >
-          <History size={16} />
-          Stock History
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'vendors' ? 'active' : ''}`}
-          onClick={() => handleTabChange('vendors')}
-        >
-          <User size={16} />
-          Vendors
-        </button>
+        extraFilter2Options={
+          activeTab === 'history'
+            ? vendorData?.map(v => ({ label: v.name, value: v.id })) || []
+            : []
+        }
+        extraFilter2Label="Filter by Vendor"
+        extraFilter2Key="vendor"
+        showExtraFilter2={activeTab === 'history'}
+
+        categoryOptions={[]}
+        sortOptions={[]}
+        placeholder={`Search ${activeTab}...`}
+        filterLabel="Filter by"
+        showDate={activeTab === 'history'}
+        initialValues={searchBarState}
+      />
+
+      <div className="stock-tabs" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            className={`tab-button ${activeTab === 'products' ? 'active' : ''}`}
+            onClick={() => handleTabChange('products')}
+          >
+            <Package size={16} />
+            Products
+          </button>
+          <button
+            className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => handleTabChange('history')}
+          >
+            <History size={16} />
+            Stock History
+          </button>
+          <button
+            className={`tab-button ${activeTab === 'vendors' ? 'active' : ''}`}
+            onClick={() => handleTabChange('vendors')}
+          >
+            <User size={16} />
+            Vendors
+          </button>
+        </div>
+
+        {activeTab === 'history' && selectedStockIds.length > 0 && (
+          <button
+            className="add-vendor-btn"
+            onClick={handleBulkUpdate}
+          >
+            <Edit2 size={16} />
+            Update Status ({selectedStockIds.length})
+          </button>
+        )}
       </div>
 
       {activeTab === 'vendors' && (
@@ -605,11 +627,14 @@ const {data: department = []} = useActiveDepartment(activeOutlet)
               onRowClick={activeTab === 'history' ? handleViewStock : undefined}
               className="stock-table"
               emptyState={
-                <EmptyState 
-                  title={`No ${activeTab} found`} 
-                  searchTerm={filters.search_terms} 
+                <EmptyState
+                  title={`No ${activeTab} found`}
+                  searchTerm={filters.search_terms}
                 />
               }
+              // Add selection props only for history tab
+              selectedRowKeys={activeTab === 'history' ? selectedStockIds : []}
+              onSelectionChange={activeTab === 'history' ? setSelectedStockIds : undefined}
             />
 
             <Pagination
@@ -623,9 +648,9 @@ const {data: department = []} = useActiveDepartment(activeOutlet)
             />
           </>
         ) : (
-          <EmptyState 
-            title={`No ${activeTab} found`} 
-            searchTerm={filters.search_terms} 
+          <EmptyState
+            title={`No ${activeTab} found`}
+            searchTerm={filters.search_terms}
           />
         )}
       </div>
@@ -648,7 +673,7 @@ const {data: department = []} = useActiveDepartment(activeOutlet)
         product={selectedProduct}
         onConfirm={handleConfirmAddStock}
         isLoading={addingStock}
-         vendors={vendorData || []}
+        vendors={vendorData || []}
         isEdit={false}
       />
 
@@ -661,7 +686,7 @@ const {data: department = []} = useActiveDepartment(activeOutlet)
         stockData={selectedStockHistory}
         onConfirm={handleConfirmUpdateStock}
         isLoading={updatingStock}
-         vendors={vendorData || []}
+        vendors={vendorData || []}
         isEdit={true}
       />
 
@@ -683,9 +708,11 @@ const {data: department = []} = useActiveDepartment(activeOutlet)
         isOpen={showUpdateStockStatusModal}
         onClose={() => setShowUpdateStockStatusModal(false)}
         selectedStockHistory={selectedStockHistory}
-        product={selectedProduct} 
+        selectedStockIds={selectedStockIds}
+        product={selectedProduct}
         formData={selectedStockHistory}
         refetchStock={refetchStock}
+        onSuccess={() => setSelectedStockIds([])}
       />
 
       {showDeleteModal && (

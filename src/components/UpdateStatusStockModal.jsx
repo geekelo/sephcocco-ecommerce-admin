@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import '../styles/UpdateOrderStatusModal.css'; 
+import '../styles/UpdateOrderStatusModal.css';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 import { useUpdateStock } from '../hooks/useUpdateStock';
+import { useUpdateBulkStock } from '../hooks/useUpdateBulkStock';
 import { toast } from 'react-toastify';
 
 
@@ -10,12 +11,15 @@ const UpdateStockStatusModal = ({
   isOpen,
   onClose,
   selectedStockHistory,
+  selectedStockIds = [],
   product,
   formData,
-  refetchStock
+  refetchStock,
+  onSuccess
 }) => {
   const activeOutlet = getActiveOutlet();
   const { mutateAsync: updateStock, isPending: updatingStock } = useUpdateStock();
+  const { mutateAsync: updateBulkStock, isPending: updatingBulkStock } = useUpdateBulkStock();
 
   const [selectedStatus, setSelectedStatus] = useState(formData?.status || 'pending');
 
@@ -27,23 +31,43 @@ const UpdateStockStatusModal = ({
 
   const handleConfirm = async () => {
     try {
-      const payload = {
-        [`sephcocco_${activeOutlet}_product_id`]: product?.id,
-        invoice_number: formData.invoice_number,
-        vendor: formData.vendor,
-        status: selectedStatus,
-     
-      };
+      if (selectedStockIds.length > 0) {
+        // Bulk Update
+        const payload = {
+          stock_management_ids: selectedStockIds,
+          status: selectedStatus
+        };
+console.log({BUP: payload});
 
-      await updateStock({
-        active_outlet: activeOutlet,
-        stockId: selectedStockHistory?.id,
-        payload,
-      });
+      const res =  await updateBulkStock({
+          active_outlet: activeOutlet,
+          payload
+        });
+console.log({BUDD: res});
 
-      toast.success('Stock updated successfully');
+        toast.success(`${selectedStockIds.length} stock items updated successfully`);
+      } else {
+        // Single Update
+        const payload = {
+          [`sephcocco_${activeOutlet}_product_id`]: product?.id,
+          invoice_number: formData.invoice_number,
+          vendor: formData.vendor,
+          status: selectedStatus,
+
+        };
+
+        await updateStock({
+          active_outlet: activeOutlet,
+          stockId: selectedStockHistory?.id,
+          payload,
+        });
+
+        toast.success('Stock updated successfully');
+      }
+
       onClose();
       refetchStock?.();
+      onSuccess?.();
     } catch (error) {
       console.error('Error updating stock:', error);
       toast.error('Failed to update stock');
@@ -51,6 +75,9 @@ const UpdateStockStatusModal = ({
   };
 
   if (!isOpen) return null;
+
+  const isBulk = selectedStockIds.length > 0;
+  const isLoading = updatingStock || updatingBulkStock;
 
   return (
     <div className="modal-overlay-confirm">
@@ -71,18 +98,19 @@ const UpdateStockStatusModal = ({
 
         {/* Content */}
         <div className="modal-content">
-          <h2 className="update-status-title">Update Stock Status</h2>
+          <h2 className="update-status-title">
+            {isBulk ? `Update Status (${selectedStockIds.length} items)` : 'Update Stock Status'}
+          </h2>
           <p className="update-status-description">
-            Select the status you want to set for this stock update
+            Select the status you want to set for {isBulk ? 'these stock items' : 'this stock update'}
           </p>
 
           <div className="status-options">
             {statusOptions.map((option) => (
               <label
                 key={option.value}
-                className={`status-option ${
-                  selectedStatus === option.value ? 'selected' : ''
-                }`}
+                className={`status-option ${selectedStatus === option.value ? 'selected' : ''
+                  }`}
               >
                 <input
                   type="radio"
@@ -109,15 +137,15 @@ const UpdateStockStatusModal = ({
             type="button"
             className="confirm-button update-status-button"
             onClick={handleConfirm}
-            disabled={updatingStock}
+            disabled={isLoading}
           >
-            {updatingStock ? 'Updating...' : 'Update Status'}
+            {isLoading ? 'Updating...' : 'Update Status'}
           </button>
           <button
             type="button"
             className="cancel-button"
             onClick={onClose}
-            disabled={updatingStock}
+            disabled={isLoading}
           >
             Cancel
           </button>

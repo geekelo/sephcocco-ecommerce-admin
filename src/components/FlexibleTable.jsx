@@ -21,16 +21,104 @@ const FlexibleTable = ({
   skeletonRows = 5, // Number of skeleton rows to show
   // New mobile card configuration props
   mobileCardConfig = null, // Configuration for mobile card layout
-  enableMobileCards = true // Enable/disable mobile card view
+  enableMobileCards = true, // Enable/disable mobile card view
+  selectedRowKeys = [],
+  onSelectionChange,
 }) => {
 
-  
+  // Get the table data - now works for any type of data
+  const getTableData = () => {
+    if (!data) return [];
+
+    // If data is already an array, return it
+    if (Array.isArray(data)) return data;
+
+    // If data has orders property, return that (for backwards compatibility)
+    if (data.orders && Array.isArray(data.orders)) return data.orders;
+
+    // If data has data property with orders, return that (for backwards compatibility)
+    if (data.data && data.data.orders && Array.isArray(data.data.orders)) return data.data.orders;
+
+    // If data has any array property, try to find it
+    const arrayProps = Object.keys(data).filter(key => Array.isArray(data[key]));
+    if (arrayProps.length > 0) {
+      return data[arrayProps[0]];
+    }
+
+    return [];
+  };
+
+  const tableData = getTableData();
+
+  // Handle row selection
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const allKeys = tableData.map(item => item[keyField]);
+      onSelectionChange(allKeys);
+    } else {
+      onSelectionChange([]);
+    }
+  };
+
+  const handleSelectRow = (key) => {
+    const newSelectedRowKeys = selectedRowKeys.includes(key)
+      ? selectedRowKeys.filter(k => k !== key)
+      : [...selectedRowKeys, key];
+    onSelectionChange(newSelectedRowKeys);
+  };
+
+  const isAllSelected = tableData.length > 0 && selectedRowKeys.length === tableData.length;
+  const isIndeterminate = selectedRowKeys.length > 0 && selectedRowKeys.length < tableData.length;
+
+  // Enhance columns with selection if enabled
+  const getDisplayColumns = () => {
+    if (!onSelectionChange) return columns;
+
+    const selectionColumn = {
+      key: 'selection',
+      header: (
+        <div className="checkbox-cell">
+          <input
+            type="checkbox"
+            className="checkbox-input"
+            checked={isAllSelected}
+            ref={input => {
+              if (input) input.indeterminate = isIndeterminate;
+            }}
+            onChange={handleSelectAll}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      ),
+      render: (item) => (
+        <div className="checkbox-cell">
+          <input
+            type="checkbox"
+            className="checkbox-input"
+            checked={selectedRowKeys.includes(item[keyField])}
+            onChange={() => handleSelectRow(item[keyField])}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      ),
+      width: '50px',
+      minWidth: '50px',
+      maxWidth: '50px',
+      align: 'center',
+      type: 'custom',
+    };
+
+    return [selectionColumn, ...columns];
+  };
+
+  const displayColumns = getDisplayColumns();
+
   // Default empty state
   const defaultEmptyState = (
     <div className="table-empty-state">
       <div className="empty-icon">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H19C20.11 23 21 22.11 21 21V9H21ZM19 21H5V3H13V9H19V21Z"/>
+          <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H19C20.11 23 21 22.11 21 21V9H21ZM19 21H5V3H13V9H19V21Z" />
         </svg>
       </div>
       <h3>No data found</h3>
@@ -41,7 +129,11 @@ const FlexibleTable = ({
   // Generate skeleton cell content based on column type or key
   const getSkeletonContent = (column) => {
     const columnKey = column.key?.toLowerCase() || '';
-    
+
+    if (columnKey === 'selection') {
+      return <div className="skeleton-checkbox" style={{ width: 16, height: 16, borderRadius: 4, background: '#e0e0e0' }}></div>;
+    }
+
     if (columnKey.includes('avatar') || columnKey.includes('user') || columnKey.includes('profile')) {
       return (
         <div className="skeleton-avatar-cell">
@@ -53,23 +145,23 @@ const FlexibleTable = ({
         </div>
       );
     }
-    
+
     if (columnKey.includes('status') || columnKey.includes('badge') || columnKey.includes('tag') || columnKey.includes('stages')) {
       return <div className="skeleton-badge"></div>;
     }
-    
+
     if (columnKey.includes('price') || columnKey.includes('amount') || columnKey.includes('cost') || columnKey.includes('currency')) {
       return <div className="skeleton-text skeleton-text-currency"></div>;
     }
-    
+
     if (columnKey.includes('date') || columnKey.includes('time') || columnKey.includes('created') || columnKey.includes('updated')) {
       return <div className="skeleton-text skeleton-text-date"></div>;
     }
-    
-    if (columnKey.includes('action') || actions.length > 0 && column === columns[columns.length - 1]) {
+
+    if (columnKey.includes('action') || (actions.length > 0 && column === columns[columns.length - 1])) {
       return <div className="skeleton-action"></div>;
     }
-    
+
     // Default text skeleton
     return <div className="skeleton-text skeleton-text-default"></div>;
   };
@@ -80,7 +172,7 @@ const FlexibleTable = ({
       <div key={`skeleton-row-${index}`} className="table-row skeleton-row">
         {/* Desktop skeleton */}
         <div className="desktop-skeleton" style={{ display: 'flex', width: '100%' }}>
-          {columns.map((column, colIndex) => (
+          {displayColumns.map((column, colIndex) => (
             <div
               key={`skeleton-cell-${index}-${colIndex}-${column.key || column.header || column.accessorKey || 'default'}`}
               className="table-cell"
@@ -131,46 +223,22 @@ const FlexibleTable = ({
     </div>
   );
 
-  // Get the table data - now works for any type of data
-  const getTableData = () => {
-    if (!data) return [];
-    
-    // If data is already an array, return it
-    if (Array.isArray(data)) return data;
-    
-    // If data has orders property, return that (for backwards compatibility)
-    if (data.orders && Array.isArray(data.orders)) return data.orders;
-    
-    // If data has data property with orders, return that (for backwards compatibility)
-    if (data.data && data.data.orders && Array.isArray(data.data.orders)) return data.data.orders;
-    
-    // If data has any array property, try to find it
-    const arrayProps = Object.keys(data).filter(key => Array.isArray(data[key]));
-    if (arrayProps.length > 0) {
-      return data[arrayProps[0]];
-    }
-    
-    return [];
-  };
-
-  const tableData = getTableData();
-
 
   // Enhanced mobile card configuration
   const getEnhancedMobileConfig = () => {
     if (mobileCardConfig) return mobileCardConfig;
-    
+
     // Auto-detect configuration based on column structure
     const primaryField = columns.find(col => {
       const key = (col.key || col.accessorKey || '').toLowerCase();
-      return key.includes('name') || key.includes('user') || key.includes('customer') || 
-             key.includes('title') || key.includes('email') || col.type === 'avatar';
+      return key.includes('name') || key.includes('user') || key.includes('customer') ||
+        key.includes('title') || key.includes('email') || col.type === 'avatar';
     });
 
     const statusFields = columns.filter(col => {
       const key = (col.key || col.accessorKey || '').toLowerCase();
-      return key === 'status' || key === 'current_stage' || key.includes('stage') || 
-             col.type === 'status' || col.type === 'badge';
+      return key === 'status' || key === 'current_stage' || key.includes('stage') ||
+        col.type === 'status' || col.type === 'badge';
     }).map(col => col.key || col.accessorKey);
 
     const actionFields = columns.filter(col => {
@@ -193,7 +261,7 @@ const FlexibleTable = ({
     <div className={`flexible-table ${isLoading ? 'loading' : ''} ${className}`}>
       {/* Table Header - Always show when loading to maintain structure on desktop */}
       <div className={`table-header ${headerClassName}`}>
-        {columns.map((column, index) => (
+        {displayColumns.map((column, index) => (
           <div
             key={index}
             className={`table-header-cell ${column.className || ''}`}
@@ -206,7 +274,7 @@ const FlexibleTable = ({
             }}
           >
             <span className="header-content">
-              {column.label || column.header || column.accessorKey}
+              {column.header && typeof column.header === 'object' ? column.header : (column.label || column.header || column.accessorKey)}
             </span>
           </div>
         ))}
@@ -224,7 +292,7 @@ const FlexibleTable = ({
                 <FlexibleTableRow
                   key={item[keyField] || index}
                   data={item}
-                  columns={columns}
+                  columns={displayColumns}
                   actions={actions}
                   onRowClick={onRowClick}
                   onActionClick={onActionClick}

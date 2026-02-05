@@ -54,6 +54,7 @@ const PaymentPage = () => {
  const {data: department = []} = useActiveDepartment(activeOutlet)
  
   const meta = payment?.meta || {};
+  console.log({PAYMENT: payment});
   
   // Extract payments from orders for the payment table
   const paymentData = payment?.payments?.flatMap(payment =>

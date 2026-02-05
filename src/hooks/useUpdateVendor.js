@@ -6,8 +6,8 @@ import { updateVendor } from "../services/updateVendor";
 export const useUpdateVendor = () => {
  
     return useMutation({
-      mutationFn: async ({active_outlet,vendorId,payload}) => {
-        const response = await updateVendor(active_outlet,vendorId,payload); 
+      mutationFn: async ({active_outlet,payload}) => {
+        const response = await updateVendor(active_outlet,payload); 
         return response
       }
     });
