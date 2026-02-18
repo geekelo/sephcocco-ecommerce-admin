@@ -11,6 +11,7 @@ export const ProductPage = lazy(() => import("../pages/Products"));
 export const OrderPage = lazy(() => import("../pages/Order"));
 export const PaymentPage = lazy(() => import("../pages/Payment"));
 export const StockPage = lazy(() => import("../pages/Stock"));
+export const BulkStockPage = lazy(() => import("../pages/BulkStock"));
 export const ActivitiesPage = lazy(() => import("../pages/Activities"));
 export const MessagesPage = lazy(() => import("../pages/Messages"));
 export const ManageAccountPage = lazy(() => import("../pages/ManageAccounts"));

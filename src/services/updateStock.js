@@ -14,7 +14,7 @@ export const updateBulkStock = async (active_outlet, payload) => {
   try {
 
 
-    const data = await apiClient().post(`/api/v1/${active_outlet}/sephcocco_${active_outlet}_stock_managements/verify_stock_management`, payload);
+    const data = await apiClient().post(`/api/v1/${active_outlet}/sephcocco_${active_outlet}_stock_managements/bulk_create`, payload);
     console.log({BULK: data});
     
     return data.data;

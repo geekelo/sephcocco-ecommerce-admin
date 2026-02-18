@@ -1,28 +1,29 @@
 import { Suspense, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Cookies from 'js-cookie';
-import { 
-  ActivitiesPage, 
-  AnalyticsPage, 
-  DashboardPage, 
-  DepartmentPage, 
-  FAQPage, 
-  ForgotPasswordPage, 
-  LocationPage, 
-  LoginPage, 
-  ManageAccountPage, 
-  MessagesPage, 
-  OrderPage, 
-  OtpPage, 
-  PaymentPage, 
-  ProductCategoresPage, 
-  RegisterPage, 
-  ResetPasswordPage, 
-  SettingsPage, 
-  ShippingPage, 
-  StockPage, 
-  StoresPage, 
-  VerifyOTPPage 
+import {
+  ActivitiesPage,
+  AnalyticsPage,
+  DashboardPage,
+  DepartmentPage,
+  FAQPage,
+  ForgotPasswordPage,
+  LocationPage,
+  LoginPage,
+  ManageAccountPage,
+  MessagesPage,
+  OrderPage,
+  OtpPage,
+  PaymentPage,
+  ProductCategoresPage,
+  RegisterPage,
+  ResetPasswordPage,
+  SettingsPage,
+  ShippingPage,
+  StockPage,
+  StoresPage,
+  BulkStockPage,
+  VerifyOTPPage
 } from "./LazyLoader";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { SplashScreen } from "../components/SplashScreen";
@@ -37,10 +38,10 @@ import UnauthorizedPage from "../pages/Unauthorized";
 const isAuthenticated = () => {
   const token = localStorage.getItem('token');
   const activeOutlet = Cookies.get('activeOutlet');
-  
+
   console.log('🔐 Auth check - Token:', !!token);
   console.log('🔐 Auth check - Active outlet:', activeOutlet);
-  
+
   if (!token || !activeOutlet) {
     if (token && !activeOutlet) {
       console.log('🔐 Removing token due to missing activeOutlet');
@@ -48,7 +49,7 @@ const isAuthenticated = () => {
     }
     return false;
   }
-  
+
   return true;
 };
 
@@ -73,12 +74,12 @@ const navItems = [
 
 // Role-based permissions
 const rolePermissions = {
-  stock: ['stocks'], 
+  stock: ['stocks'],
   logistics: ['logistics'],
   support: ['orders', 'payments'],
   supperadmin: navItems.map(i => i.key),
   admin: navItems.map(i => i.key),
-  manager: navItems.map(i => i.key).filter(k => !['users', 'analytics'].includes(k)), 
+  manager: navItems.map(i => i.key).filter(k => !['users', 'analytics'].includes(k)),
   accountant: ['dashboard', 'analytics'],
 };
 
@@ -89,7 +90,7 @@ const getAllowedKeys = () => {
   const subroles = activeUser?.subroles || [];
 
   let allowedKeys = [];
-  
+
   if (subroles.length > 0) {
     // Merge all permissions from subroles
     allowedKeys = subroles.flatMap(sr => rolePermissions[sr.toLowerCase()] || []);
@@ -123,7 +124,7 @@ const getRouteKeyFromPath = (path) => {
 const hasAccessToRoute = (path) => {
   const allowedKeys = getAllowedKeys();
   const routeKey = getRouteKeyFromPath(path);
-  
+
   if (!routeKey) return true;
   return allowedKeys.includes(routeKey);
 };
@@ -131,7 +132,7 @@ const hasAccessToRoute = (path) => {
 // Protected Route Component with role-based access
 const ProtectedRoute = ({ children, requiredKey }) => {
   const location = useLocation();
-  
+
   if (!isAuthenticated()) {
     return <Navigate to="/sign-in" state={{ from: location }} replace />;
   }
@@ -141,18 +142,18 @@ const ProtectedRoute = ({ children, requiredKey }) => {
     console.warn(`🚫 Access denied to ${location.pathname}`);
     return <Navigate to="/unauthorized" replace />;
   }
-  
+
   return children;
 };
 
 // Component to redirect index to first accessible route
 const IndexRedirect = () => {
   const defaultRoute = getDefaultRoute();
-  console.log('defaultrole',defaultRoute);
-  if(defaultRoute === '/'){
-    return <DashboardPage/>
+  console.log('defaultrole', defaultRoute);
+  if (defaultRoute === '/') {
+    return <DashboardPage />
   }
-  
+
   return <Navigate to={defaultRoute} replace />;
 };
 
@@ -182,200 +183,209 @@ const AppRouter = () => {
           <Suspense fallback={<SplashScreen />}>
             <Routes>
               {/* Public routes */}
-              <Route 
-                path="/sign-up" 
+              <Route
+                path="/sign-up"
                 element={
                   <PublicRoute>
                     <RegisterPage />
                   </PublicRoute>
-                } 
+                }
               />
-              <Route 
-                path="/sign-in" 
+              <Route
+                path="/sign-in"
                 element={
                   <PublicRoute>
                     <LoginPage />
                   </PublicRoute>
-                } 
+                }
               />
-              <Route 
-                path="/forgot-password" 
+              <Route
+                path="/forgot-password"
                 element={
                   <PublicRoute>
                     <ForgotPasswordPage />
                   </PublicRoute>
-                } 
+                }
               />
-              <Route 
-                path="/reset-password" 
+              <Route
+                path="/reset-password"
                 element={
                   <PublicRoute>
                     <ResetPasswordPage />
                   </PublicRoute>
-                } 
+                }
               />
-              <Route 
-                path="/verify-otp" 
+              <Route
+                path="/verify-otp"
                 element={
                   <PublicRoute>
                     <VerifyOTPPage />
                   </PublicRoute>
-                } 
+                }
               />
-              <Route 
-                path="/verify-email" 
+              <Route
+                path="/verify-email"
                 element={
                   <PublicRoute>
                     <OtpPage />
                   </PublicRoute>
-                } 
+                }
               />
-           <Route path="/unauthorized" element={<UnauthorizedPage />} />
+              <Route path="/unauthorized" element={<UnauthorizedPage />} />
               <Route path="/store" element={<ProtectedRoute><StoresPage /></ProtectedRoute>} />
 
               {/* Protected routes */}
-              <Route 
-                path="/" 
+              <Route
+                path="/"
                 element={
                   <ProtectedRoute>
                     <Layout />
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<IndexRedirect /> || <DashboardPage/>} />
+                <Route index element={<IndexRedirect /> || <DashboardPage />} />
 
 
 
 
-                <Route 
-                  path="products" 
+                <Route
+                  path="products"
                   element={
                     <ProtectedRoute requiredKey="products">
                       <ProductsPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="stocks" 
+
+                <Route
+                  path="stocks"
                   element={
                     <ProtectedRoute requiredKey="stocks">
                       <StockPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="products-categories" 
+
+                <Route
+                  path="stocks/bulk"
+                  element={
+                    <ProtectedRoute requiredKey="stocks">
+                      <BulkStockPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="products-categories"
                   element={
                     <ProtectedRoute requiredKey="categories">
                       <ProductCategoresPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="faq" 
+
+                <Route
+                  path="faq"
                   element={
                     <ProtectedRoute requiredKey="faq">
                       <FAQPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="departments" 
+
+                <Route
+                  path="departments"
                   element={
                     <ProtectedRoute requiredKey="departments">
                       <DepartmentPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="orders" 
+
+                <Route
+                  path="orders"
                   element={
                     <ProtectedRoute requiredKey="orders">
                       <OrderPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="payments" 
+
+                <Route
+                  path="payments"
                   element={
                     <ProtectedRoute requiredKey="payments">
                       <PaymentPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="logistics" 
+
+                <Route
+                  path="logistics"
                   element={
                     <ProtectedRoute requiredKey="logistics">
                       <ShippingPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="delivery-locations" 
+
+                <Route
+                  path="delivery-locations"
                   element={
                     <ProtectedRoute requiredKey="locations">
                       <LocationPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="activities" 
+
+                <Route
+                  path="activities"
                   element={
                     <ProtectedRoute requiredKey="activities">
                       <ActivitiesPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="analytics" 
+
+                <Route
+                  path="analytics"
                   element={
                     <ProtectedRoute requiredKey="analytics">
                       <AnalyticsPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="messages" 
+
+                <Route
+                  path="messages"
                   element={
                     <ProtectedRoute requiredKey="messages">
                       <MessagesPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="manage-accounts" 
+
+                <Route
+                  path="manage-accounts"
                   element={
                     <ProtectedRoute requiredKey="users">
                       <ManageAccountPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
-                <Route 
-                  path="settings" 
+
+                <Route
+                  path="settings"
                   element={
                     <ProtectedRoute requiredKey="settings">
                       <SettingsPage />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
               </Route>
 
               {/* Redirect unknown routes */}
-             <Route path="*" element={<NotFoundPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>
         )}

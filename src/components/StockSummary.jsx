@@ -11,19 +11,19 @@ const StockSummary = ({
   onBack,
   onEdit,
   onDelete,
-  onUpdateStatus, 
+  onUpdateStatus,
 
   isUpdating = false,
   hideEmailButton = true
 }) => {
 
-  
+
   // Format stock data for display
   const formatStockData = (stock) => {
     return {
       invoiceNumber: stock.invoice_number,
       stockId: stock.id,
-      vendor: stock.vendor || 'N/A',
+      vendor: stock.vendor?.name || (typeof stock.vendor === 'string' ? stock.vendor : 'N/A'),
       status: stock.status,
       createdDate: stock.created_at,
       updatedDate: stock.updated_at,
@@ -46,9 +46,9 @@ const StockSummary = ({
     priceChanges,
     notes
   } = formatStockData(stockData);
- const { subroles } = getActiveUser();
+  const { subroles } = getActiveUser();
   const isStockSubrole = subroles.includes("stock");
-   const isPending = status?.toLowerCase() === "pending";
+  const isPending = status?.toLowerCase() === "pending";
   // Format product for ProductCard component
   const formattedProduct = product ? [{
     id: product.id,
@@ -103,25 +103,25 @@ const StockSummary = ({
             </button>
           </div>
         </div>
-                        
+
         {isPending && (
           <div className='verify'>
-            <button 
-              className="update-button add-button" 
+            <button
+              className="update-button add-button"
               onClick={onEdit}
               disabled={isUpdating}
-              style={{ 
+              style={{
                 opacity: isUpdating ? 0.6 : 1,
                 cursor: isUpdating ? 'not-allowed' : 'pointer'
               }}
             >
               <Edit size={16} />
-              {isUpdating ? 'Updating...' : 'Edit Stock Record'}  
+              {isUpdating ? 'Updating...' : 'Edit Stock Record'}
             </button>
           </div>
         )}
 
-                        
+
         <div className="order-details">
           <div className="order-info-row">
             <InfoCard items={leftCardItems} />
@@ -206,8 +206,8 @@ const StockSummary = ({
             <div className="form-actions">
               {/* Hide update status if subrole = stock */}
               {!isStockSubrole && (
-                <button 
-                  className="update-button add-button" 
+                <button
+                  className="update-button add-button"
                   onClick={onUpdateStatus}
                   disabled={isUpdating}
                 >
@@ -215,8 +215,8 @@ const StockSummary = ({
                 </button>
               )}
 
-              <button 
-                className="discard-button cancel-button" 
+              <button
+                className="discard-button cancel-button"
                 onClick={onDelete}
                 disabled={isUpdating}
               >
@@ -224,7 +224,7 @@ const StockSummary = ({
               </button>
             </div>
           )}
-      
+
         </div>
       </div>
     </div>

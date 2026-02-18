@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Package, History, ArrowLeft, X, User, Trash2, Edit, Edit2 } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import FlexibleTable from '../components/FlexibleTable';
@@ -115,7 +116,7 @@ const createStockHistoryColumns = (onViewStock) => [
   {
     key: 'vendor',
     header: 'Vendor Name',
-    render: (history) => String(history.vendor || 'N/A')
+    render: (history) => String(history.vendor?.name || 'N/A')
   },
   {
     key: 'status',
@@ -158,7 +159,7 @@ const createStockHistoryColumns = (onViewStock) => [
       return (
         <div className="stock-changes-cell">
           <span className="old-stock">{String(oldStock)}</span>
-          <span className="add-stock">+{String(addStock)}</span>
+          {/* <span className="add-stock">+{String(addStock)}</span> */}
           <span className="new-stock">{String(newStock)}</span>
         </div>
       );
@@ -245,6 +246,7 @@ const createVendorColumns = (onEditVendor, onDeleteVendor) => [
 ];
 
 const StockManagement = () => {
+  const navigate = useNavigate();
   const activeOutlet = getActiveOutlet();
   const user_id = getActiveUser();
   const [activeTab, setActiveTab] = useState('products');
@@ -295,6 +297,7 @@ const StockManagement = () => {
     currentPage,
     itemsPerPage
   );
+
 
   const { mutateAsync: addStock, isPending: addingStock } = useAddStock();
   const { mutateAsync: updateStock, isPending: updatingStock } = useUpdateStock();
@@ -591,6 +594,16 @@ const StockManagement = () => {
           >
             <User size={16} />
             Vendors
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            className="add-vendor-btn"
+            onClick={() => navigate('/stocks/bulk')}
+          >
+            <Plus size={16} />
+            Bulk Stock
           </button>
         </div>
 
