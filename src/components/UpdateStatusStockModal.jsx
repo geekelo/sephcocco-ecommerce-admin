@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import '../styles/UpdateOrderStatusModal.css';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 import { useUpdateStock } from '../hooks/useUpdateStock';
-import { useUpdateBulkStock } from '../hooks/useUpdateBulkStock';
+import { useUpdateVendor } from '../hooks/useUpdateVendor';
 import { toast } from 'react-toastify';
 
 
@@ -19,7 +19,7 @@ const UpdateStockStatusModal = ({
 }) => {
   const activeOutlet = getActiveOutlet();
   const { mutateAsync: updateStock, isPending: updatingStock } = useUpdateStock();
-  const { mutateAsync: updateBulkStock, isPending: updatingBulkStock } = useUpdateBulkStock();
+  const { mutateAsync: updateVendor, isPending: updatingVendor } = useUpdateVendor();
 
   const [selectedStatus, setSelectedStatus] = useState(formData?.status || 'pending');
 
@@ -37,13 +37,13 @@ const UpdateStockStatusModal = ({
           stock_management_ids: selectedStockIds,
           status: selectedStatus
         };
-console.log({BUP: payload});
+        console.log({ BUP: payload });
 
-      const res =  await updateBulkStock({
+        const res = await updateVendor({
           active_outlet: activeOutlet,
           payload
         });
-console.log({BUDD: res});
+        console.log({ BUDD: res });
 
         toast.success(`${selectedStockIds.length} stock items updated successfully`);
       } else {
@@ -77,7 +77,7 @@ console.log({BUDD: res});
   if (!isOpen) return null;
 
   const isBulk = selectedStockIds.length > 0;
-  const isLoading = updatingStock || updatingBulkStock;
+  const isLoading = updatingStock || updatingVendor;
 
   return (
     <div className="modal-overlay-confirm">
