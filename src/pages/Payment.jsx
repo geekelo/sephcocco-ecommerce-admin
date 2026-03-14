@@ -57,31 +57,33 @@ const PaymentPage = () => {
   console.log({PAYMENT: payment});
   
   // Extract payments from orders for the payment table
-  const paymentData = payment?.payments?.flatMap(payment =>
-    payment.paid_orders?.map(order => ({
-      id: payment.id, // Add this for unique identification
-      customerName: order.customer?.name,
-      customerEmail: order.customer?.email,
-      orderId: order.id,
-      phoneNumber: order.customer?.phone_number,
-      orderDate: order.created_at,
-      orderStatus: order.status,
-      paymentMethod: payment.payment_method, // Use payment.payment_method instead
-      status: payment.status,
-      notes: order.notes,
-      products: order.product, // This is a single object, not an array
-      amount: payment.amount,
-      deliveryAmount: payment.delivery_location.logistics_price,
-      deliveryLocation: payment.delivery_location.location,
-      orderAmount: payment.amount - payment.delivery_location.logistics_price,
-      paymentDate: payment.created_at,
-      transactionId: payment.transaction_id,
-      orderNumber: order.order_number,
-      // Add any other fields you need
-      totalPrice: order.total_price
-    })) || []
-  ) || [];
-  
+const paymentData = payment?.payments?.map((paymentItem) => {
+  const firstOrder = paymentItem.paid_orders?.[0];
+
+  return {
+    id: paymentItem.id,
+    transactionId: paymentItem.transaction_id,
+    customerName: firstOrder?.customer?.name || "",
+    customerEmail: firstOrder?.customer?.email || "",
+    phoneNumber: firstOrder?.customer?.phone_number || "",
+    paymentMethod: paymentItem.payment_method,
+    status: paymentItem.status,
+    amount: Number(paymentItem.amount || 0),
+    deliveryAmount: Number(paymentItem.delivery_location?.logistics_price || 0),
+    deliveryLocation: paymentItem.delivery_location?.location || "",
+    orderAmount:
+      Number(paymentItem.amount || 0) -
+      Number(paymentItem.delivery_location?.logistics_price || 0),
+    paymentDate: paymentItem.created_at,
+
+    orders: paymentItem.paid_orders || [],
+    orderCount: paymentItem.paid_orders?.length || 0,
+    orderNumbers: paymentItem.paid_orders?.map((item) => item.order_number) || [],
+   orderStatus: [...new Set(paymentItem.paid_orders?.map((item) => item.status) || [])].join(", "),
+    products: paymentItem.paid_orders?.map((item) => item.product).filter(Boolean) || [],
+  };
+}) || [];
+ 
 const sortedPaymentData = [...paymentData].sort((a, b) => 
   new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime() // DESC
   // new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime() // ASC

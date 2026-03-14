@@ -19,16 +19,14 @@ const PaymentSummary = ({
 }) => {
   const [showReceipt, setShowReceipt] = useState(false);
 
-  // Detect new payment format
   const isNewFormat = order?.paid_orders && order?.transaction_id;
 
   let paymentData;
 
   if (isNewFormat) {
     const paymentInfo = order;
-    const orderInfo = paymentInfo?.paid_orders?.[0];
-    const customer = orderInfo?.customer;
-    const product = orderInfo?.product;
+    const firstOrder = paymentInfo?.paid_orders?.[0];
+    const customer = firstOrder?.customer;
 
     const formatAmount = (amount) => {
       const num = parseFloat(amount);
@@ -45,12 +43,18 @@ const PaymentSummary = ({
       customerName: customer?.name,
       customerEmail: customer?.email,
       phoneNumber: customer?.phone_number,
-      deliveryAmount: paymentInfo?.deliveryAmount || 0,
-      deliveryLocation: paymentInfo?.deliveryLocation,
-      orderAmount: paymentInfo?.amount - paymentInfo?.deliveryAmount,
-      orderNumber: orderInfo?.order_number,
-      orderStatus: orderInfo?.status,
-      products: product
+      deliveryAmount: paymentInfo?.delivery_location?.logistics_price || 0,
+      deliveryLocation: paymentInfo?.delivery_location?.location || 'N/A',
+      orderAmount:
+        Number(paymentInfo.amount || 0) -
+        Number(paymentInfo?.delivery_location?.logistics_price || 0),
+      orderNumber:
+        paymentInfo?.paid_orders?.map((item) => item.order_number).join(', '),
+      orderStatus:
+        paymentInfo?.paid_orders?.[0]?.status || '',
+      paidOrders: paymentInfo?.paid_orders || [],
+      products:
+        paymentInfo?.paid_orders?.map((item) => item.product).filter(Boolean) || []
     };
   } else {
     paymentData = {
@@ -65,10 +69,18 @@ const PaymentSummary = ({
       phoneNumber: order.phoneNumber,
       deliveryAmount: order?.deliveryAmount || 0,
       deliveryLocation: order?.deliveryLocation,
-      orderAmount: order?.amount - order?.deliveryAmount,
-      orderNumber: order.orderNumber,
-      orderStatus: order.orderStatus,
-      products: order.products
+      orderAmount:
+        Number(order?.amount || 0) - Number(order?.deliveryAmount || 0),
+      orderNumber: Array.isArray(order.orderNumbers)
+        ? order.orderNumbers.join(', ')
+        : order.orderNumber,
+      orderStatus: order.orderStatus || '',
+      paidOrders: order.orders || [],
+      products: Array.isArray(order.products)
+        ? order.products
+        : order.products
+        ? [order.products]
+        : []
     };
   }
 
@@ -84,48 +96,61 @@ const PaymentSummary = ({
     phoneNumber,
     orderNumber,
     orderStatus,
-    products,
-    orderAmount,
-    deliveryAmount,
-    deliveryLocation
+    products
   } = paymentData;
 
   const isPaymentConfirmed =
     paymentStatus?.toLowerCase() === 'payment confirmed' ||
     paymentStatus?.toLowerCase() === 'confirmed';
 
-  const formattedProducts = products
-    ? [{
-        id: products.id,
-        name: products.name,
-        image: products.main_image_url,
-        price: products.price,
+  const formattedProducts = isNewFormat
+    ? (order?.paid_orders || []).map((item) => ({
+        id: item.product?.id,
+        orderId: item.id,
+        orderNumber: item.order_number,
+        orderStatus: item.status,
+        name: item.product?.name,
+        image: item.product?.main_image_url,
+        price: item.product?.price,
         rating: 5,
-        stockCount: products.amount_in_stock,
-        stockStatus: products.out_of_stock_status ? "Out of stock" : "In stock",
-        description: products.short_description || products.long_description,
-        categories: products.categories?.map(cat => cat.name).join(', ')
-      }]
+        stockCount: item.product?.amount_in_stock,
+        stockStatus: item.product?.out_of_stock_status ? 'Out of stock' : 'In stock',
+        description:
+          item.product?.short_description || item.product?.long_description,
+        categories: item.product?.categories?.map((cat) => cat.name).join(', ')
+      }))
+    : Array.isArray(products)
+    ? products.map((product, index) => ({
+        id: product.id,
+        orderId: paymentData?.paidOrders?.[index]?.id || '',
+        orderNumber: paymentData?.paidOrders?.[index]?.order_number || '',
+        orderStatus: paymentData?.paidOrders?.[index]?.status || orderStatus || '',
+        name: product.name,
+        image: product.main_image_url || product.image,
+        price: product.price,
+        rating: 5,
+        stockCount: product.amount_in_stock,
+        stockStatus: product.out_of_stock_status ? 'Out of stock' : 'In stock',
+        description: product.short_description || product.long_description,
+        categories: product.categories?.map((cat) => cat.name).join(', ')
+      }))
     : [];
 
   const leftCardItems = [
-    { label: "Payment ID:", value: paymentId, isCopyable: true },
-    { label: "Transaction ID:", value: transactionId, isCopyable: true },
-    { label: "Payment Method:", value: paymentMethod },
-    { label: "Payment Date:", value: formatDate(paymentDate) },
-    { label: "Delivery Location:", value: deliveryLocation || 'N/A' },
-    { label: "Delivery Amount:", value: `₦${deliveryAmount || '0'}` },
-    { label: "Order Amount:", value: `₦${orderAmount || '0'}` },
-    { label: "Total Amount:", value: `₦${amount || '0'}` }
+    { label: 'Payment ID:', value: paymentId, isCopyable: true },
+    { label: 'Transaction ID:', value: transactionId, isCopyable: true },
+    { label: 'Payment Method:', value: paymentMethod },
+    { label: 'Payment Date:', value: formatDate(paymentDate) },
+    { label: 'Total Amount:', value: `₦${amount || '0'}` }
   ];
 
   const rightCardItems = [
-    { label: "Customer Name:", value: customerName },
-    { label: "Customer Email:", value: customerEmail, isEmail: true },
-    { label: "Phone Number:", value: phoneNumber, isPhone: true },
-    { label: "Order Number:", value: orderNumber, isCopyable: true },
-    { label: "Payment Status:", value: paymentStatus, badge: true },
-    { label: "Order Status:", value: orderStatus, badge: true }
+    { label: 'Customer Name:', value: customerName },
+    { label: 'Customer Email:', value: customerEmail, isEmail: true },
+    { label: 'Phone Number:', value: phoneNumber, isPhone: true },
+    { label: 'Order Number(s):', value: orderNumber },
+    { label: 'Payment Status:', value: paymentStatus, badge: true },
+    { label: 'Order Status:', value: orderStatus, badge: true }
   ];
 
   return (
@@ -152,7 +177,6 @@ const PaymentSummary = ({
             </div>
           </div>
 
-          {/* 🔥 VERIFY / PRINT SECTION */}
           <div className="verify">
             {!isPaymentConfirmed ? (
               <button
@@ -181,13 +205,13 @@ const PaymentSummary = ({
 
             {formattedProducts.length > 0 && (
               <div className="ordered-products-section">
-                <h3>Ordered Product</h3>
+                <h3>Ordered Products</h3>
                 <div className="ordered-products-grid">
                   {formattedProducts.map((product) => (
                     <ProductCard
                       key={product.id}
                       product={product}
-                      onView={onView}
+                      onView={() => onView?.(product)}
                     />
                   ))}
                 </div>
@@ -210,7 +234,6 @@ const PaymentSummary = ({
         </div>
       </div>
 
-      {/* 🧾 RECEIPT MODAL */}
       {showReceipt && (
         <Receipt
           order={{
