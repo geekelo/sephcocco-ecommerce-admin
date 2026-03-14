@@ -304,7 +304,7 @@ const sortedPaymentData = [...paymentData].sort((a, b) =>
   };
 
   return (
-    <div className="order-page" style={{height: '100vh'}}>
+    <div className="order-page" style={{position: 'initial'}}>
       <SearchBar
         onApply={handleApplyFilters}
         onManualSearch={handleManualSearch} // Add manual search handler
@@ -358,7 +358,7 @@ const sortedPaymentData = [...paymentData].sort((a, b) =>
       {/* Payment Summary Modal - Enhanced with Email Button */}
       {isPaymentSummaryModal && (
         <PaymentSummary
-       style={{ paddingLeft: '0px' }}
+       style={{ paddingLeft: '240px' }} 
           order={selectedPayment}
           onBack={handlePaymentSummaryBack}
           onViewOrder={handleViewOrder}
@@ -375,7 +375,7 @@ const sortedPaymentData = [...paymentData].sort((a, b) =>
       {/* Product Details Modal */}
       {isViewProductModal && (
         <ProductDetails
-        style={{marginTop: '0px'}}
+       style={{paddingLeft: '240px'}}
           product={selectedPayment?.products}
           onClose={() => setIsViewProductModal(false)}
         />
