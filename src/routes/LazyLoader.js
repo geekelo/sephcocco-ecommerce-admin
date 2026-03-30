@@ -24,4 +24,6 @@ export const ShippingPage = lazy(() => import("../pages/ShippingPage"));
 export const LocationPage = lazy(() => import("../pages/Location"));
 export const DepartmentPage = lazy(() => import("../pages/Departments"));
 
+export const WaiterDashboardPage = lazy(() => import("../pages/WaiterDashboard"));
+
 

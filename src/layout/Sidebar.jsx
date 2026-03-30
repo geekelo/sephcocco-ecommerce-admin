@@ -46,11 +46,13 @@ const Sidebar = ({ isOpen }) => {
     { name: 'Activities', icon: <Activity size={20} />, path: '/activities', key: 'activities' },
     { name: 'Analytics', icon: <BarChart size={20} />, path: '/analytics', key: 'analytics' },
     { name: 'Manage accounts', icon: <Users size={20} />, path: '/manage-accounts', key: 'users' },
+
   ];
 
   // Role-based permissions
   const rolePermissions = {
     stock: ['stocks'], 
+ 
     logistics: ['logistics'],
     support: ['orders', 'payments'], // front desk == support
     supperadmin: navItems.map(i => i.key), // everything

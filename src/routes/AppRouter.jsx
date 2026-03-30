@@ -23,8 +23,11 @@ import {
   StockPage,
   StoresPage,
   BulkStockPage,
-  VerifyOTPPage
+  VerifyOTPPage,
+
+  WaiterDashboardPage,
 } from "./LazyLoader";
+import WaiterLayout from "../layout/WaiterLayout";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { SplashScreen } from "../components/SplashScreen";
 import Layout from "../layout/Layout";
@@ -70,6 +73,8 @@ const navItems = [
   { path: '/analytics', key: 'analytics' },
   { path: '/manage-accounts', key: 'users' },
   { path: '/settings', key: 'settings' },
+
+  { path: '/waiter', key: 'waiter_dashboard' },
 ];
 
 // Role-based permissions
@@ -77,6 +82,7 @@ const rolePermissions = {
   stock: ['stocks'],
   logistics: ['logistics'],
   support: ['orders', 'payments'],
+  waiters: ['waiter_dashboard'],
   supperadmin: navItems.map(i => i.key),
   admin: navItems.map(i => i.key),
   manager: navItems.map(i => i.key).filter(k => !['users', 'analytics'].includes(k)),
@@ -234,6 +240,18 @@ const AppRouter = () => {
               <Route path="/unauthorized" element={<UnauthorizedPage />} />
               <Route path="/store" element={<ProtectedRoute><StoresPage /></ProtectedRoute>} />
 
+              {/* Waiter interface — no sidebar */}
+              <Route
+                path="/waiter"
+                element={
+                  <ProtectedRoute>
+                    <WaiterLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<WaiterDashboardPage />} />
+              </Route>
+
               {/* Protected routes */}
               <Route
                 path="/"
@@ -382,6 +400,8 @@ const AppRouter = () => {
                     </ProtectedRoute>
                   }
                 />
+
+             
               </Route>
 
               {/* Redirect unknown routes */}

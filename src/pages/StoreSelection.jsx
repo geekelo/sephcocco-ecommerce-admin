@@ -9,6 +9,7 @@ import Cookies from 'js-cookie';
 // Remove the hardcoded import
 // import { storeOptions } from '../constants/data';
 import { getStoreIcon } from '../utils/getStoreIcon';
+import { getActiveUser } from '../utils/getActiveUser';
 
 const StoreSelectionPage = () => {
   const [selectedStore, setSelectedStore] = useState(null);
@@ -38,11 +39,11 @@ const StoreSelectionPage = () => {
 
   const handleStoreSelection = (outlet) => {
     setSelectedStore(outlet);
-    
-  
     Cookies.set('activeOutlet', outlet, { expires: 1 });
-    
-    navigate('/');
+
+    const { subroles } = getActiveUser();
+    const isWaiter = subroles.map(s => s.toLowerCase()).includes('waiters');
+    navigate(isWaiter ? '/waiter' : '/');
   };
 
   if (loading) {

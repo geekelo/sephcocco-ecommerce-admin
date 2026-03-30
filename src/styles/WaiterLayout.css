@@ -1,0 +1,69 @@
+/* ── Waiter Layout ───────────────────────────────────────────────────────── */
+.wl-layout {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #f9fafb;
+}
+
+.wl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.wl-greeting {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.wl-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wl-outlet-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #fff0eb;
+  color: #F93A01;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.wl-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: none;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.wl-logout-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.wl-content {
+  flex: 1;
+  overflow-y: auto;
+}
