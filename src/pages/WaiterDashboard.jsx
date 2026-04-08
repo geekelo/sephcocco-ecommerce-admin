@@ -22,14 +22,21 @@ const fmt = (val) => `₦${parseFloat(val || 0).toLocaleString()}`;
 const fmtTime = (iso) => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
 const getOrderItems = (order, outlet) => {
+  // Try nested items array first
   const key = `sephcocco_${outlet}_order_items`;
-  const items = order?.[key] || order?.order_items || order?.items || [];
-  return items.map(item => {
-    const pk  = `sephcocco_${outlet}_product`;
-    const name = item?.[pk]?.name || item?.product?.name || item?.product_name || item?.name || 'Item';
-    const qty  = item?.quantity || item?.qty || 1;
-    return { name, qty };
-  });
+  const items = order?.[key] || order?.order_items || order?.items;
+  if (Array.isArray(items) && items.length > 0) {
+    return items.map(item => {
+      const pk  = `sephcocco_${outlet}_product`;
+      const name = item?.[pk]?.name || item?.product?.name || item?.product_name || item?.name || 'Item';
+      const qty  = item?.quantity || item?.qty || 1;
+      return { name, qty };
+    });
+  }
+  // Flat order: product + quantity directly on the order object
+  const name = order?.product?.name || order?.product_details?.name || 'Item';
+  const qty  = order?.quantity || order?.qty || 1;
+  return [{ name, qty }];
 };
 
 // ── Mobile pending order card ─────────────────────────────────────────────
@@ -228,6 +235,7 @@ const WaiterDashboard = () => {
   const {
     data: pendingData, isLoading: loadingPending, refetch: refetchPending,
   } = useGetPendingWaiterOrders(active_outlet, pendingPage, ORDERS_PER_PAGE);
+console.log({Pen: pendingData});
 
   const {
     data: completedData, isLoading: loadingCompleted, refetch: refetchCompleted,
@@ -561,6 +569,7 @@ const WaiterDashboard = () => {
               isLoading={loadingProducts}
               clickableRows={false}
               skeletonRows={8}
+            
               emptyState={<EmptyState title="No products found" />}
             />
           </div>
@@ -697,6 +706,7 @@ const WaiterDashboard = () => {
             isLoading={loadingOrders}
             clickableRows={false}
             skeletonRows={5}
+         
             emptyState={
               <EmptyState
                 title={orderTab === 'pending' ? 'No pending orders' : 'No completed orders'}

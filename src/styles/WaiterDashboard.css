@@ -169,12 +169,12 @@
 .wd-mobile-only    { display: none; }
 
 /* ── Mobile order cards ───────────────────────────────────────────── */
-.wd-mob-orders {
+/* .wd-mob-orders {
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 100%;
-}
+} */
 
 .wd-mob-order-card {
   background: white;
@@ -666,7 +666,15 @@
 
   /* Stack browser + cart */
   .wd-top { flex-direction: column; }
-
+.wd-mobile-only{
+  display: block;
+}
+.wd-mob-orders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
   /* Browser full width on mobile */
   .wd-browser { width: 100%; }
 
@@ -730,7 +738,7 @@
 
   /* Orders: hide desktop table, show mobile cards */
   .wd-desktop-only { display: none !important; }
-  .wd-mobile-only  { display: flex !important; flex-direction: column; }
+  /* .wd-mobile-only  { display: flex !important; flex-direction: column; } */
 
   /* Pagination: compact on mobile */
   .wd-orders-section .pagination-container,
