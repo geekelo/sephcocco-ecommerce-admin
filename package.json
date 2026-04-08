@@ -15,6 +15,8 @@
   "dependencies": {
     "@rails/actioncable": "^8.0.200",
     "@tanstack/react-query": "^5.80.0",
+    "@zxing/browser": "^0.1.5",
+    "@zxing/library": "^0.21.3",
     "axios": "^1.9.0",
     "framer-motion": "^12.12.1",
     "js-cookie": "^3.0.5",

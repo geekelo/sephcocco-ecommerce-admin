@@ -119,6 +119,129 @@
 .wd-filters-row .wd-cat-dropdown-wrap { flex-shrink: 0; }
 .wd-filters-row .wd-search-wrap { flex: 1; max-width: none; }
 
+/* ── Scan button ──────────────────────────────────────────────────── */
+.wd-scan-btn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.wd-scan-btn:hover { background: #fff0eb; border-color: #F93A01; color: #F93A01; }
+
+/* ── Barcode scanner overlay ──────────────────────────────────────── */
+.wd-scanner-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.wd-scanner-modal {
+  background: #111827;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.wd-scanner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: #1f2937;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.wd-scanner-close {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+}
+.wd-scanner-close:hover { color: white; }
+
+.wd-scanner-view {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  gap: 12px;
+}
+
+.wd-scanner-video {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+
+.wd-scanner-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  width: 220px;
+  height: 110px;
+  border: 2px solid #F93A01;
+  border-radius: 8px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wd-scanner-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #F93A01;
+  animation: wd-scan-sweep 1.8s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(249, 58, 1, 0.7);
+}
+
+@keyframes wd-scan-sweep {
+  0%   { top: 0; }
+  50%  { top: calc(100% - 2px); }
+  100% { top: 0; }
+}
+
+.wd-scanner-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+  text-align: center;
+}
+
+.wd-scanner-error {
+  padding: 24px 20px;
+  color: #fca5a5;
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.5;
+}
+
 /* ── Search ───────────────────────────────────────────────────────── */
 .wd-search-wrap {
   position: relative;
@@ -569,6 +692,81 @@
 }
 
 .wd-orders-table { overflow-x: auto; }
+
+/* ── Completed date filters ───────────────────────────────────────── */
+.wd-date-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.wd-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wd-date-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.wd-date-input {
+  padding: 8px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #111827;
+  background: white;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.wd-date-input:focus {
+  border-color: #F93A01;
+  box-shadow: 0 0 0 2px rgba(249,58,1,.08);
+}
+
+.wd-date-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  margin-bottom: 1px;
+}
+
+.wd-date-clear:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+
+.wd-date-search-btn {
+  padding: 8px 18px;
+  background: #F93A01;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+  margin-bottom: 1px;
+}
+
+.wd-date-search-btn:hover:not(:disabled) { background: #e03000; }
+.wd-date-search-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* ── Order table cell styles ──────────────────────────────────────── */
 .wd-table-badge {

@@ -1,6 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Minus, Search, CheckCircle, Hourglass, ShoppingCart, X, Package, ClipboardList } from 'lucide-react';
+import { Plus, Minus, Search, CheckCircle, Hourglass, ShoppingCart, X, Package, ClipboardList, ScanBarcode } from 'lucide-react';
+import { BrowserMultiFormatReader } from '@zxing/browser';
+import { NotFoundException } from '@zxing/library';
 import { toast } from 'react-toastify';
 import FlexibleTable from '../components/FlexibleTable';
 import Pagination from '../components/Pagination';
@@ -88,6 +90,59 @@ const MobileCompletedOrderCard = ({ order, outlet }) => {
       <div className="wd-mob-order-bottom">
         <span className="wd-order-total">{fmt(order.total_cost || order.amount)}</span>
         <span className="wd-completed-badge"><CheckCircle size={12} /> Paid</span>
+      </div>
+    </div>
+  );
+};
+
+// ── Barcode scanner ───────────────────────────────────────────────────────
+const BarcodeScanner = ({ onScan, onClose }) => {
+  const videoRef    = useRef(null);
+  const controlsRef = useRef(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const reader = new BrowserMultiFormatReader();
+
+    reader.decodeFromConstraints(
+      { video: { facingMode: 'environment' } },
+      videoRef.current,
+      (result, err) => {
+        if (result) {
+          controlsRef.current?.stop();
+          onScan(result.getText());
+        }
+        if (err && !(err instanceof NotFoundException)) {
+          setError('Camera access denied. Please allow camera permission and try again.');
+        }
+      }
+    ).then(controls => {
+      controlsRef.current = controls;
+    }).catch(() => {
+      setError('Could not start camera. Please allow camera access and try again.');
+    });
+
+    return () => { controlsRef.current?.stop(); };
+  }, []);
+
+  return (
+    <div className="wd-scanner-overlay" onClick={onClose}>
+      <div className="wd-scanner-modal" onClick={e => e.stopPropagation()}>
+        <div className="wd-scanner-header">
+          <span>Scan Barcode</span>
+          <button className="wd-scanner-close" onClick={onClose}><X size={20} /></button>
+        </div>
+        {error ? (
+          <div className="wd-scanner-error">{error}</div>
+        ) : (
+          <div className="wd-scanner-view">
+            <video ref={videoRef} className="wd-scanner-video" muted playsInline />
+            <div className="wd-scanner-frame">
+              <div className="wd-scanner-line" />
+            </div>
+            <p className="wd-scanner-hint">Point at a barcode to scan automatically</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -203,6 +258,9 @@ const WaiterDashboard = () => {
   const [tableNumber, setTableNumber] = useState('');
   const [notes, setNotes]             = useState('');
   const [showCartSheet, setShowCartSheet] = useState(false);
+  const [showScanner, setShowScanner]     = useState(false);
+  const [dateRange, setDateRange]               = useState({ start_date: '', end_date: '' });
+  const [completedFilters, setCompletedFilters] = useState({ start_date: '', end_date: '' });
   const [orderTab, setOrderTab]       = useState('pending');
   const [pendingPage, setPendingPage] = useState(1);
   const [completedPage, setCompletedPage] = useState(1);
@@ -239,7 +297,8 @@ console.log({Pen: pendingData});
 
   const {
     data: completedData, isLoading: loadingCompleted, refetch: refetchCompleted,
-  } = useGetCompletedWaiterOrders(active_outlet, completedPage, ORDERS_PER_PAGE);
+  } = useGetCompletedWaiterOrders(active_outlet, completedPage, ORDERS_PER_PAGE, completedFilters);
+console.log({dd: completedData});
 
   const products      = productData?.products   || productData?.data   || [];
   const productMeta   = productData?.meta || {};
@@ -558,7 +617,18 @@ console.log({Pen: pendingData});
                 </button>
               )}
             </div>
+
+            <button className="wd-scan-btn" onClick={() => setShowScanner(true)} title="Scan barcode">
+              <ScanBarcode size={18} />
+            </button>
           </div>
+
+          {showScanner && (
+            <BarcodeScanner
+              onScan={(value) => { setSearchTerm(value); setDebSearch(value); setShowScanner(false); }}
+              onClose={() => setShowScanner(false)}
+            />
+          )}
 
           {/* ── Desktop: FlexibleTable ─────────────────────────────── */}
           <div className="wd-desktop-table">
@@ -696,6 +766,49 @@ console.log({Pen: pendingData});
             {completedTotal > 0 && <span className="wd-tab-count">{completedTotal}</span>}
           </button>
         </div>
+
+        {/* Completed date filters */}
+        {orderTab === 'completed' && (
+          <div className="wd-date-filters">
+            <div className="wd-date-field">
+              <label className="wd-date-label">From</label>
+              <input
+                type="date"
+                className="wd-date-input"
+                value={dateRange.start_date}
+                onChange={e => setDateRange(prev => ({ ...prev, start_date: e.target.value }))}
+              />
+            </div>
+            <div className="wd-date-field">
+              <label className="wd-date-label">To</label>
+              <input
+                type="date"
+                className="wd-date-input"
+                value={dateRange.end_date}
+                onChange={e => setDateRange(prev => ({ ...prev, end_date: e.target.value }))}
+              />
+            </div>
+            <button
+              className="wd-date-search-btn"
+              onClick={() => { setCompletedFilters({ ...dateRange }); setCompletedPage(1); }}
+              disabled={!dateRange.end_date}
+            >
+              Search
+            </button>
+            {(completedFilters.start_date || completedFilters.end_date) && (
+              <button
+                className="wd-date-clear"
+                onClick={() => {
+                  setDateRange({ start_date: '', end_date: '' });
+                  setCompletedFilters({ start_date: '', end_date: '' });
+                  setCompletedPage(1);
+                }}
+              >
+                <X size={13} /> Clear
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Orders table — desktop */}
         <div className="wd-orders-table wd-desktop-only">
