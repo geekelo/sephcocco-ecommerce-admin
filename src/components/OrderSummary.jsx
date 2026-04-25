@@ -45,7 +45,7 @@ console.log('dg',order);
     },
     {
       label: "Phone Number:",
-      value: order?.customer?.whatsapp_number || 'Not provided',
+      value: order?.customer?.whatsapp_number || order?.customer?.phone_number || 'Not provided',
       isPhone: true
     },
     {
@@ -100,8 +100,6 @@ if (order?.payment_details) {
 
   const formattedPayments = formatPaymentData();
 
-
-  // Enhanced payment columns to include transaction ID
   const paymentColumns = [
     { key: 'id', label: 'Payment ID', className: 'payment-id' },
     { key: 'transaction_id', label: 'Transaction ID', className: 'transaction-id' },
@@ -111,6 +109,22 @@ if (order?.payment_details) {
     { key: 'date', label: 'Date', className: 'date' },
     { key: 'action', label: 'Action', className: 'action' }
   ];
+
+  const orderItemColumns = [
+    { key: 'id', label: 'ID' },
+    { key: 'product_name', label: 'Product Name' },
+    { key: 'unit_price', label: 'Price' },
+    { key: 'quantity', label: 'Quantity' },
+    { key: 'total_price', label: 'Total Price' },
+  ];
+
+  const orderItemRows = (order?.orders || []).map(o => ({
+    id: o.id,
+    product_name: o.product?.name || o.product_details?.name || '—',
+    unit_price: `₦${parseFloat(o.unit_price || 0).toLocaleString()}`,
+    quantity: o.quantity,
+    total_price: `₦${parseFloat(o.total_price || 0).toLocaleString()}`,
+  }));
 
   const handleSendEmail = () => {
     const email = order?.customer?.email
@@ -167,29 +181,48 @@ if (order?.payment_details) {
               <InfoCard items={leftCardItems} />
               <InfoCard items={rightCardItems} />
             </div>
-
-            <div className="ordered-products-section">
-              <h3>Ordered Products</h3>
-              <div className="ordered-products-grid">
-                <ProductCard
-                  product={order?.product}
-                  onView={onView}
-                />
-              </div>
-            </div>
-
-            {/* Show payment table only if we have payment data */}
-            {formattedPayments && formattedPayments.length > 0  && (
+                {/* Order items table */}
+            {orderItemRows.length > 0 && (
               <div className="linked-payment-section">
-                <h3>Payment Details</h3>
+                <h3>Order Items</h3>
                 <FlexibleTable
-                   data={formattedPayments}
-                  columns={paymentColumns}
+                  data={orderItemRows}
+                  columns={orderItemColumns}
                   keyField="id"
-                  onRowClick={onViewPayment} 
                 />
               </div>
             )}
+            {/* Payment details — moved up */}
+            {formattedPayments && formattedPayments.length > 0 && (
+              <div className="linked-payment-section">
+                <h3>Payment Details</h3>
+                <FlexibleTable
+                  data={formattedPayments}
+                  columns={paymentColumns}
+                  keyField="id"
+                  onRowClick={onViewPayment}
+                />
+              </div>
+            )}
+
+        
+
+            {/* Ordered product cards — last */}
+            <div className="ordered-products-section">
+              <h3>Ordered Products</h3>
+              <div className="ordered-products-grid">
+                {order?.orders?.length > 0
+                  ? order.orders.map((item, index) => (
+                      <ProductCard
+                        key={item.id || index}
+                        product={item.product || item.product_details}
+                        onView={onView}
+                      />
+                    ))
+                  : <ProductCard product={order?.product} onView={onView} />
+                }
+              </div>
+            </div>
 
             <div className="form-actions">
               <button className="update-button add-button" onClick={onUpdateStatus}>
