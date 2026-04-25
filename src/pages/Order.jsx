@@ -45,15 +45,52 @@ const OrderPage = () => {
     itemsPerPage,
   );
   const {data: department = []} = useActiveDepartment(activeOutlet)
+console.log({ORDERPAGE: data});
 
-  // Sort orders by most recent first (descending order)
+  // One row per grouped order; individual orders attached for OrderSummary
   const orders = useMemo(() => {
-    const ordersData = data?.orders || [];
-    return ordersData.sort((a, b) => {
-      const dateA = new Date(a.created_at || a.updated_at).getTime();
-      const dateB = new Date(b.created_at || b.updated_at).getTime();
-      return dateB - dateA; // Most recent first
-    });
+    const groups = Array.isArray(data?.orders?.grouped_orders)
+      ? data.orders.grouped_orders
+      : [];
+    return groups
+      .map(group => {
+        const individualOrders = Array.isArray(group.orders) ? group.orders : [];
+        const first = individualOrders[0] || {};
+        const paymentDetails =
+          group.payment_details ||
+          individualOrders.find(o => o.payment_details)?.payment_details ||
+          null;
+        return {
+          id: group.order_number,
+          order_number: group.order_number,
+          customer: group.customer || first.customer,
+          // show single product name, or "N products" for multi-item orders
+          product: {
+            name:
+              individualOrders.length === 1
+                ? first.product?.name || first.product_details?.name || ''
+                : `${individualOrders.length} products`,
+          },
+          quantity: group.total_quantity,
+          total_price: group.total_price,
+          unit_price: individualOrders.length === 1 ? first.unit_price : '—',
+          total_cost: individualOrders
+            .reduce((s, o) => s + parseFloat(o.total_cost || 0), 0)
+            .toFixed(1),
+          current_stage: first.current_stage || '',
+          status: first.status || group.payment_status,
+          created_at: first.created_at || '',
+          stages: first.stages || [],
+          additional_notes: first.additional_notes || '',
+          payment_details: paymentDetails,
+          payment_status: group.payment_status,
+          payment_method: group.payment_method || paymentDetails?.payment_method,
+          payment_state: group.payment_state,
+          delivery_location: group.delivery_location,
+          orders: individualOrders,
+        };
+      })
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [data?.orders]);
 
   const meta = data?.meta || {};
@@ -210,7 +247,7 @@ const OrderPage = () => {
       {isViewPaymentModal && (
         <PaymentSummary
               style={{ paddingLeft: '240px' }} 
-         order={selectedOrder?.[`sephcocco_${activeOutlet}_payment`]}
+         order={selectedOrder?.payment_details}
           onBack={() => setIsViewPaymentModal(false)}
           onViewOrder={() => {
             setIsViewPaymentModal(false);

@@ -13,6 +13,7 @@ import { useViewProductCategories } from '../hooks/useGetProductCategories';
 import { useAdminOrderCreation } from '../hooks/useAdminOrderCreation';
 import { useGetPendingWaiterOrders } from '../hooks/useGetPendingWaiterOrders';
 import { useGetCompletedWaiterOrders } from '../hooks/useGetCompletedWaiterOrders';
+import { useGetConfirmedWaiterOrders } from '../hooks/useGetConfirmedWaiterOrders';
 import { useCreateWaiterPayment } from '../hooks/useCreateWaiterPayment';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 import '../styles/WaiterDashboard.css';
@@ -21,6 +22,7 @@ const ORDERS_PER_PAGE = 10;
 const PRODUCTS_PER_PAGE = 10;
 
 const fmt = (val) => `₦${parseFloat(val || 0).toLocaleString()}`;
+const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString() : '';
 const fmtTime = (iso) => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
 const getOrderItems = (order, outlet) => {
@@ -48,7 +50,7 @@ const MobilePendingOrderCard = ({ order, outlet, onMarkPaid, isPaying }) => {
     <div className="wd-mob-order-card pending">
       <div className="wd-mob-order-top">
         <span className="wd-table-badge">{order.address || order.table_number || '—'}</span>
-        <span className="wd-time">{fmtTime(order.created_at)}</span>
+        <span className="wd-time">{fmtDate(order.created_at)} {fmtTime(order.created_at)}</span>
       </div>
       {items.length > 0 && (
         <div className="wd-items-wrap" style={{ margin: '6px 0' }}>
@@ -78,7 +80,7 @@ const MobileCompletedOrderCard = ({ order, outlet }) => {
     <div className="wd-mob-order-card completed">
       <div className="wd-mob-order-top">
         <span className="wd-table-badge">{order.address || order.table_number || '—'}</span>
-        <span className="wd-time">{fmtTime(order.created_at)}</span>
+        <span className="wd-time">{fmtDate(order.created_at)} {fmtTime(order.created_at)}</span>
       </div>
       {items.length > 0 && (
         <div className="wd-items-wrap" style={{ margin: '6px 0' }}>
@@ -264,6 +266,7 @@ const WaiterDashboard = () => {
   const [orderTab, setOrderTab]       = useState('pending');
   const [pendingPage, setPendingPage] = useState(1);
   const [completedPage, setCompletedPage] = useState(1);
+  const [confirmedPage, setConfirmedPage] = useState(1);
   const [payingId, setPayingId]       = useState(null);
   const [productPage, setProductPage] = useState(1);
 
@@ -293,12 +296,14 @@ const WaiterDashboard = () => {
   const {
     data: pendingData, isLoading: loadingPending, refetch: refetchPending,
   } = useGetPendingWaiterOrders(active_outlet, pendingPage, ORDERS_PER_PAGE);
-console.log({Pen: pendingData});
 
   const {
     data: completedData, isLoading: loadingCompleted, refetch: refetchCompleted,
   } = useGetCompletedWaiterOrders(active_outlet, completedPage, ORDERS_PER_PAGE, completedFilters);
-console.log({dd: completedData});
+
+  const {
+    data: confirmedData, isLoading: loadingConfirmed, refetch: refetchConfirmed,
+  } = useGetConfirmedWaiterOrders(active_outlet, confirmedPage, ORDERS_PER_PAGE, completedFilters);
 
   const products      = productData?.products   || productData?.data   || [];
   const productMeta   = productData?.meta || {};
@@ -307,13 +312,17 @@ console.log({dd: completedData});
   const categories    = Array.isArray(catData) ? catData : (catData?.product_categories || catData?.categories || catData?.data || []);
   const pendingOrders = pendingData?.orders   || pendingData?.data   || [];
   const completedOrders = completedData?.orders || completedData?.data || [];
+  const confirmedOrders = confirmedData?.orders || confirmedData?.data || [];
 
   const pendingMeta   = pendingData?.meta   || {};
   const completedMeta = completedData?.meta || {};
+  const confirmedMeta = confirmedData?.meta || {};
   const pendingTotal  = pendingMeta?.total_count  ?? pendingOrders.length;
   const completedTotal= completedMeta?.total_count?? completedOrders.length;
+  const confirmedTotal= confirmedMeta?.total_count?? confirmedOrders.length;
   const pendingPages  = pendingMeta?.total_pages  ?? Math.ceil(pendingTotal / ORDERS_PER_PAGE);
   const completedPages= completedMeta?.total_pages?? Math.ceil(completedTotal / ORDERS_PER_PAGE);
+  const confirmedPages= confirmedMeta?.total_pages?? Math.ceil(confirmedTotal / ORDERS_PER_PAGE);
 
   // ── Cart helpers ─────────────────────────────────────────────────────────
   const addToCart = useCallback((product) => {
@@ -385,12 +394,13 @@ console.log({dd: completedData});
       toast.success('Payment recorded');
       refetchPending();
       refetchCompleted();
+      refetchConfirmed();
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Payment failed');
     } finally {
       setPayingId(null);
     }
-  }, [active_outlet, paymentMutation, refetchPending, refetchCompleted]);
+  }, [active_outlet, paymentMutation, refetchPending, refetchCompleted, refetchConfirmed]);
 
   // ── Desktop product columns ───────────────────────────────────────────────
   const productColumns = useMemo(() => [
@@ -479,6 +489,12 @@ console.log({dd: completedData});
     },
     {
       key: 'created_at',
+      header: 'Date',
+      flex: 1,
+      render: (o) => <span className="wd-time">{fmtDate(o.created_at)}</span>,
+    },
+    {
+      key: 'created_at_time',
       header: 'Time',
       flex: 1,
       render: (o) => <span className="wd-time">{fmtTime(o.created_at)}</span>,
@@ -533,6 +549,12 @@ console.log({dd: completedData});
     },
     {
       key: 'created_at',
+      header: 'Date',
+      flex: 1,
+      render: (o) => <span className="wd-time">{fmtDate(o.created_at)}</span>,
+    },
+    {
+      key: 'created_at_time',
       header: 'Time',
       flex: 1,
       render: (o) => <span className="wd-time">{fmtTime(o.created_at)}</span>,
@@ -547,15 +569,93 @@ console.log({dd: completedData});
     },
   ], [active_outlet]);
 
+  const confirmedColumns = useMemo(() => [
+    {
+      key: 'address',
+      header: 'Table',
+      flex: 1,
+      render: (o) => <span className="wd-table-badge">{o.address || o.table_number || '—'}</span>,
+    },
+    {
+      key: 'items',
+      header: 'Items',
+      flex: 4,
+      render: (o) => {
+        const items = getOrderItems(o, active_outlet);
+        if (!items.length) return <span className="wd-no-items">—</span>;
+        return (
+          <div className="wd-items-wrap">
+            {items.map((it, i) => (
+              <span key={i} className="wd-item-tag completed">{it.name} ×{it.qty}</span>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      key: 'total_cost',
+      header: 'Total',
+      flex: 1.5,
+      render: (o) => <span className="wd-order-total">{fmt(o.total_cost || o.amount)}</span>,
+    },
+    {
+      key: 'created_at',
+      header: 'Date',
+      flex: 1,
+      render: (o) => <span className="wd-time">{fmtDate(o.created_at)}</span>,
+    },
+    {
+      key: 'created_at_time',
+      header: 'Time',
+      flex: 1,
+      render: (o) => <span className="wd-time">{fmtTime(o.created_at)}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      flex: 2,
+      render: () => (
+        <span className="wd-completed-badge"><CheckCircle size={12} /> Confirmed</span>
+      ),
+    },
+  ], [active_outlet]);
+
   const isPlacing = orderMutation.isPending;
 
-  const currentOrders  = orderTab === 'pending' ? pendingOrders    : completedOrders;
-  const currentCols    = orderTab === 'pending' ? pendingColumns    : completedColumns;
-  const loadingOrders  = orderTab === 'pending' ? loadingPending   : loadingCompleted;
-  const currentPages   = orderTab === 'pending' ? pendingPages     : completedPages;
-  const currentTotal   = orderTab === 'pending' ? pendingTotal     : completedTotal;
-  const currentPage    = orderTab === 'pending' ? pendingPage      : completedPage;
-  const setCurrentPage = orderTab === 'pending' ? setPendingPage   : setCompletedPage;
+  const currentOrders  =
+    orderTab === 'pending' ? pendingOrders :
+    orderTab === 'completed' ? completedOrders :
+    confirmedOrders;
+
+  const currentCols    =
+    orderTab === 'pending' ? pendingColumns :
+    orderTab === 'completed' ? completedColumns :
+    confirmedColumns;
+
+  const loadingOrders  =
+    orderTab === 'pending' ? loadingPending :
+    orderTab === 'completed' ? loadingCompleted :
+    loadingConfirmed;
+
+  const currentPages   =
+    orderTab === 'pending' ? pendingPages :
+    orderTab === 'completed' ? completedPages :
+    confirmedPages;
+
+  const currentTotal   =
+    orderTab === 'pending' ? pendingTotal :
+    orderTab === 'completed' ? completedTotal :
+    confirmedTotal;
+
+  const currentPage    =
+    orderTab === 'pending' ? pendingPage :
+    orderTab === 'completed' ? completedPage :
+    confirmedPage;
+
+  const setCurrentPage =
+    orderTab === 'pending' ? setPendingPage :
+    orderTab === 'completed' ? setCompletedPage :
+    setConfirmedPage;
 
   return (
     <div className="wd-page">
@@ -765,6 +865,14 @@ console.log({dd: completedData});
             Completed
             {completedTotal > 0 && <span className="wd-tab-count">{completedTotal}</span>}
           </button>
+          <button
+            className={`wd-tab ${orderTab === 'confirmed' ? 'active' : ''}`}
+            onClick={() => setOrderTab('confirmed')}
+          >
+            <CheckCircle size={14} />
+            Confirmed
+            {confirmedTotal > 0 && <span className="wd-tab-count">{confirmedTotal}</span>}
+          </button>
         </div>
 
         {/* Completed date filters */}
@@ -822,7 +930,13 @@ console.log({dd: completedData});
          
             emptyState={
               <EmptyState
-                title={orderTab === 'pending' ? 'No pending orders' : 'No completed orders'}
+                title={
+                  orderTab === 'pending'
+                    ? 'No pending orders'
+                    : orderTab === 'completed'
+                      ? 'No completed orders'
+                      : 'No confirmed orders'
+                }
               />
             }
           />
@@ -839,7 +953,15 @@ console.log({dd: completedData});
               </div>
             ))
           ) : currentOrders.length === 0 ? (
-            <EmptyState title={orderTab === 'pending' ? 'No pending orders' : 'No completed orders'} />
+            <EmptyState
+              title={
+                orderTab === 'pending'
+                  ? 'No pending orders'
+                  : orderTab === 'completed'
+                    ? 'No completed orders'
+                    : 'No confirmed orders'
+              }
+            />
           ) : orderTab === 'pending' ? (
             currentOrders.map(o => (
               <MobilePendingOrderCard
@@ -848,6 +970,14 @@ console.log({dd: completedData});
                 outlet={active_outlet}
                 onMarkPaid={handleMarkPaid}
                 isPaying={payingId === o.id}
+              />
+            ))
+          ) : orderTab === 'completed' ? (
+            currentOrders.map(o => (
+              <MobileCompletedOrderCard
+                key={o.id}
+                order={o}
+                outlet={active_outlet}
               />
             ))
           ) : (

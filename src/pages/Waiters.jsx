@@ -6,12 +6,18 @@ import { EmptyState } from '../components/EmptyState';
 import PlaceOrderModal from '../components/PlaceOrderModal';
 import { useGetPendingWaiterOrders } from '../hooks/useGetPendingWaiterOrders';
 import { useGetCompletedWaiterOrders } from '../hooks/useGetCompletedWaiterOrders';
+import { useGetConfirmedWaiterOrders } from '../hooks/useGetConfirmedWaiterOrders';
 import { useCreateWaiterPayment } from '../hooks/useCreateWaiterPayment';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 import '../styles/Stock.css';
 import '../styles/Waiters.css';
 
 const ITEMS_PER_PAGE = 10;
+
+const formatDate = (iso) => {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString();
+};
 
 const formatTime = (iso) => {
   if (!iso) return '';
@@ -42,6 +48,7 @@ const OrderCard = ({ order, outlet, onMarkPaid, isPaying }) => {
       <div className="woc-header">
         <span className="woc-table">{table}</span>
         <div className="woc-meta">
+          <span className="woc-time">{formatDate(order?.created_at)}</span>
           <span className="woc-time">{formatTime(order?.created_at)}</span>
           <span className={`waiter-status-badge status-${order?.status}`}>
             {isPending
@@ -97,6 +104,7 @@ const WaitersPage = () => {
   const [activeTab, setActiveTab]         = useState('pending');
   const [pendingPage, setPendingPage]     = useState(1);
   const [completedPage, setCompletedPage] = useState(1);
+  const [confirmedPage, setConfirmedPage] = useState(1);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [payingId, setPayingId]           = useState(null);
 
@@ -114,17 +122,27 @@ const WaitersPage = () => {
     refetch: refetchCompleted,
   } = useGetCompletedWaiterOrders(active_outlet, completedPage, ITEMS_PER_PAGE);
 
+  const {
+    data: confirmedData,
+    isLoading: loadingConfirmed,
+    refetch: refetchConfirmed,
+  } = useGetConfirmedWaiterOrders(active_outlet, confirmedPage, ITEMS_PER_PAGE);
+
   const pendingOrders   = pendingData?.orders   || pendingData?.data   || [];
   const completedOrders = completedData?.orders || completedData?.data || [];
+  const confirmedOrders = confirmedData?.orders || confirmedData?.data || [];
 
   const pendingMeta   = pendingData?.meta   || {};
   const completedMeta = completedData?.meta || {};
+  const confirmedMeta = confirmedData?.meta || {};
 
   const pendingTotal   = pendingMeta?.total_count   ?? pendingOrders.length;
   const completedTotal = completedMeta?.total_count ?? completedOrders.length;
+  const confirmedTotal = confirmedMeta?.total_count ?? confirmedOrders.length;
 
   const pendingPages   = pendingMeta?.total_pages   ?? Math.ceil(pendingTotal / ITEMS_PER_PAGE);
   const completedPages = completedMeta?.total_pages ?? Math.ceil(completedTotal / ITEMS_PER_PAGE);
+  const confirmedPages = confirmedMeta?.total_pages ?? Math.ceil(confirmedTotal / ITEMS_PER_PAGE);
 
   // ── Mark as paid ──────────────────────────────────────────────────────────
   const handleMarkPaid = async (order) => {
@@ -143,6 +161,7 @@ const WaitersPage = () => {
       toast.success('Payment recorded successfully');
       refetchPending();
       refetchCompleted();
+      refetchConfirmed();
     } catch (err) {
       const msg = err?.response?.data?.message || 'Failed to record payment. Try again.';
       toast.error(msg);
@@ -160,12 +179,35 @@ const WaitersPage = () => {
     setActiveTab(tab);
   };
 
-  const isLoading     = activeTab === 'pending' ? loadingPending : loadingCompleted;
-  const currentOrders = activeTab === 'pending' ? pendingOrders  : completedOrders;
-  const currentPages  = activeTab === 'pending' ? pendingPages   : completedPages;
-  const currentTotal  = activeTab === 'pending' ? pendingTotal   : completedTotal;
-  const currentPage   = activeTab === 'pending' ? pendingPage    : completedPage;
-  const setCurrentPage = activeTab === 'pending' ? setPendingPage : setCompletedPage;
+  const isLoading =
+    activeTab === 'pending' ? loadingPending :
+    activeTab === 'completed' ? loadingCompleted :
+    loadingConfirmed;
+
+  const currentOrders =
+    activeTab === 'pending' ? pendingOrders :
+    activeTab === 'completed' ? completedOrders :
+    confirmedOrders;
+
+  const currentPages =
+    activeTab === 'pending' ? pendingPages :
+    activeTab === 'completed' ? completedPages :
+    confirmedPages;
+
+  const currentTotal =
+    activeTab === 'pending' ? pendingTotal :
+    activeTab === 'completed' ? completedTotal :
+    confirmedTotal;
+
+  const currentPage =
+    activeTab === 'pending' ? pendingPage :
+    activeTab === 'completed' ? completedPage :
+    confirmedPage;
+
+  const setCurrentPage =
+    activeTab === 'pending' ? setPendingPage :
+    activeTab === 'completed' ? setCompletedPage :
+    setConfirmedPage;
 
   return (
     <div className="order-page">
@@ -200,6 +242,16 @@ const WaitersPage = () => {
             <span className="tab-count">{completedTotal}</span>
           )}
         </button>
+        <button
+          className={`tab-button ${activeTab === 'confirmed' ? 'active' : ''}`}
+          onClick={() => handleTabChange('confirmed')}
+        >
+          <CheckCircle size={15} />
+          Confirmed
+          {confirmedTotal > 0 && (
+            <span className="tab-count">{confirmedTotal}</span>
+          )}
+        </button>
       </div>
 
       {/* Order cards */}
@@ -209,7 +261,13 @@ const WaitersPage = () => {
         ) : currentOrders.length === 0 ? (
           <div className="waiter-empty-wrap">
             <EmptyState
-              title={activeTab === 'pending' ? 'No pending orders' : 'No completed orders'}
+              title={
+                activeTab === 'pending'
+                  ? 'No pending orders'
+                  : activeTab === 'completed'
+                    ? 'No completed orders'
+                    : 'No confirmed orders'
+              }
             />
           </div>
         ) : (

@@ -46,17 +46,15 @@ const ProductDetails = ({ product, style,onEdit, onDelete, onClose }) => {
         
           </div>
           
-          <p className="stock-status">
-          <LikeButton 
+          <div className="stock-status">
+            <LikeButton
               initialLikes={product.likes}
-              isLiked={product.likes > 0}  
-           
+              isLiked={product.likes > 0}
             />
             {!product.out_of_stock_status
               ? `In stock : ${product.amount_in_stock} Items`
               : 'Out of stock'}
-           
-          </p>
+          </div>
 
           <p className="stock-status">
   Categories: {
