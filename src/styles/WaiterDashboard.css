@@ -850,6 +850,164 @@
   100% { background-position: -200% 0; }
 }
 
+/* ── Grouped orders list ──────────────────────────────────────────── */
+.wd-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.wd-group-card {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  transition: box-shadow 0.15s;
+}
+
+.wd-group-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+
+.wd-group-pending   { border-left: 3px solid #f59e0b; }
+.wd-group-confirmed { border-left: 3px solid #3b82f6; }
+.wd-group-completed { border-left: 3px solid #059669; }
+
+.wd-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  gap: 12px;
+  user-select: none;
+}
+
+.wd-group-header:hover { background: #fafafa; }
+
+.wd-group-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.wd-group-meta-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wd-group-num {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.wd-group-count {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.wd-group-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.wd-group-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.wd-group-actions { display: flex; align-items: center; }
+
+.wd-chevron {
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.wd-chevron.open { transform: rotate(180deg); }
+
+/* ── Expanded items ───────────────────────────────────────────────── */
+.wd-group-items {
+  border-top: 1px solid #f3f4f6;
+  padding: 10px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fafafa;
+}
+
+.wd-group-items-header {
+  display: grid;
+  grid-template-columns: 1fr 40px 80px 80px;
+  gap: 8px;
+  padding: 4px 0 6px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wd-group-items-header span:not(:first-child) { text-align: right; }
+
+.wd-group-item {
+  display: grid;
+  grid-template-columns: 1fr 40px 80px 80px;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.wd-group-item:last-child { border-bottom: none; }
+
+.wd-group-item-name {
+  font-size: 13px;
+  color: #374151;
+}
+
+.wd-group-item-qty {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-align: right;
+}
+
+.wd-group-item-unit {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: right;
+}
+
+.wd-group-item-total {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  text-align: right;
+}
+
+/* mobile: stack item columns */
+@media (max-width: 480px) {
+  .wd-group-items-header { grid-template-columns: 1fr 36px 70px 70px; font-size: 10px; }
+  .wd-group-item         { grid-template-columns: 1fr 36px 70px 70px; }
+  .wd-group-item-name    { font-size: 12px; }
+}
+
+.wd-group-skeleton {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    RESPONSIVE — Mobile ( ≤ 768px )
    ═══════════════════════════════════════════════════════════════════ */
@@ -964,4 +1122,35 @@
   .wd-browser .pagination-button {
     padding: 0.4rem 0.5rem;
   }
+
+  /* Order tabs — horizontal scroll on mobile */
+  .wd-order-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+
+  .wd-order-tabs::-webkit-scrollbar { display: none; }
+
+  .wd-tab { flex-shrink: 0; }
+
+  /* Grouped orders — mobile adjustments */
+  .wd-group-header {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
+  .wd-group-left { flex: 1 1 100%; }
+
+  .wd-group-right {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .wd-group-info { align-items: flex-start; }
+
+  .wd-group-num  { font-size: 12px; }
+  .wd-group-count { font-size: 11px; }
 }

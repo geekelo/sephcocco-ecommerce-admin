@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Minus, Search, CheckCircle, Hourglass, ShoppingCart, X, Package, ClipboardList, ScanBarcode } from 'lucide-react';
+import { Plus, Minus, Search, CheckCircle, Hourglass, ShoppingCart, X, Package, ClipboardList, ScanBarcode, ChevronDown } from 'lucide-react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { NotFoundException } from '@zxing/library';
 import { toast } from 'react-toastify';
@@ -21,78 +21,149 @@ import '../styles/WaiterDashboard.css';
 const ORDERS_PER_PAGE = 10;
 const PRODUCTS_PER_PAGE = 10;
 
-const fmt = (val) => `₦${parseFloat(val || 0).toLocaleString()}`;
+const fmt     = (val) => `₦${parseFloat(val || 0).toLocaleString()}`;
 const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString() : '';
 const fmtTime = (iso) => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
 const getOrderItems = (order, outlet) => {
-  // Try nested items array first
-  const key = `sephcocco_${outlet}_order_items`;
+  const key   = `sephcocco_${outlet}_order_items`;
   const items = order?.[key] || order?.order_items || order?.items;
   if (Array.isArray(items) && items.length > 0) {
     return items.map(item => {
-      const pk  = `sephcocco_${outlet}_product`;
+      const pk   = `sephcocco_${outlet}_product`;
       const name = item?.[pk]?.name || item?.product?.name || item?.product_name || item?.name || 'Item';
       const qty  = item?.quantity || item?.qty || 1;
       return { name, qty };
     });
   }
-  // Flat order: product + quantity directly on the order object
   const name = order?.product?.name || order?.product_details?.name || 'Item';
   const qty  = order?.quantity || order?.qty || 1;
   return [{ name, qty }];
 };
 
-// ── Mobile pending order card ─────────────────────────────────────────────
-const MobilePendingOrderCard = ({ order, outlet, onMarkPaid, isPaying }) => {
-  const items = getOrderItems(order, outlet);
-  return (
-    <div className="wd-mob-order-card pending">
-      <div className="wd-mob-order-top">
-        <span className="wd-table-badge">{order.address || order.table_number || '—'}</span>
-        <span className="wd-time">{fmtDate(order.created_at)} {fmtTime(order.created_at)}</span>
-      </div>
-      {items.length > 0 && (
-        <div className="wd-items-wrap" style={{ margin: '6px 0' }}>
-          {items.map((it, i) => (
-            <span key={i} className="wd-item-tag">{it.name} ×{it.qty}</span>
-          ))}
-        </div>
-      )}
-      <div className="wd-mob-order-bottom">
-        <span className="wd-order-total">{fmt(order.total_cost || order.amount)}</span>
-        <button
-          className="wd-paid-btn"
-          onClick={() => onMarkPaid(order)}
-          disabled={isPaying}
-        >
-          {isPaying ? 'Processing...' : <><CheckCircle size={13} /> I Have Paid</>}
-        </button>
-      </div>
-    </div>
+const getTableLabel = (order) => order?.address || order?.table_number || 'N/A';
+
+// ── Group flat orders array by order_number ───────────────────────────────
+const groupOrders = (orders, outlet) => {
+  const map = {};
+  orders.forEach(order => {
+    const key = order.order_number || String(order.id);
+    if (!map[key]) {
+      map[key] = {
+        order_number: key,
+        table:        getTableLabel(order),
+        created_at:   order.created_at,
+        status:       order.status,
+        allItems:     [],
+        total:        0,
+        orders:       [],
+      };
+    }
+    map[key].allItems.push(...getOrderItems(order, outlet));
+    map[key].total += parseFloat(order.total_cost || order.amount || 0);
+    map[key].orders.push(order);
+  });
+  return Object.values(map).sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at)
   );
 };
 
-// ── Mobile completed order card ───────────────────────────────────────────
-const MobileCompletedOrderCard = ({ order, outlet }) => {
-  const items = getOrderItems(order, outlet);
+// ── Grouped orders list — shared for desktop + mobile ────────────────────
+const GroupedOrdersList = ({
+  groups, status, onMarkPaid, payingIds, expandedGroups, onToggle, isLoading,
+}) => {
+  if (isLoading) {
+    return (
+      <div className="wd-group-list">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="wd-group-card wd-group-skeleton">
+            <div className="skel w60" />
+            <div className="skel w40 mt6" />
+            <div className="skel w30 mt6" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!groups.length) {
+    return <EmptyState title={`No ${status} orders`} />;
+  }
+
   return (
-    <div className="wd-mob-order-card completed">
-      <div className="wd-mob-order-top">
-        <span className="wd-table-badge">{order.address || order.table_number || '—'}</span>
-        <span className="wd-time">{fmtDate(order.created_at)} {fmtTime(order.created_at)}</span>
-      </div>
-      {items.length > 0 && (
-        <div className="wd-items-wrap" style={{ margin: '6px 0' }}>
-          {items.map((it, i) => (
-            <span key={i} className="wd-item-tag completed">{it.name} ×{it.qty}</span>
-          ))}
-        </div>
-      )}
-      <div className="wd-mob-order-bottom">
-        <span className="wd-order-total">{fmt(order.total_cost || order.amount)}</span>
-        <span className="wd-completed-badge"><CheckCircle size={12} /> Paid</span>
-      </div>
+    <div className="wd-group-list">
+      {groups.map(group => {
+        const isExpanded   = expandedGroups.has(group.order_number);
+        const isGroupPaying = group.orders.some(o => payingIds.has(o.id));
+        const isPending    = status === 'pending';
+
+        return (
+          <div key={group.order_number} className={`wd-group-card wd-group-${status}`}>
+            {/* ── Summary row ── */}
+            <div className="wd-group-header" onClick={() => onToggle(group.order_number)}>
+              <div className="wd-group-left">
+                <span className="wd-table-badge">{group.table}</span>
+                <div className="wd-group-meta-text">
+                  <span className="wd-group-num">#{group.order_number}</span>
+                  <span className="wd-group-count">
+                    {group.allItems.length} item{group.allItems.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              </div>
+
+              <div className="wd-group-right">
+                <div className="wd-group-info">
+                  <span className="wd-order-total">{fmt(group.total)}</span>
+                  <span className="wd-time">
+                    {fmtDate(group.created_at)} · {fmtTime(group.created_at)}
+                  </span>
+                </div>
+
+                <div className="wd-group-actions" onClick={e => e.stopPropagation()}>
+                  {isPending ? (
+                    <button
+                      className="wd-paid-btn"
+                      onClick={() => onMarkPaid(group.orders)}
+                      disabled={isGroupPaying}
+                    >
+                      {isGroupPaying
+                        ? 'Processing…'
+                        : <><CheckCircle size={13} /> I Have Paid</>}
+                    </button>
+                  ) : (
+                    <span className="wd-completed-badge">
+                      <CheckCircle size={12} />
+                      {status === 'confirmed' ? 'Confirmed' : 'Paid'}
+                    </span>
+                  )}
+                </div>
+
+                <ChevronDown size={16} className={`wd-chevron${isExpanded ? ' open' : ''}`} />
+              </div>
+            </div>
+
+            {/* ── Item list (expanded) ── */}
+            {isExpanded && (
+              <div className="wd-group-items">
+                <div className="wd-group-items-header">
+                  <span>Item</span>
+                  <span>Qty</span>
+                  <span>Unit Price</span>
+                  <span>Total</span>
+                </div>
+                {group.allItems.map((item, i) => (
+                  <div key={i} className="wd-group-item">
+                    <span className="wd-group-item-name">{item.name}</span>
+                    <span className="wd-group-item-qty">× {item.qty}</span>
+                    <span className="wd-group-item-unit">{fmt(item.unit_price)}</span>
+                    <span className="wd-group-item-total">{fmt(item.total_cost)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -105,15 +176,11 @@ const BarcodeScanner = ({ onScan, onClose }) => {
 
   useEffect(() => {
     const reader = new BrowserMultiFormatReader();
-
     reader.decodeFromConstraints(
       { video: { facingMode: 'environment' } },
       videoRef.current,
       (result, err) => {
-        if (result) {
-          controlsRef.current?.stop();
-          onScan(result.getText());
-        }
+        if (result) { controlsRef.current?.stop(); onScan(result.getText()); }
         if (err && !(err instanceof NotFoundException)) {
           setError('Camera access denied. Please allow camera permission and try again.');
         }
@@ -123,7 +190,6 @@ const BarcodeScanner = ({ onScan, onClose }) => {
     }).catch(() => {
       setError('Could not start camera. Please allow camera access and try again.');
     });
-
     return () => { controlsRef.current?.stop(); };
   }, []);
 
@@ -139,9 +205,7 @@ const BarcodeScanner = ({ onScan, onClose }) => {
         ) : (
           <div className="wd-scanner-view">
             <video ref={videoRef} className="wd-scanner-video" muted playsInline />
-            <div className="wd-scanner-frame">
-              <div className="wd-scanner-line" />
-            </div>
+            <div className="wd-scanner-frame"><div className="wd-scanner-line" /></div>
             <p className="wd-scanner-hint">Point at a barcode to scan automatically</p>
           </div>
         )}
@@ -154,7 +218,6 @@ const BarcodeScanner = ({ onScan, onClose }) => {
 const MobileProductCard = ({ product, qty, onAdd, onRemove }) => {
   const unit  = parseFloat(product?.price || product?.selling_price || 0);
   const total = unit * qty;
-
   return (
     <div className={`wd-mob-card ${qty > 0 ? 'in-cart' : ''}`}>
       <div className="wd-mob-card-info">
@@ -223,7 +286,6 @@ const CartContent = ({
         value={tableNumber}
         onChange={e => setTableNumber(e.target.value)}
       />
-
       <label className="wd-field-label" style={{ marginTop: 10 }}>NOTES (OPTIONAL)</label>
       <textarea
         className="wd-field-input"
@@ -253,36 +315,35 @@ const CartContent = ({
 const WaiterDashboard = () => {
   const active_outlet = getActiveOutlet();
 
-  const [cart, setCart]               = useState({});
-  const [categoryId, setCategoryId]   = useState('');
-  const [searchTerm, setSearchTerm]   = useState('');
-  const [debSearch, setDebSearch]     = useState('');
-  const [tableNumber, setTableNumber] = useState('');
-  const [notes, setNotes]             = useState('');
-  const [showCartSheet, setShowCartSheet] = useState(false);
-  const [showScanner, setShowScanner]     = useState(false);
-  const [dateRange, setDateRange]               = useState({ start_date: '', end_date: '' });
+  const [cart, setCart]                     = useState({});
+  const [categoryId, setCategoryId]         = useState('');
+  const [searchTerm, setSearchTerm]         = useState('');
+  const [debSearch, setDebSearch]           = useState('');
+  const [tableNumber, setTableNumber]       = useState('');
+  const [notes, setNotes]                   = useState('');
+  const [showCartSheet, setShowCartSheet]   = useState(false);
+  const [showScanner, setShowScanner]       = useState(false);
+  const [dateRange, setDateRange]           = useState({ start_date: '', end_date: '' });
   const [completedFilters, setCompletedFilters] = useState({ start_date: '', end_date: '' });
-  const [orderTab, setOrderTab]       = useState('pending');
-  const [pendingPage, setPendingPage] = useState(1);
-  const [completedPage, setCompletedPage] = useState(1);
-  const [confirmedPage, setConfirmedPage] = useState(1);
-  const [payingId, setPayingId]       = useState(null);
-  const [productPage, setProductPage] = useState(1);
+  const [orderTab, setOrderTab]             = useState('pending');
+  const [pendingPage, setPendingPage]       = useState(1);
+  const [completedPage, setCompletedPage]   = useState(1);
+  const [confirmedPage, setConfirmedPage]   = useState(1);
+  const [payingIds, setPayingIds]           = useState(new Set());
+  const [productPage, setProductPage]       = useState(1);
+  const [expandedGroups, setExpandedGroups] = useState(new Set());
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const pageTab = searchParams.get('tab') || 'products';
+  const pageTab    = searchParams.get('tab') || 'products';
   const setPageTab = (tab) => setSearchParams({ tab });
 
   const orderMutation   = useAdminOrderCreation();
   const paymentMutation = useCreateWaiterPayment();
 
-  // Debounce search
   useEffect(() => {
     const t = setTimeout(() => setDebSearch(searchTerm), 350);
     return () => clearTimeout(t);
   }, [searchTerm]);
-
 
   // ── Data fetching ────────────────────────────────────────────────────────
   const { data: productData, isLoading: loadingProducts } = useViewAllProduct(
@@ -290,40 +351,35 @@ const WaiterDashboard = () => {
     { search_terms: debSearch, category_id: categoryId || undefined },
     productPage, PRODUCTS_PER_PAGE
   );
-
   const { data: catData } = useViewProductCategories(active_outlet);
 
-  const {
-    data: pendingData, isLoading: loadingPending, refetch: refetchPending,
-  } = useGetPendingWaiterOrders(active_outlet, pendingPage, ORDERS_PER_PAGE);
+  const { data: pendingData,   isLoading: loadingPending,   refetch: refetchPending   } =
+    useGetPendingWaiterOrders(active_outlet, pendingPage, ORDERS_PER_PAGE);
+  const { data: completedData, isLoading: loadingCompleted, refetch: refetchCompleted } =
+    useGetCompletedWaiterOrders(active_outlet, completedPage, ORDERS_PER_PAGE, completedFilters);
+  const { data: confirmedData, isLoading: loadingConfirmed, refetch: refetchConfirmed } =
+    useGetConfirmedWaiterOrders(active_outlet, confirmedPage, ORDERS_PER_PAGE, completedFilters);
 
-  const {
-    data: completedData, isLoading: loadingCompleted, refetch: refetchCompleted,
-  } = useGetCompletedWaiterOrders(active_outlet, completedPage, ORDERS_PER_PAGE, completedFilters);
+  const products     = productData?.products || productData?.data || [];
+  const productMeta  = productData?.meta || {};
+  const productTotal = productMeta?.total_count ?? products.length;
+  const productPages = productMeta?.total_pages  ?? Math.ceil(productTotal / PRODUCTS_PER_PAGE);
+  const categories   = Array.isArray(catData) ? catData : (catData?.product_categories || catData?.categories || catData?.data || []);
 
-  const {
-    data: confirmedData, isLoading: loadingConfirmed, refetch: refetchConfirmed,
-  } = useGetConfirmedWaiterOrders(active_outlet, confirmedPage, ORDERS_PER_PAGE, completedFilters);
+  const pendingOrders   = pendingData?.orders?.grouped_orders   || pendingData?.orders   || pendingData?.data   || [];
+  const completedOrders = completedData?.orders?.grouped_orders || completedData?.orders || completedData?.data || [];
+  const confirmedOrders = confirmedData?.orders?.grouped_orders || confirmedData?.orders || confirmedData?.data || [];
+console.log({PENDINDATA: pendingData});
 
-  const products      = productData?.products   || productData?.data   || [];
-  const productMeta   = productData?.meta || {};
-  const productTotal  = productMeta?.total_count ?? products.length;
-  const productPages  = productMeta?.total_pages  ?? Math.ceil(productTotal / PRODUCTS_PER_PAGE);
-  const categories    = Array.isArray(catData) ? catData : (catData?.product_categories || catData?.categories || catData?.data || []);
-  const pendingOrders = pendingData?.orders   || pendingData?.data   || [];
-  const completedOrders = completedData?.orders || completedData?.data || [];
-  const confirmedOrders = confirmedData?.orders || confirmedData?.data || [];
-
-  const pendingMeta   = pendingData?.meta   || {};
-  const completedMeta = completedData?.meta || {};
-  const confirmedMeta = confirmedData?.meta || {};
-  const pendingTotal  = pendingMeta?.total_count  ?? pendingOrders.length;
-  const completedTotal= completedMeta?.total_count?? completedOrders.length;
-  const confirmedTotal= confirmedMeta?.total_count?? confirmedOrders.length;
-  const pendingPages  = pendingMeta?.total_pages  ?? Math.ceil(pendingTotal / ORDERS_PER_PAGE);
-  const completedPages= completedMeta?.total_pages?? Math.ceil(completedTotal / ORDERS_PER_PAGE);
-  const confirmedPages= confirmedMeta?.total_pages?? Math.ceil(confirmedTotal / ORDERS_PER_PAGE);
-
+  const pendingMeta    = pendingData?.meta   || {};
+  const completedMeta  = completedData?.meta || {};
+  const confirmedMeta  = confirmedData?.meta || {};
+  const pendingTotal   = pendingMeta?.total_count   ?? pendingOrders.length;
+  const completedTotal = completedMeta?.total_count ?? completedOrders.length;
+  const confirmedTotal = confirmedMeta?.total_count ?? confirmedOrders.length;
+  const pendingPages   = pendingMeta?.total_pages   ?? Math.ceil(pendingTotal / ORDERS_PER_PAGE);
+  const completedPages = completedMeta?.total_pages ?? Math.ceil(completedTotal / ORDERS_PER_PAGE);
+  const confirmedPages = confirmedMeta?.total_pages ?? Math.ceil(confirmedTotal / ORDERS_PER_PAGE);
   // ── Cart helpers ─────────────────────────────────────────────────────────
   const addToCart = useCallback((product) => {
     setCart(prev => ({
@@ -335,11 +391,7 @@ const WaiterDashboard = () => {
   const removeFromCart = useCallback((product) => {
     setCart(prev => {
       const qty = prev[product.id]?.qty || 0;
-      if (qty <= 1) {
-        const next = { ...prev };
-        delete next[product.id];
-        return next;
-      }
+      if (qty <= 1) { const next = { ...prev }; delete next[product.id]; return next; }
       return { ...prev, [product.id]: { ...prev[product.id], qty: qty - 1 } };
     });
   }, []);
@@ -352,7 +404,6 @@ const WaiterDashboard = () => {
   const handlePlaceOrder = async () => {
     if (!tableNumber.trim()) { toast.error('Enter a table number'); return; }
     if (cartItems.length === 0) { toast.error('Add at least one item'); return; }
-
     try {
       const payload = {
         [`sephcocco_${active_outlet}_order`]: {
@@ -360,7 +411,7 @@ const WaiterDashboard = () => {
             [`sephcocco_${active_outlet}_product_id`]: item.id,
             quantity: item.qty,
           })),
-          address: tableNumber.trim(),
+          address:          tableNumber.trim(),
           additional_notes: notes,
         },
       };
@@ -378,14 +429,18 @@ const WaiterDashboard = () => {
     }
   };
 
-  // ── Mark as paid ─────────────────────────────────────────────────────────
-  const handleMarkPaid = useCallback(async (order) => {
-    setPayingId(order.id);
+  // ── Mark as paid (accepts single order or array of orders) ───────────────
+  const handleMarkPaid = useCallback(async (orderOrOrders) => {
+    const orderArr = Array.isArray(orderOrOrders) ? orderOrOrders : [orderOrOrders];
+    const ids      = orderArr.map(o => o.id);
+    const total    = orderArr.reduce((s, o) => s + parseFloat(o.total_cost || o.amount || 0), 0);
+
+    setPayingIds(prev => new Set([...prev, ...ids]));
     try {
       const payload = {
         [`sephcocco_${active_outlet}_payment`]: {
-          orders_ids: [order.id],
-          amount: parseFloat(order.total_cost || order.amount || 0),
+          orders_ids:     ids,
+          amount:         total,
           payment_method: 'bank',
           transaction_id: `WAI-${Date.now()}`,
         },
@@ -398,16 +453,27 @@ const WaiterDashboard = () => {
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Payment failed');
     } finally {
-      setPayingId(null);
+      setPayingIds(prev => {
+        const next = new Set(prev);
+        ids.forEach(id => next.delete(id));
+        return next;
+      });
     }
   }, [active_outlet, paymentMutation, refetchPending, refetchCompleted, refetchConfirmed]);
+
+  // ── Toggle expanded group ────────────────────────────────────────────────
+  const toggleGroup = useCallback((key) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }, []);
 
   // ── Desktop product columns ───────────────────────────────────────────────
   const productColumns = useMemo(() => [
     {
-      key: 'product',
-      header: 'Product',
-      flex: 3,
+      key: 'product', header: 'Product', flex: 3,
       render: (p) => (
         <div className="wd-product-cell">
           <span className="wd-product-name">{p.name}</span>
@@ -415,17 +481,11 @@ const WaiterDashboard = () => {
       ),
     },
     {
-      key: 'unit_price',
-      header: 'Unit Price',
-      flex: 2,
-      render: (p) => (
-        <span className="wd-unit-price">{fmt(p.price || p.selling_price)}</span>
-      ),
+      key: 'unit_price', header: 'Unit Price', flex: 2,
+      render: (p) => <span className="wd-unit-price">{fmt(p.price || p.selling_price)}</span>,
     },
     {
-      key: 'qty',
-      header: 'Qty',
-      flex: 2,
+      key: 'qty', header: 'Qty', flex: 2,
       render: (p) => {
         const qty = cart[p.id]?.qty || 0;
         return (
@@ -444,9 +504,7 @@ const WaiterDashboard = () => {
       },
     },
     {
-      key: 'total',
-      header: 'Total',
-      flex: 2,
+      key: 'total', header: 'Total', flex: 2,
       render: (p) => {
         const qty  = cart[p.id]?.qty || 0;
         const unit = parseFloat(p.price || p.selling_price || 0);
@@ -457,205 +515,53 @@ const WaiterDashboard = () => {
     },
   ], [cart, addToCart, removeFromCart]);
 
-  // ── Pending order columns ────────────────────────────────────────────────
-  const pendingColumns = useMemo(() => [
-    {
-      key: 'address',
-      header: 'Table',
-      flex: 1,
-      render: (o) => <span className="wd-table-badge">{o.address || o.table_number || '—'}</span>,
-    },
-    {
-      key: 'items',
-      header: 'Items',
-      flex: 4,
-      render: (o) => {
-        const items = getOrderItems(o, active_outlet);
-        if (!items.length) return <span className="wd-no-items">—</span>;
-        return (
-          <div className="wd-items-wrap">
-            {items.map((it, i) => (
-              <span key={i} className="wd-item-tag">{it.name} ×{it.qty}</span>
-            ))}
-          </div>
-        );
-      },
-    },
-    {
-      key: 'total_cost',
-      header: 'Total',
-      flex: 1.5,
-      render: (o) => <span className="wd-order-total">{fmt(o.total_cost || o.amount)}</span>,
-    },
-    {
-      key: 'created_at',
-      header: 'Date',
-      flex: 1,
-      render: (o) => <span className="wd-time">{fmtDate(o.created_at)}</span>,
-    },
-    {
-      key: 'created_at_time',
-      header: 'Time',
-      flex: 1,
-      render: (o) => <span className="wd-time">{fmtTime(o.created_at)}</span>,
-    },
-    {
-      key: 'actions',
-      header: '',
-      flex: 2,
-      render: (o) => (
-        <button
-          className="wd-paid-btn"
-          onClick={(e) => { e.stopPropagation(); handleMarkPaid(o); }}
-          disabled={payingId === o.id}
-        >
-          {payingId === o.id
-            ? 'Processing...'
-            : <><CheckCircle size={13} /> I Have Paid</>
-          }
-        </button>
-      ),
-    },
-  ], [payingId, handleMarkPaid, active_outlet]);
-
-  const completedColumns = useMemo(() => [
-    {
-      key: 'address',
-      header: 'Table',
-      flex: 1,
-      render: (o) => <span className="wd-table-badge">{o.address || o.table_number || '—'}</span>,
-    },
-    {
-      key: 'items',
-      header: 'Items',
-      flex: 4,
-      render: (o) => {
-        const items = getOrderItems(o, active_outlet);
-        if (!items.length) return <span className="wd-no-items">—</span>;
-        return (
-          <div className="wd-items-wrap">
-            {items.map((it, i) => (
-              <span key={i} className="wd-item-tag completed">{it.name} ×{it.qty}</span>
-            ))}
-          </div>
-        );
-      },
-    },
-    {
-      key: 'total_cost',
-      header: 'Total',
-      flex: 1.5,
-      render: (o) => <span className="wd-order-total">{fmt(o.total_cost || o.amount)}</span>,
-    },
-    {
-      key: 'created_at',
-      header: 'Date',
-      flex: 1,
-      render: (o) => <span className="wd-time">{fmtDate(o.created_at)}</span>,
-    },
-    {
-      key: 'created_at_time',
-      header: 'Time',
-      flex: 1,
-      render: (o) => <span className="wd-time">{fmtTime(o.created_at)}</span>,
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      flex: 2,
-      render: () => (
-        <span className="wd-completed-badge"><CheckCircle size={12} /> Paid</span>
-      ),
-    },
-  ], [active_outlet]);
-
-  const confirmedColumns = useMemo(() => [
-    {
-      key: 'address',
-      header: 'Table',
-      flex: 1,
-      render: (o) => <span className="wd-table-badge">{o.address || o.table_number || '—'}</span>,
-    },
-    {
-      key: 'items',
-      header: 'Items',
-      flex: 4,
-      render: (o) => {
-        const items = getOrderItems(o, active_outlet);
-        if (!items.length) return <span className="wd-no-items">—</span>;
-        return (
-          <div className="wd-items-wrap">
-            {items.map((it, i) => (
-              <span key={i} className="wd-item-tag completed">{it.name} ×{it.qty}</span>
-            ))}
-          </div>
-        );
-      },
-    },
-    {
-      key: 'total_cost',
-      header: 'Total',
-      flex: 1.5,
-      render: (o) => <span className="wd-order-total">{fmt(o.total_cost || o.amount)}</span>,
-    },
-    {
-      key: 'created_at',
-      header: 'Date',
-      flex: 1,
-      render: (o) => <span className="wd-time">{fmtDate(o.created_at)}</span>,
-    },
-    {
-      key: 'created_at_time',
-      header: 'Time',
-      flex: 1,
-      render: (o) => <span className="wd-time">{fmtTime(o.created_at)}</span>,
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      flex: 2,
-      render: () => (
-        <span className="wd-completed-badge"><CheckCircle size={12} /> Confirmed</span>
-      ),
-    },
-  ], [active_outlet]);
-
   const isPlacing = orderMutation.isPending;
 
-  const currentOrders  =
-    orderTab === 'pending' ? pendingOrders :
-    orderTab === 'completed' ? completedOrders :
-    confirmedOrders;
+  // ── Current tab data ─────────────────────────────────────────────────────
+  const currentOrders =
+    orderTab === 'pending'   ? pendingOrders :
+    orderTab === 'completed' ? completedOrders : confirmedOrders;
 
-  const currentCols    =
-    orderTab === 'pending' ? pendingColumns :
-    orderTab === 'completed' ? completedColumns :
-    confirmedColumns;
+  const loadingOrders =
+    orderTab === 'pending'   ? loadingPending :
+    orderTab === 'completed' ? loadingCompleted : loadingConfirmed;
 
-  const loadingOrders  =
-    orderTab === 'pending' ? loadingPending :
-    orderTab === 'completed' ? loadingCompleted :
-    loadingConfirmed;
+  const currentPages =
+    orderTab === 'pending'   ? pendingPages :
+    orderTab === 'completed' ? completedPages : confirmedPages;
 
-  const currentPages   =
-    orderTab === 'pending' ? pendingPages :
-    orderTab === 'completed' ? completedPages :
-    confirmedPages;
+  const currentTotal =
+    orderTab === 'pending'   ? pendingTotal :
+    orderTab === 'completed' ? completedTotal : confirmedTotal;
 
-  const currentTotal   =
-    orderTab === 'pending' ? pendingTotal :
-    orderTab === 'completed' ? completedTotal :
-    confirmedTotal;
-
-  const currentPage    =
-    orderTab === 'pending' ? pendingPage :
-    orderTab === 'completed' ? completedPage :
-    confirmedPage;
+  const currentPage =
+    orderTab === 'pending'   ? pendingPage :
+    orderTab === 'completed' ? completedPage : confirmedPage;
 
   const setCurrentPage =
-    orderTab === 'pending' ? setPendingPage :
-    orderTab === 'completed' ? setCompletedPage :
-    setConfirmedPage;
+    orderTab === 'pending'   ? setPendingPage :
+    orderTab === 'completed' ? setCompletedPage : setConfirmedPage;
+
+  const groupedOrders = useMemo(() => {
+    return currentOrders.map(group => {
+      const individualOrders = Array.isArray(group.orders) ? group.orders : [];
+      const first = individualOrders[0] || {};
+      return {
+        order_number: group.order_number,
+        table:        first.address || first.table_number || '—',
+        created_at:   first.created_at || '',
+        status:       first.status || group.payment_status,
+        allItems:     individualOrders.map(o => ({
+          name:       o.product?.name || o.product_details?.name || 'Item',
+          qty:        o.quantity || 1,
+          unit_price: parseFloat(o.unit_price || o.product?.price || 0),
+          total_cost: parseFloat(o.total_cost || o.total_price || 0),
+        })),
+        total:  parseFloat(group.total_price || 0),
+        orders: individualOrders,
+      };
+    });
+  }, [currentOrders]);
 
   return (
     <div className="wd-page">
@@ -667,15 +573,13 @@ const WaiterDashboard = () => {
             className={`wd-page-tab ${pageTab === 'products' ? 'active' : ''}`}
             onClick={() => setPageTab('products')}
           >
-            <Package size={16} />
-            Products
+            <Package size={16} /> Products
           </button>
           <button
             className={`wd-page-tab ${pageTab === 'orders' ? 'active' : ''}`}
             onClick={() => setPageTab('orders')}
           >
-            <ClipboardList size={16} />
-            Orders
+            <ClipboardList size={16} /> Orders
             {pendingTotal > 0 && <span className="wd-page-tab-badge">{pendingTotal}</span>}
           </button>
         </div>
@@ -687,8 +591,6 @@ const WaiterDashboard = () => {
 
         {/* Left: Product browser */}
         <div className="wd-browser">
-
-          {/* Category + Search row */}
           <div className="wd-filters-row">
             <div className="wd-cat-dropdown-wrap">
               <select
@@ -730,7 +632,7 @@ const WaiterDashboard = () => {
             />
           )}
 
-          {/* ── Desktop: FlexibleTable ─────────────────────────────── */}
+          {/* Desktop: FlexibleTable */}
           <div className="wd-desktop-table">
             <FlexibleTable
               data={products}
@@ -739,12 +641,11 @@ const WaiterDashboard = () => {
               isLoading={loadingProducts}
               clickableRows={false}
               skeletonRows={8}
-            
               emptyState={<EmptyState title="No products found" />}
             />
           </div>
 
-          {/* ── Mobile: product cards ──────────────────────────────── */}
+          {/* Mobile: product cards */}
           <div className="wd-mobile-cards">
             {loadingProducts ? (
               Array.from({ length: 6 }).map((_, i) => (
@@ -781,7 +682,7 @@ const WaiterDashboard = () => {
           )}
         </div>
 
-        {/* ── Desktop: Cart side panel ───────────────────────────────── */}
+        {/* Desktop: Cart side panel */}
         <div className="wd-cart-panel">
           <div className="wd-cart-panel-header">
             <ShoppingCart size={17} />
@@ -803,7 +704,7 @@ const WaiterDashboard = () => {
         </div>
       </div>
 
-      {/* ── Mobile: sticky cart bar ─────────────────────────────────── */}
+      {/* Mobile: sticky cart bar */}
       {cartCount > 0 && pageTab === 'products' && (
         <div className="wd-mobile-bar" onClick={() => setShowCartSheet(true)}>
           <span className="wd-bar-info">
@@ -814,7 +715,7 @@ const WaiterDashboard = () => {
         </div>
       )}
 
-      {/* ── Mobile: cart bottom sheet ───────────────────────────────── */}
+      {/* Mobile: cart bottom sheet */}
       {showCartSheet && (
         <div className="wd-sheet-overlay" onClick={() => setShowCartSheet(false)}>
           <div className="wd-sheet" onClick={e => e.stopPropagation()}>
@@ -853,30 +754,27 @@ const WaiterDashboard = () => {
             className={`wd-tab ${orderTab === 'pending' ? 'active' : ''}`}
             onClick={() => setOrderTab('pending')}
           >
-            <Hourglass size={14} />
-            Pending
+            <Hourglass size={14} /> Pending
             {pendingTotal > 0 && <span className="wd-tab-badge">{pendingTotal}</span>}
-          </button>
-          <button
-            className={`wd-tab ${orderTab === 'completed' ? 'active' : ''}`}
-            onClick={() => setOrderTab('completed')}
-          >
-            <CheckCircle size={14} />
-            Completed
-            {completedTotal > 0 && <span className="wd-tab-count">{completedTotal}</span>}
           </button>
           <button
             className={`wd-tab ${orderTab === 'confirmed' ? 'active' : ''}`}
             onClick={() => setOrderTab('confirmed')}
           >
-            <CheckCircle size={14} />
-            Confirmed
+            <CheckCircle size={14} /> Confirmed
             {confirmedTotal > 0 && <span className="wd-tab-count">{confirmedTotal}</span>}
+          </button>
+          <button
+            className={`wd-tab ${orderTab === 'completed' ? 'active' : ''}`}
+            onClick={() => setOrderTab('completed')}
+          >
+            <CheckCircle size={14} /> Completed
+            {completedTotal > 0 && <span className="wd-tab-count">{completedTotal}</span>}
           </button>
         </div>
 
-        {/* Completed date filters */}
-        {orderTab === 'completed' && (
+        {/* Completed / Confirmed date filters */}
+        {(orderTab === 'completed' || orderTab === 'confirmed') && (
           <div className="wd-date-filters">
             <div className="wd-date-field">
               <label className="wd-date-label">From</label>
@@ -898,7 +796,7 @@ const WaiterDashboard = () => {
             </div>
             <button
               className="wd-date-search-btn"
-              onClick={() => { setCompletedFilters({ ...dateRange }); setCompletedPage(1); }}
+              onClick={() => { setCompletedFilters({ ...dateRange }); setCompletedPage(1); setConfirmedPage(1); }}
               disabled={!dateRange.end_date}
             >
               Search
@@ -910,6 +808,7 @@ const WaiterDashboard = () => {
                   setDateRange({ start_date: '', end_date: '' });
                   setCompletedFilters({ start_date: '', end_date: '' });
                   setCompletedPage(1);
+                  setConfirmedPage(1);
                 }}
               >
                 <X size={13} /> Clear
@@ -918,78 +817,16 @@ const WaiterDashboard = () => {
           </div>
         )}
 
-        {/* Orders table — desktop */}
-        <div className="wd-orders-table wd-desktop-only">
-          <FlexibleTable
-            data={currentOrders}
-            columns={currentCols}
-            keyField="id"
-            isLoading={loadingOrders}
-            clickableRows={false}
-            skeletonRows={5}
-         
-            emptyState={
-              <EmptyState
-                title={
-                  orderTab === 'pending'
-                    ? 'No pending orders'
-                    : orderTab === 'completed'
-                      ? 'No completed orders'
-                      : 'No confirmed orders'
-                }
-              />
-            }
-          />
-        </div>
-
-        {/* Orders cards — mobile */}
-        <div className="wd-mob-orders wd-mobile-only">
-          {loadingOrders ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="wd-mob-order-card">
-                <div className="skel w40" />
-                <div className="skel w60 mt6" />
-                <div className="skel w30 mt6" />
-              </div>
-            ))
-          ) : currentOrders.length === 0 ? (
-            <EmptyState
-              title={
-                orderTab === 'pending'
-                  ? 'No pending orders'
-                  : orderTab === 'completed'
-                    ? 'No completed orders'
-                    : 'No confirmed orders'
-              }
-            />
-          ) : orderTab === 'pending' ? (
-            currentOrders.map(o => (
-              <MobilePendingOrderCard
-                key={o.id}
-                order={o}
-                outlet={active_outlet}
-                onMarkPaid={handleMarkPaid}
-                isPaying={payingId === o.id}
-              />
-            ))
-          ) : orderTab === 'completed' ? (
-            currentOrders.map(o => (
-              <MobileCompletedOrderCard
-                key={o.id}
-                order={o}
-                outlet={active_outlet}
-              />
-            ))
-          ) : (
-            currentOrders.map(o => (
-              <MobileCompletedOrderCard
-                key={o.id}
-                order={o}
-                outlet={active_outlet}
-              />
-            ))
-          )}
-        </div>
+        {/* Grouped orders list */}
+        <GroupedOrdersList
+          groups={groupedOrders}
+          status={orderTab}
+          onMarkPaid={handleMarkPaid}
+          payingIds={payingIds}
+          expandedGroups={expandedGroups}
+          onToggle={toggleGroup}
+          isLoading={loadingOrders}
+        />
 
         {!loadingOrders && currentPages > 1 && (
           <Pagination

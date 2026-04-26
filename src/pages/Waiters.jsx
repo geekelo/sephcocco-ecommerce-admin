@@ -227,19 +227,9 @@ const WaitersPage = () => {
           onClick={() => handleTabChange('pending')}
         >
           <Hourglass size={15} />
-          Pending
+          Pending 
           {pendingTotal > 0 && (
             <span className="pending-tab-badge">{pendingTotal}</span>
-          )}
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'completed' ? 'active' : ''}`}
-          onClick={() => handleTabChange('completed')}
-        >
-          <CheckCircle size={15} />
-          Completed
-          {completedTotal > 0 && (
-            <span className="tab-count">{completedTotal}</span>
           )}
         </button>
         <button
@@ -250,6 +240,16 @@ const WaitersPage = () => {
           Confirmed
           {confirmedTotal > 0 && (
             <span className="tab-count">{confirmedTotal}</span>
+          )}
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'completed' ? 'active' : ''}`}
+          onClick={() => handleTabChange('completed')}
+        >
+          <CheckCircle size={15} />
+          Completed
+          {completedTotal > 0 && (
+            <span className="tab-count">{completedTotal}</span>
           )}
         </button>
       </div>

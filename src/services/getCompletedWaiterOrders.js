@@ -14,8 +14,6 @@ export const getCompletedWaiterOrders = async (active_outlet, page, per_page, fi
       `/api/v1/${active_outlet}/sephcocco_${active_outlet}_orders/completed`,
       { params }
     );
-console.log({COMPLD: data});
-
     return response.data;
   } catch (error) {
     throw error;
