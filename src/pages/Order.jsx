@@ -16,6 +16,9 @@ import { getActiveOutlet } from "../utils/getActiveOutlets";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import '../styles/OrderPage.css'
 import { useActiveDepartment } from "../hooks/useGetActiveDepartment";
+import { useUpdatePaymentStatus } from "../hooks/useUpdatePaymentStatus";
+import { useDiscardOrderItem } from "../hooks/useDiscardOrderItem";
+import { useGetWaiters } from "../hooks/useGetWaiters";
 
 const itemsPerPage = 10;
 
@@ -29,22 +32,33 @@ const OrderPage = () => {
     endDate: ""
   });
 
+  const [activeTab, setActiveTab] = useState("all");
+
   const [filters, setFilters] = useState({
     search_terms: "",
     status: "",
     department_id: "",
     start_date: "",
     end_date: "",
+    waiters: false,
+    waiter_id: "",
   });
 
   const [currentPage, setCurrentPage] = useState(1);
   const activeOutlet = getActiveOutlet();
 
-  const { data, isLoading, refetch } = useGetOrder(activeOutlet, filters, 
+  const { data, isLoading, refetch } = useGetOrder(activeOutlet, filters,
     currentPage,
     itemsPerPage,
   );
-  const {data: department = []} = useActiveDepartment(activeOutlet)
+  const { data: department = [] } = useActiveDepartment(activeOutlet);
+  const { data: waitersData } = useGetWaiters();
+  const { mutateAsync: updatePaymentStatus, isPending: isUpdatingStatus } = useUpdatePaymentStatus();
+  const { mutateAsync: discardOrderItem, isPending: isDiscardingItem } = useDiscardOrderItem();
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [selectedOrderItem, setSelectedOrderItem] = useState(null);
+  const [isUpdateItemStatusModal, setIsUpdateItemStatusModal] = useState(false);
+  const [isDiscardItemModal, setIsDiscardItemModal] = useState(false);
 console.log({ORDERPAGE: data});
 
   // One row per grouped order; individual orders attached for OrderSummary
@@ -164,6 +178,96 @@ console.log({ORDERPAGE: data});
     setIsDeleteModal(false);
   };
 
+  // item can be a single order object or an array (bulk selection)
+  const handleUpdateItemStatus = (item) => {
+    setSelectedOrderItem(Array.isArray(item) ? item : [item]);
+    setIsUpdateItemStatusModal(true);
+  };
+
+  const handleDiscardItem = (item) => {
+    setSelectedOrderItem(Array.isArray(item) ? item : [item]);
+    setIsDiscardItemModal(true);
+  };
+
+  const handleConfirmDiscardItem = async () => {
+    try {
+      const items = Array.isArray(selectedOrderItem) ? selectedOrderItem : [selectedOrderItem];
+      await discardOrderItem({
+        active_outlet: activeOutlet,
+        orderIds: items.map(o => o?.id),
+      });
+      setIsDiscardItemModal(false);
+      setSelectedOrderItem(null);
+      refetch();
+    } catch (error) {
+      console.error("Error discarding order item:", error);
+    }
+  };
+
+  const getPaymentId = () =>
+    (selectedOrder?.orders || []).find(o => o.payment_details)?.payment_details?.id
+    || selectedOrder?.payment_details?.id;
+
+  const handleVerifyConfirm = async () => {
+    try {
+      setIsVerifying(true);
+      const paymentId = getPaymentId();
+      await updatePaymentStatus({
+        active_outlet: activeOutlet,
+        paymentId,
+        payload: { [`sephcocco_${activeOutlet}_payment`]: { status: "payment confirmed" } },
+      });
+      // Update selectedOrder locally so PaymentSummary switches to "Print Receipt"
+      setSelectedOrder(prev => {
+        if (!prev) return prev;
+        const updatedOrders = (prev.orders || []).map(o =>
+          o.payment_details?.id === paymentId
+            ? { ...o, payment_details: { ...o.payment_details, status: "payment confirmed" } }
+            : o
+        );
+        return {
+          ...prev,
+          payment_details: prev.payment_details
+            ? { ...prev.payment_details, status: "payment confirmed" }
+            : prev.payment_details,
+          orders: updatedOrders,
+        };
+      });
+      setIsVerifyModal(false);
+      setIsSuccessModal(true);
+      refetch();
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleDiscardPayment = async () => {
+    try {
+      await updatePaymentStatus({
+        active_outlet: activeOutlet,
+        paymentId: getPaymentId(),
+        payload: { [`sephcocco_${activeOutlet}_payment`]: { status: "Declined" } },
+      });
+      setIsViewPaymentModal(false);
+      setIsDiscardPaymentModal(false);
+      refetch();
+    } catch (error) {
+      console.error("Error discarding payment:", error);
+    }
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setFilters(prev => ({
+      ...prev,
+      waiters: tab === "waiters",
+      waiter_id: "",
+    }));
+    setCurrentPage(1);
+  };
+
   const orderColumns = useMemo(() => createOrderColumns(handleViewOrder), []);
 
 
@@ -187,6 +291,39 @@ console.log({ORDERPAGE: data});
             // Pass the persistent state as initial values
             initialValues={searchBarState}
           />
+
+          <div className="order-tabs">
+            <button
+              className={`order-tab${activeTab === "all" ? " active" : ""}`}
+              onClick={() => handleTabChange("all")}
+            >
+              All
+            </button>
+            <button
+              className={`order-tab${activeTab === "waiters" ? " active" : ""}`}
+              onClick={() => handleTabChange("waiters")}
+            >
+              Waiters
+            </button>
+          </div>
+
+          {activeTab === "waiters" && (
+            <div className="waiter-filter">
+              <select
+                className="waiter-select"
+                value={filters.waiter_id}
+                onChange={(e) => {
+                  setFilters(prev => ({ ...prev, waiter_id: e.target.value }));
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="">All Waiters</option>
+                {(waitersData?.waiters || waitersData?.data || []).map(w => (
+                  <option key={w.id} value={w.id}>{w.name || w.full_name || w.email}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="order-table-container">
             {isLoading ? (
@@ -233,21 +370,28 @@ console.log({ORDERPAGE: data});
           onEdit={() => setIsEditModal(true)}
           onDelete={() => setIsDeleteModal(true)}
           onView={() => setIsViewModal(true)}
-          onViewPayment={() =>
-          {
-            
-            
-             setIsViewPaymentModal(true)
-            }
-          }
+          onViewPayment={() => setIsViewPaymentModal(true)}
+          onUpdateItemStatus={handleUpdateItemStatus}
+          onDiscardItem={handleDiscardItem}
         />
       )}
 
       {/* Modals */}
       {isViewPaymentModal && (
         <PaymentSummary
-              style={{ paddingLeft: '240px' }} 
-         order={selectedOrder?.payment_details}
+          style={{ paddingLeft: '240px' }}
+          order={{
+            // prefer payment_details from individual orders; fall back to group-level
+            ...(
+              (selectedOrder?.orders || []).find(o => o.payment_details)?.payment_details
+              || selectedOrder?.payment_details
+              || {}
+            ),
+            paid_orders: (selectedOrder?.orders || []).map(o => ({
+              ...o,
+              customer: o.customer || selectedOrder?.customer,
+            })),
+          }}
           onBack={() => setIsViewPaymentModal(false)}
           onViewOrder={() => {
             setIsViewPaymentModal(false);
@@ -255,6 +399,7 @@ console.log({ORDERPAGE: data});
           }}
           onVerify={() => setIsVerifyModal(true)}
           onDiscard={() => setIsDiscardPaymentModal(true)}
+          isVerifying={isVerifying}
           onEdit={() => setIsEditModal(true)}
           onDelete={() => setIsDeleteModal(true)}
           onView={() => setIsViewModal(true)}
@@ -280,13 +425,12 @@ console.log({ORDERPAGE: data});
       {isUpdateStatusModal && (
         <UpdateOrderStatusModal
           isOpen={isUpdateStatusModal}
-          orderId={selectedOrder?.id}
+          orderIds={selectedOrder?.orders?.map(o => o.id) || [selectedOrder?.id]}
           onClose={() => setIsUpdateStatusModal(false)}
           onConfirm={(newStatus) => {
-            console.log("Updating order status to:", newStatus);
             setIsUpdateStatusModal(false);
-            setShowOrderSummary(false)
-            refetch()
+            setShowOrderSummary(false);
+            refetch();
           }}
           currentStatus={selectedOrder?.status}
         />
@@ -330,16 +474,13 @@ console.log({ORDERPAGE: data});
         <ConfirmActionModal
           isOpen={isDiscardPaymentModal}
           onClose={() => setIsDiscardPaymentModal(false)}
-          onConfirm={() => {
-            console.log("Discarding payment for order:", selectedOrder?.id);
-            setIsViewPaymentModal(false);
-            setIsDiscardPaymentModal(false);
-          }}
+          onConfirm={handleDiscardPayment}
           type="discardPayment"
-          title="Confirm Discard Payment"
+          title={isUpdatingStatus ? "Discarding..." : "Confirm Discard Payment"}
           message={
             <p>Are you sure you want to discard this payment? This action cannot be undone.</p>
           }
+          isLoading={isUpdatingStatus}
         />
       )}
 
@@ -347,16 +488,13 @@ console.log({ORDERPAGE: data});
         <ConfirmActionModal
           isOpen={isVerifyModal}
           onClose={() => setIsVerifyModal(false)}
-          onConfirm={() => {
-            console.log("Payment verified successfully");
-            setIsVerifyModal(false);
-            setIsSuccessModal(true);
-          }}
+          onConfirm={handleVerifyConfirm}
           type="verify"
-          title="Confirm Verification"
+          title={isVerifying ? "Confirming..." : "Confirm Verification"}
           message={
-            <p>Are you sure you want to verify this payment made by <strong>{selectedOrder?.customer?.name}</strong> with Payment ID <strong>"{selectedOrder?.payments?.[0]?.id}"</strong>?</p>
+            <p>Are you sure you want to verify this payment made by <strong>{selectedOrder?.customer?.name}</strong> with Payment ID <strong>"{getPaymentId()}"</strong>?</p>
           }
+          isLoading={isVerifying}
         />
       )}
 
@@ -371,6 +509,42 @@ console.log({ORDERPAGE: data});
           }
         />
       )}
+
+      {isUpdateItemStatusModal && (
+        <UpdateOrderStatusModal
+          isOpen={isUpdateItemStatusModal}
+          orderIds={(Array.isArray(selectedOrderItem) ? selectedOrderItem : [selectedOrderItem]).map(o => o?.id)}
+          onClose={() => { setIsUpdateItemStatusModal(false); setSelectedOrderItem(null); }}
+          onConfirm={(newStatus) => {
+            setIsUpdateItemStatusModal(false);
+            setSelectedOrderItem(null);
+            refetch();
+          }}
+          currentStatus={
+            Array.isArray(selectedOrderItem)
+              ? selectedOrderItem[0]?.status
+              : selectedOrderItem?.status
+          }
+        />
+      )}
+
+      {isDiscardItemModal && (() => {
+        const items = Array.isArray(selectedOrderItem) ? selectedOrderItem : [selectedOrderItem];
+        const label = items.length === 1
+          ? (items[0]?.product?.name || items[0]?.product_details?.name || 'this item')
+          : `${items.length} items`;
+        return (
+          <ConfirmActionModal
+            isOpen={isDiscardItemModal}
+            onClose={() => { setIsDiscardItemModal(false); setSelectedOrderItem(null); }}
+            onConfirm={handleConfirmDiscardItem}
+            type="discard"
+            title={isDiscardingItem ? "Discarding..." : "Confirm Discard"}
+            message={<p>Are you sure you want to discard <strong>{label}</strong>? This action cannot be undone.</p>}
+            isLoading={isDiscardingItem}
+          />
+        );
+      })()}
     </div>
   );
 };
