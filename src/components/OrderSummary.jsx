@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Mail, Phone, X } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, X, RefreshCw, Trash2 } from 'lucide-react';
 import ProductCard from './ProductCard';
 import OrderTable from './OrderTable';
 import '../styles/OrderSummary.css';
@@ -8,17 +8,20 @@ import EmailModal from './EmailModal';
 import { formatDate } from '../utils/formatDate';
 import FlexibleTable from './FlexibleTable';
 
-const OrderSummary = ({ 
-  order, 
-  onBack, 
-  onViewPayment, 
-  onUpdateStatus, 
-  onDiscard, 
-  onEdit, 
-  onDelete, 
-  onView 
+const OrderSummary = ({
+  order,
+  onBack,
+  onViewPayment,
+  onUpdateStatus,
+  onDiscard,
+  onEdit,
+  onDelete,
+  onView,
+  onUpdateItemStatus,
+  onDiscardItem,
 }) => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [selectedItemKeys, setSelectedItemKeys] = useState([]);
 console.log('dg',order);
 
   // const {
@@ -116,6 +119,36 @@ if (order?.payment_details) {
     { key: 'unit_price', label: 'Price' },
     { key: 'quantity', label: 'Quantity' },
     { key: 'total_price', label: 'Total Price' },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (row) => (
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <button
+            title="Update Status"
+            style={{
+              background: 'none', border: '1px solid #3b82f6', borderRadius: '6px',
+              padding: '5px', cursor: 'pointer', color: '#3b82f6', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+            }}
+            onClick={(e) => { e.stopPropagation(); onUpdateItemStatus?.(row._order); }}
+          >
+            <RefreshCw size={14} />
+          </button>
+          <button
+            title="Discard"
+            style={{
+              background: 'none', border: '1px solid #ef4444', borderRadius: '6px',
+              padding: '5px', cursor: 'pointer', color: '#ef4444', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+            }}
+            onClick={(e) => { e.stopPropagation(); onDiscardItem?.(row._order); }}
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   const orderItemRows = (order?.orders || []).map(o => ({
@@ -124,6 +157,7 @@ if (order?.payment_details) {
     unit_price: `₦${parseFloat(o.unit_price || 0).toLocaleString()}`,
     quantity: o.quantity,
     total_price: `₦${parseFloat(o.total_price || 0).toLocaleString()}`,
+    _order: o,
   }));
 
   const handleSendEmail = () => {
@@ -181,14 +215,57 @@ if (order?.payment_details) {
               <InfoCard items={leftCardItems} />
               <InfoCard items={rightCardItems} />
             </div>
-                {/* Order items table */}
+            {/* Order items table */}
             {orderItemRows.length > 0 && (
               <div className="linked-payment-section">
-                <h3>Order Items</h3>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <h3 style={{ margin: 0 }}>Order Items</h3>
+                  {selectedItemKeys.length > 0 && (
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '13px', color: '#6b7280' }}>
+                        {selectedItemKeys.length} selected
+                      </span>
+                      <button
+                        title="Bulk Update Status"
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '4px',
+                          background: 'none', border: '1px solid #3b82f6', borderRadius: '6px',
+                          padding: '5px 10px', cursor: 'pointer', color: '#3b82f6', fontSize: '13px',
+                        }}
+                        onClick={() => {
+                          const selectedOrders = orderItemRows
+                            .filter(r => selectedItemKeys.includes(r.id))
+                            .map(r => r._order);
+                          onUpdateItemStatus?.(selectedOrders);
+                        }}
+                      >
+                        <RefreshCw size={13} /> Update Status
+                      </button>
+                      <button
+                        title="Bulk Discard"
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '4px',
+                          background: 'none', border: '1px solid #ef4444', borderRadius: '6px',
+                          padding: '5px 10px', cursor: 'pointer', color: '#ef4444', fontSize: '13px',
+                        }}
+                        onClick={() => {
+                          const selectedOrders = orderItemRows
+                            .filter(r => selectedItemKeys.includes(r.id))
+                            .map(r => r._order);
+                          onDiscardItem?.(selectedOrders);
+                        }}
+                      >
+                        <Trash2 size={13} /> Discard
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <FlexibleTable
                   data={orderItemRows}
                   columns={orderItemColumns}
                   keyField="id"
+                  selectedRowKeys={selectedItemKeys}
+                  onSelectionChange={setSelectedItemKeys}
                 />
               </div>
             )}
@@ -224,14 +301,6 @@ if (order?.payment_details) {
               </div>
             </div>
 
-            <div className="form-actions">
-              <button className="update-button add-button" onClick={onUpdateStatus}>
-                Update Order Status
-              </button>
-              <button className="discard-button cancel-button" onClick={onDiscard}>
-                Discard Order
-              </button>
-            </div>
           </div>
         </div>
       </div>

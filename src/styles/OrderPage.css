@@ -1,3 +1,56 @@
+/* Tabs */
+.order-tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 12px;
+}
+
+.order-tab {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #6b7280;
+}
+
+.order-tab:hover {
+  color: #374151;
+  border-bottom-color: #d1d5db;
+}
+
+.order-tab.active {
+  color: #dc2626;
+  border-bottom-color: #dc2626;
+  background: white;
+}
+
+/* Waiter filter */
+.waiter-filter {
+  margin: 12px 0 4px;
+  display: inline-flex;
+}
+
+.waiter-select {
+  padding: 7px 12px;
+  font-size: 14px;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+  max-width: 150px;
+}
+
+.waiter-select:focus {
+  border-color: #dc2626;
+}
+
 /* Order Page Layout - Fixed for proper table scrolling */
 .order-page {   
   background-color: #ffffff;      

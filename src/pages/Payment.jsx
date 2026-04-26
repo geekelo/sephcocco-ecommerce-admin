@@ -50,7 +50,7 @@ const PaymentPage = () => {
     itemsPerPage,
   );
   
-  const { mutateAsync: updatePaymentStatus, isLoading: isUpdatingStatus } = useUpdatePaymentStatus();
+  const { mutateAsync: updatePaymentStatus, isPending: isUpdatingStatus } = useUpdatePaymentStatus();
  const {data: department = []} = useActiveDepartment(activeOutlet)
  
   const meta = payment?.meta || {};
@@ -132,16 +132,10 @@ const sortedPaymentData = [...paymentData].sort((a, b) =>
 
   const handleDiscardPayment = async () => {
     try {
-      const payload = {
-        [`sephcocco_${activeOutlet}_payment`]: {
-          status: "Declined"
-        }
-      };
-
       await updatePaymentStatus({
         active_outlet: activeOutlet,
         paymentId: selectedPayment?.id,
-        payload
+        payload: { [`sephcocco_${activeOutlet}_payment`]: { status: "Declined" } },
       });
 
       console.log("Payment discarded successfully");
@@ -179,18 +173,11 @@ const sortedPaymentData = [...paymentData].sort((a, b) =>
 
   const handleVerifyConfirm = async () => {
     try {
-      setIsVerifying(true); // Set verifying state
-      
-      const payload = {
-        [`sephcocco_${activeOutlet}_payment`]: {
-          status: "payment confirmed"
-        }
-      };
-
+      setIsVerifying(true);
       await updatePaymentStatus({
         active_outlet: activeOutlet,
         paymentId: selectedPayment?.id,
-        payload
+        payload: { [`sephcocco_${activeOutlet}_payment`]: { status: "payment confirmed" } },
       });
 
       console.log("Payment verified successfully");
@@ -228,16 +215,10 @@ const sortedPaymentData = [...paymentData].sort((a, b) =>
 
   const handleConfirmStatusUpdate = async (newStatus) => {
     try {
-      const payload = {
-        [`sephcocco_${activeOutlet}_payment`]: {
-          status: newStatus
-        }
-      };
-
       await updatePaymentStatus({
         active_outlet: activeOutlet,
         paymentId: selectedPayment?.id,
-        payload
+        payload: { [`sephcocco_${activeOutlet}_payment`]: { status: newStatus } },
       });
 
       console.log("Payment status updated successfully to:", newStatus);

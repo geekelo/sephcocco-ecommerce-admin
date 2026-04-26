@@ -8,7 +8,7 @@ const UpdateOrderStatusModal = ({
   isOpen,
   onClose,
   onConfirm,
-  orderId, 
+  orderIds,
   currentStatus = "Pending"
 }) => {
   const [selectedStatus, setSelectedStatus] = useState(currentStatus);
@@ -45,18 +45,10 @@ const UpdateOrderStatusModal = ({
 
   const handleConfirm = async () => {
     try {
-      // Construct the payload according to your specification
-      const payload = {
-        [`sephcocco_${activeOutlet}_order`]: {
-          status: selectedStatus.toLowerCase()
-        }
-      };
-
-      // Call the mutation
       await updateOrderMutation.mutateAsync({
         active_outlet: activeOutlet,
-        orderId: orderId,
-        payload: payload
+        orderIds: Array.isArray(orderIds) ? orderIds : [orderIds],
+        status: selectedStatus.toLowerCase(),
       });
 
       // Call the onConfirm callback with the selected status

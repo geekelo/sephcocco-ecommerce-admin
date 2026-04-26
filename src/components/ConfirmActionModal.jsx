@@ -12,6 +12,7 @@ const ConfirmActionModal = ({
   cancelButtonText = 'Cancel',
   confirmButtonClass = 'confirm-button',
   type = 'default', // 'delete', 'discard', 'verify', 'default'
+  isLoading = undefined,
   children
 }) => {
   
@@ -63,7 +64,10 @@ const ConfirmActionModal = ({
     if (onConfirm) {
       onConfirm();
     }
-    onClose();
+    // auto-close only when parent is NOT managing loading state
+    if (isLoading === undefined) {
+      onClose();
+    }
   };
 
   if (!isOpen) return null;
@@ -93,14 +97,16 @@ const ConfirmActionModal = ({
               type="button"
               className={buttonConfig.confirmClass}
               onClick={handleConfirm}
+              disabled={!!isLoading}
             >
-              {buttonConfig.confirmText}
+              {isLoading ? `${buttonConfig.confirmText.split(' ')[0]}ing...` : buttonConfig.confirmText}
             </button>
             {buttonConfig.cancelText && (
               <button
                 type="button"
                 className="cancel-button"
                 onClick={onClose}
+                disabled={!!isLoading}
               >
                 {buttonConfig.cancelText}
               </button>
