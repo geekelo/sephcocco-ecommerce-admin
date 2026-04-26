@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Minus, Search, CheckCircle, Hourglass, ShoppingCart, X, Package, ClipboardList, ScanBarcode, ChevronDown } from 'lucide-react';
+import { Plus, Minus, Search, CheckCircle, Hourglass, ShoppingCart, X, Package, ClipboardList, ScanBarcode, ChevronDown, Trash2, RotateCcw } from 'lucide-react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { NotFoundException } from '@zxing/library';
 import { toast } from 'react-toastify';
@@ -15,6 +15,8 @@ import { useGetPendingWaiterOrders } from '../hooks/useGetPendingWaiterOrders';
 import { useGetCompletedWaiterOrders } from '../hooks/useGetCompletedWaiterOrders';
 import { useGetConfirmedWaiterOrders } from '../hooks/useGetConfirmedWaiterOrders';
 import { useCreateWaiterPayment } from '../hooks/useCreateWaiterPayment';
+import { useDiscardWaiterOrder } from '../hooks/useDiscardWaiterOrder';
+import { useRefundWaiterOrder } from '../hooks/useRefundWaiterOrder';
 import { getActiveOutlet } from '../utils/getActiveOutlets';
 import '../styles/WaiterDashboard.css';
 
@@ -71,6 +73,7 @@ const groupOrders = (orders, outlet) => {
 // ── Grouped orders list — shared for desktop + mobile ────────────────────
 const GroupedOrdersList = ({
   groups, status, onMarkPaid, payingIds, expandedGroups, onToggle, isLoading,
+  onDiscard, onRefund, discardingIds, refundingIds,
 }) => {
   if (isLoading) {
     return (
@@ -150,15 +153,43 @@ const GroupedOrdersList = ({
                   <span>Qty</span>
                   <span>Unit Price</span>
                   <span>Total</span>
+                  <span></span>
                 </div>
-                {group.allItems.map((item, i) => (
-                  <div key={i} className="wd-group-item">
-                    <span className="wd-group-item-name">{item.name}</span>
-                    <span className="wd-group-item-qty">× {item.qty}</span>
-                    <span className="wd-group-item-unit">{fmt(item.unit_price)}</span>
-                    <span className="wd-group-item-total">{fmt(item.total_cost)}</span>
-                  </div>
-                ))}
+                {group.allItems.map((item, i) => {
+                  const order       = group.orders[i];
+                  const isDiscarding = discardingIds.has(order?.id);
+                  const isRefunding  = refundingIds.has(order?.id);
+                  return (
+                    <div key={i} className="wd-group-item">
+                      <span className="wd-group-item-name">{item.name}</span>
+                      <span className="wd-group-item-qty">× {item.qty}</span>
+                      <span className="wd-group-item-unit">{fmt(item.unit_price)}</span>
+                      <span className="wd-group-item-total">{fmt(item.total_cost)}</span>
+                      <div className="wd-group-item-actions">
+                        {status === 'pending' && (
+                          <button
+                            className="wd-item-btn discard"
+                            title="Discard"
+                            disabled={isDiscarding}
+                            onClick={e => { e.stopPropagation(); onDiscard(order); }}
+                          >
+                            {isDiscarding ? '…' : <Trash2 size={13} />}
+                          </button>
+                        )}
+                        {status === 'confirmed' && (
+                          <button
+                            className="wd-item-btn refund"
+                            title="Refund"
+                            disabled={isRefunding}
+                            onClick={e => { e.stopPropagation(); onRefund(order); }}
+                          >
+                            {isRefunding ? '…' : <RotateCcw size={13} />}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -332,6 +363,8 @@ const WaiterDashboard = () => {
   const [payingIds, setPayingIds]           = useState(new Set());
   const [productPage, setProductPage]       = useState(1);
   const [expandedGroups, setExpandedGroups] = useState(new Set());
+  const [discardingIds, setDiscardingIds]   = useState(new Set());
+  const [refundingIds, setRefundingIds]     = useState(new Set());
 
   const [searchParams, setSearchParams] = useSearchParams();
   const pageTab    = searchParams.get('tab') || 'products';
@@ -339,6 +372,8 @@ const WaiterDashboard = () => {
 
   const orderMutation   = useAdminOrderCreation();
   const paymentMutation = useCreateWaiterPayment();
+  const discardMutation = useDiscardWaiterOrder();
+  const refundMutation  = useRefundWaiterOrder();
 
   useEffect(() => {
     const t = setTimeout(() => setDebSearch(searchTerm), 350);
@@ -469,6 +504,35 @@ console.log({PENDINDATA: pendingData});
       return next;
     });
   }, []);
+
+  // ── Discard / Refund order item ──────────────────────────────────────────
+  const handleDiscard = useCallback(async (order) => {
+    const ids = [order.id];
+    setDiscardingIds(prev => new Set([...prev, order.id]));
+    try {
+      await discardMutation.mutateAsync({ active_outlet, orderIds: ids });
+      toast.success('Order discarded');
+      refetchPending(); refetchCompleted(); refetchConfirmed();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to discard order');
+    } finally {
+      setDiscardingIds(prev => { const n = new Set(prev); n.delete(order.id); return n; });
+    }
+  }, [active_outlet, discardMutation, refetchPending, refetchCompleted, refetchConfirmed]);
+
+  const handleRefund = useCallback(async (order) => {
+    const ids = [order.id];
+    setRefundingIds(prev => new Set([...prev, order.id]));
+    try {
+      await refundMutation.mutateAsync({ active_outlet, orderIds: ids });
+      toast.success('Order refunded');
+      refetchPending(); refetchCompleted(); refetchConfirmed();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to refund order');
+    } finally {
+      setRefundingIds(prev => { const n = new Set(prev); n.delete(order.id); return n; });
+    }
+  }, [active_outlet, refundMutation, refetchPending, refetchCompleted, refetchConfirmed]);
 
   // ── Desktop product columns ───────────────────────────────────────────────
   const productColumns = useMemo(() => [
@@ -826,6 +890,10 @@ console.log({PENDINDATA: pendingData});
           expandedGroups={expandedGroups}
           onToggle={toggleGroup}
           isLoading={loadingOrders}
+          onDiscard={handleDiscard}
+          onRefund={handleRefund}
+          discardingIds={discardingIds}
+          refundingIds={refundingIds}
         />
 
         {!loadingOrders && currentPages > 1 && (
