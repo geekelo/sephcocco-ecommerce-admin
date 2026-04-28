@@ -59,7 +59,6 @@ const OrderPage = () => {
   const [selectedOrderItem, setSelectedOrderItem] = useState(null);
   const [isUpdateItemStatusModal, setIsUpdateItemStatusModal] = useState(false);
   const [isDiscardItemModal, setIsDiscardItemModal] = useState(false);
-console.log({ORDERPAGE: data});
 
   // One row per grouped order; individual orders attached for OrderSummary
   const orders = useMemo(() => {
@@ -134,7 +133,18 @@ console.log({ORDERPAGE: data});
   }) => {
     // Update both the API filters and the search bar state
     // Note: We ignore sort parameters since orders don't use them
-    setFilters({ status,department_id, search_terms, start_date, end_date });
+    // IMPORTANT: merge with existing filters so tab-specific flags (waiters/waiter_id)
+    // are not lost when applying search/date/status filters.
+    setFilters(prev => ({
+      ...prev,
+      status,
+      department_id,
+      search_terms,
+      start_date,
+      end_date,
+      // keep the current tab reflected in the request
+      waiters: activeTab === "waiters",
+    }));
     setCurrentPage(1);
     
     // Update search bar state to maintain UI state
@@ -152,7 +162,7 @@ console.log({ORDERPAGE: data});
     // Clear all filters and only keep the search term
     handleApplyFilters({
       status: "", // Clear status filter
-      department: "",
+      department_id: "",
       search_terms: searchTerm,
       start_date: "", // Clear start date filter
       end_date: "", // Clear end date filter
