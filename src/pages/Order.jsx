@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import FlexibleTable from "../components/FlexibleTable";
 import Pagination from "../components/Pagination";
@@ -53,12 +53,51 @@ const OrderPage = () => {
   );
   const { data: department = [] } = useActiveDepartment(activeOutlet);
   const { data: waitersData } = useGetWaiters();
+  const waiterUsers = useMemo(
+    () => (waitersData?.users || waitersData?.waiters || waitersData?.data || []),
+    [waitersData]
+  );
   const { mutateAsync: updatePaymentStatus, isPending: isUpdatingStatus } = useUpdatePaymentStatus();
   const { mutateAsync: discardOrderItem, isPending: isDiscardingItem } = useDiscardOrderItem();
   const [isVerifying, setIsVerifying] = useState(false);
   const [selectedOrderItem, setSelectedOrderItem] = useState(null);
   const [isUpdateItemStatusModal, setIsUpdateItemStatusModal] = useState(false);
   const [isDiscardItemModal, setIsDiscardItemModal] = useState(false);
+
+  // Waiter searchable dropdown state (visible on Waiters tab only)
+  const [waiterQuery, setWaiterQuery] = useState("");
+  const [waiterOpen, setWaiterOpen] = useState(false);
+  const waiterWrapRef = useRef(null);
+
+  const selectedWaiter = useMemo(() => {
+    if (!filters.waiter_id) return null;
+    return waiterUsers.find(u => u.id === filters.waiter_id) || null;
+  }, [filters.waiter_id, waiterUsers]);
+
+  const filteredWaiters = useMemo(() => {
+    const q = (waiterQuery || "").trim().toLowerCase();
+    if (!q) return waiterUsers;
+    return waiterUsers.filter(u => {
+      const name = (u.name || u.full_name || "").toLowerCase();
+      const email = (u.email || "").toLowerCase();
+      return name.includes(q) || email.includes(q);
+    });
+  }, [waiterQuery, waiterUsers]);
+
+  useEffect(() => {
+    // Keep the input display in sync with the selected waiter id.
+    // When cleared, show empty so placeholder appears.
+    setWaiterQuery(selectedWaiter?.name || selectedWaiter?.full_name || "");
+  }, [selectedWaiter?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (!waiterWrapRef.current) return;
+      if (!waiterWrapRef.current.contains(e.target)) setWaiterOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
 
   // One row per grouped order; individual orders attached for OrderSummary
   const orders = useMemo(() => {
@@ -318,20 +357,85 @@ const OrderPage = () => {
           </div>
 
           {activeTab === "waiters" && (
-            <div className="waiter-filter">
-              <select
-                className="waiter-select"
-                value={filters.waiter_id}
-                onChange={(e) => {
-                  setFilters(prev => ({ ...prev, waiter_id: e.target.value }));
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="">All Waiters</option>
-                {(waitersData?.waiters || waitersData?.data || []).map(w => (
-                  <option key={w.id} value={w.id}>{w.name || w.full_name || w.email}</option>
-                ))}
-              </select>
+            <div className="waiter-tab-section">
+              <div className="waiter-tab-head">
+                <div className="waiter-tab-title">Waiter Orders</div>
+                <div className="waiter-tab-subtitle">
+                  Filter the orders list by a specific waiter (search by name/email).
+                </div>
+              </div>
+
+              <div className="waiter-combobox" ref={waiterWrapRef}>
+                <div className="waiter-combobox-inputRow">
+                  <input
+                    className="waiter-combobox-input"
+                    value={waiterQuery}
+                    placeholder="All waiters"
+                    onChange={(e) => {
+                      setWaiterQuery(e.target.value);
+                      setWaiterOpen(true);
+                    }}
+                    onFocus={() => setWaiterOpen(true)}
+                  />
+                  {!!filters.waiter_id && (
+                    <button
+                      type="button"
+                      className="waiter-combobox-clear"
+                      onClick={() => {
+                        setFilters(prev => ({ ...prev, waiter_id: "" }));
+                        setCurrentPage(1);
+                        setWaiterQuery("");
+                        setWaiterOpen(false);
+                      }}
+                      aria-label="Clear waiter filter"
+                      title="Clear"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                {waiterOpen && (
+                  <div className="waiter-combobox-popover">
+                    <button
+                      type="button"
+                      className={`waiter-combobox-item ${!filters.waiter_id ? "active" : ""}`}
+                      onClick={() => {
+                        setFilters(prev => ({ ...prev, waiter_id: "" }));
+                        setCurrentPage(1);
+                        setWaiterQuery("");
+                        setWaiterOpen(false);
+                      }}
+                    >
+                      All waiters
+                    </button>
+                    {filteredWaiters.length === 0 ? (
+                      <div className="waiter-combobox-empty">No matches</div>
+                    ) : (
+                      filteredWaiters.map((u) => {
+                        const label = u.name || u.full_name || u.email || "—";
+                        const sub = u.email && (u.name || u.full_name) ? u.email : "";
+                        return (
+                          <button
+                            key={u.id}
+                            type="button"
+                            className={`waiter-combobox-item ${filters.waiter_id === u.id ? "active" : ""}`}
+                            onClick={() => {
+                              setFilters(prev => ({ ...prev, waiter_id: u.id }));
+                              setCurrentPage(1);
+                              setWaiterQuery(label);
+                              setWaiterOpen(false);
+                            }}
+                          >
+                            <div className="waiter-combobox-itemName">{label}</div>
+                            {sub && <div className="waiter-combobox-itemSub">{sub}</div>}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
